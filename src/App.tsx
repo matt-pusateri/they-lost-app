@@ -409,6 +409,30 @@ const HISTORIC_LOSSES = {
 };
 
 const CELEBRATION_GIFS = [
+  "https://media.giphy.com/media/blSTtZemaWgPQ/giphy.gif",
+  "https://media.giphy.com/media/UO5elnTqo4vSg/giphy.gif",
+  "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
+  "https://media.giphy.com/media/l46CimW38a7EQxMcM/giphy.gif",
+  "https://media.giphy.com/media/HhBea19lrGaJO/giphy.gif",
+  "https://media.giphy.com/media/26u4cqiYI30juCOk0/giphy.gif",
+  "https://media.giphy.com/media/P7JmDW7IkB7TW/giphy.gif",
+  "https://media.giphy.com/media/pa37AAGzKXoek/giphy.gif",
+  "https://media.giphy.com/media/lu38au6O3SEj6/giphy.gif",
+  "https://media.giphy.com/media/BPJmthQ3YRwD6/giphy.gif",
+  "https://media.giphy.com/media/cO39srN2EUIRaVqaVq/giphy.gif",
+  "https://media.giphy.com/media/xl5QdxfNonh3q/giphy.gif",
+  "https://media.giphy.com/media/BFYLNwlsSNtcc/giphy.gif",
+  "https://media.giphy.com/media/10hzvF9FTulLxK/giphy.gif",
+  "https://media.giphy.com/media/HUHf3QyX7OXxm/giphy.gif",
+  "https://media.giphy.com/media/j0eRJzyW7XjMpx1Tlx/giphy.gif",
+  "https://media.giphy.com/media/l4Jz3a8jO92crUlWM/giphy.gif",
+  "https://media.giphy.com/media/nNxT5qXR02FOM/giphy.gif",
+  "https://media.giphy.com/media/l0HlCqV35hdEg2LSM/giphy.gif",
+  "https://media.giphy.com/media/ebAfdhOr5mn0LG1mme/giphy.gif",
+  "https://media.giphy.com/media/gtakVlnStZUbe/giphy.gif",
+  "https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif",
+  "https://media.giphy.com/media/l3V0lsGtTMSB5YNgc/giphy.gif",
+  "https://media.giphy.com/media/Is1O1TWV0LEJi/giphy.gif",
   "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
@@ -493,6 +517,13 @@ const TEASE_TITLES = [
   "Not surprised, but...",
   "Heh heh. Guess who lost...",
   "Pure joy awaits inside."
+];
+
+const SHARE_TEMPLATES = [
+  { label: "Casual", text: "So... [TEAM] lost [SCORE]-[OPP_SCORE]. Hate to see it. 😬 [LINK]" },
+  { label: "Receipts", text: "FINAL: [TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. See for yourself: [LINK]" },
+  { label: "Toxic", text: "IMAGINE LOSING [SCORE]-[OPP_SCORE] TO [OPPONENT]. [TEAM] DOWN BAD. 📉🤡 [LINK]" },
+  { label: "Philosophical", text: "The universe tends towards justice. [TEAM] losing [SCORE]-[OPP_SCORE] is proof. [LINK]" }
 ];
 
 // --- UPDATED: Dynamic Template Library ---
@@ -990,6 +1021,10 @@ export default function App() {
     );
   };
 
+  // --- NOTIFICATION HELPER ---
+  // Notification state is removed, but this component definition was causing errors.
+  // Removed PushNotification component entirely as it's no longer used.
+
   return (
     <div className={`min-h-screen ${styles.bg} ${styles.font} ${styles.text} max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-slate-200 flex flex-col`}>
       <style>{`
@@ -1032,13 +1067,13 @@ export default function App() {
             <h1 className="font-black text-xl tracking-tight italic">THEY LOST!</h1>
           </div>
           <div className="flex gap-2">
-            {/* SIMULATE BUTTON RE-ADDED FOR TESTING, BUT VISUALLY SUBTLE */}
             <button 
-              onClick={simulateGames}
-              className={`p-2 rounded-lg transition hover:opacity-80 opacity-50 hover:opacity-100`}
-              title="Simulate"
+              onClick={checkLiveScores}
+              disabled={loading}
+              className={`p-2 rounded-lg transition hover:bg-white/10 ${loading ? 'opacity-50' : ''}`}
+              title="Refresh Scores"
             >
-              <RefreshCw size={20} />
+              <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
             </button>
 
             <button 
@@ -1103,11 +1138,11 @@ export default function App() {
               {/* RENDER DYNAMIC OPTIONS FROM STATE */}
               {shareOptions.map((option, i) => {
                 
-                let leagueUrl = "https://www.espn.com";
-                if (shareModal.team.league === 'NBA') leagueUrl = `https://www.espn.com/nba/game/_/gameId/${shareModal.gameId}`;
-                else if (shareModal.team.league === 'NFL') leagueUrl = `https://www.espn.com/nfl/game/_/gameId/${shareModal.gameId}`;
-                else if (shareModal.team.league === 'NCAA') leagueUrl = `https://www.espn.com/mens-college-basketball/game/_/gameId/${shareModal.gameId}`;
-                else if (shareModal.team.league === 'CFB') leagueUrl = `https://www.espn.com/college-football/game/_/gameId/${shareModal.gameId}`;
+                let leagueUrl = "espn.com";
+                if (shareModal.team.league === 'NBA') leagueUrl = `espn.com/nba/game/_/gameId/${shareModal.gameId}`;
+                else if (shareModal.team.league === 'NFL') leagueUrl = `espn.com/nfl/game/_/gameId/${shareModal.gameId}`;
+                else if (shareModal.team.league === 'NCAA') leagueUrl = `espn.com/mens-college-basketball/game/_/gameId/${shareModal.gameId}`;
+                else if (shareModal.team.league === 'CFB') leagueUrl = `espn.com/college-football/game/_/gameId/${shareModal.gameId}`;
 
                 const filledText = option.text
                   .replace('[TEAM]', shareModal.team.name)
@@ -1126,7 +1161,7 @@ export default function App() {
                       <span className="text-xs font-bold text-slate-400 group-hover:text-green-600 uppercase">{option.label}</span>
                       <Copy size={14} className="text-slate-300 group-hover:text-green-500" />
                     </div>
-                    <p className="text-sm font-medium text-slate-800 leading-snug">{filledText}</p>
+                    <p className="text-sm font-medium text-slate-800 leading-snug break-words">{filledText}</p>
                   </button>
                 );
               })}
@@ -1142,26 +1177,7 @@ export default function App() {
         {view === 'scoreboard' && (
           <div className="space-y-6">
             
-            {/* CONTROLS */}
-            <div className={`p-5 text-center ${styles.card}`}>
-              <p className={`text-sm mb-4 opacity-70 ${styles.text}`}>
-                Tracking <strong>{hatedTeams.length}</strong> enemies
-              </p>
-              
-              <div className="flex gap-2">
-                <button 
-                  onClick={checkLiveScores}
-                  disabled={loading}
-                  className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition disabled:opacity-50 ${styles.buttonPrimary}`}
-                >
-                  {loading ? <RefreshCw className="animate-spin" size={18} /> : <Globe size={18} />}
-                  Check Live
-                </button>
-              </div>
-              <p className="text-[10px] opacity-50 mt-3 uppercase tracking-widest font-bold">
-                {loading ? "Checking ESPN..." : "Tap for instant joy"}
-              </p>
-            </div>
+            {/* CONTROLS SECTION REMOVED */}
 
             {/* RESULTS LIST */}
             <div className="space-y-4">
@@ -1178,7 +1194,7 @@ export default function App() {
                     <RefreshCw className={styles.accent} size={24} />
                   </div>
                   <h3 className={`font-bold text-lg ${styles.text}`}>No Scores Yet</h3>
-                  <p className="opacity-60 text-sm mt-1">Tap a button above to check on your enemies.</p>
+                  <p className="opacity-60 text-sm mt-1">Checking scores...</p>
                 </div>
               )}
 
@@ -1300,6 +1316,14 @@ export default function App() {
                 </div>
               ))}
             </div>
+            
+            {/* FOOTER: TRACKING COUNT (Moved to bottom of list) */}
+            <div className="text-center pt-8 pb-4 opacity-40">
+               <p className="text-xs font-bold tracking-widest uppercase">
+                 Tracking {hatedTeams.length} Enemies
+               </p>
+            </div>
+
           </div>
         )}
 
