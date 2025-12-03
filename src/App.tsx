@@ -83,27 +83,30 @@ const processESPNData = (data, league) => {
   // Start of today in local time (00:00:00)
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
-
-  // Lookback window for Weekly sports to filter out "Last Thursday"
+  
+  // Lookback window (48 hours)
   const lookbackWindow = new Date(todayStart);
-  lookbackWindow.setDate(lookbackWindow.getDate() - 2); // 48 Hours back
+  lookbackWindow.setDate(lookbackWindow.getDate() - 2);
 
   return data.events.filter(event => {
-    // FILTER LOGIC:
-    // 1. For Daily Sports (NBA/NCAA), trust the API. We explicitly asked for specific dates.
+    // Filter logic:
     if (league === 'NBA' || league === 'NCAA') return true;
-
-    // 2. For Weekly Sports (NFL/CFB), the API might return games outside our specific date query if we hit a cached endpoint.
-    // We filter out games older than 48 hours to hide Thursday Night games on Sunday/Monday.
     const gameDate = new Date(event.date);
     return gameDate >= lookbackWindow;
   }).map(event => {
-    const competition = event.competitions[0];
-    const home = competition.competitors.find(c => c.homeAway === 'home');
-    const away = competition.competitors.find(c => c.homeAway === 'away');
+    // --- CRITICAL SAFETY CHECKS ---
+    const competition = event.competitions?.[0];
+    if (!competition) return null;
+
+    const home = competition.competitors?.find(c => c.homeAway === 'home');
+    const away = competition.competitors?.find(c => c.homeAway === 'away');
+    
+    if (!home || !away) return null;
+    // -----------------------------
+
     const isFinal = event.status.type.completed;
-    const homeScore = parseInt(home.score);
-    const awayScore = parseInt(away.score);
+    const homeScore = parseInt(home.score || '0');
+    const awayScore = parseInt(away.score || '0');
     
     let loserId = null;
     if (isFinal) {
@@ -113,7 +116,6 @@ const processESPNData = (data, league) => {
 
     // Robust Date Checking
     const gameDate = new Date(event.date);
-    // If the game started before today's 00:00:00, it is considered "Yesterday" (or older)
     const isYesterday = gameDate < todayStart;
 
     return {
@@ -135,7 +137,7 @@ const processESPNData = (data, league) => {
       },
       loserId: loserId
     };
-  });
+  }).filter(Boolean); // Filter out any nulls
 };
 
 const fetchScoreboard = async (league) => {
@@ -144,17 +146,9 @@ const fetchScoreboard = async (league) => {
 
   try {
     const cacheBuster = Math.floor(Math.random() * 10000);
-
-    // FETCH STRATEGY:
-    // Instead of relying on "Default Scoreboard" (which breaks for NFL on Tuesdays),
-    // we now explicitly fetch a 3-DAY WINDOW for ALL sports.
-    // This ensures we catch "Last Night" and "The Night Before" regardless of the API's "Current Week" logic.
-    
     const today = new Date();
-    
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    
     const dayBefore = new Date();
     dayBefore.setDate(dayBefore.getDate() - 2);
 
@@ -166,19 +160,18 @@ const fetchScoreboard = async (league) => {
 
     const promises = datesToFetch.map(dateStr => {
       let targetUrl = `${BASE_URL}/${sportPath}/scoreboard?limit=1000&dates=${dateStr}&cb=${cacheBuster}`;
-      
-      // CRITICAL: Ensure full team lists for NCAA sports
       if (league === 'NCAA') targetUrl += '&groups=50'; // Div I Basketball
       if (league === 'CFB') targetUrl += '&groups=80';  // FBS Football
-
       return fetch(PROXY_URL + encodeURIComponent(targetUrl))
         .then(res => res.ok ? res.json() : { events: [] })
-        .catch(err => ({ events: [] }));
+        .catch(err => {
+             console.error("Fetch error for date " + dateStr, err);
+             return { events: [] };
+        });
     });
 
     const results = await Promise.all(promises);
     const allEvents = results.flatMap(data => data.events || []);
-    // Deduplicate events based on ID
     const uniqueEvents = Array.from(new Map(allEvents.map(item => [item.id, item])).values());
     
     return processESPNData({ events: uniqueEvents }, league);
@@ -526,11 +519,30 @@ const TEASE_TITLES = [
   "Pure joy awaits inside."
 ];
 
-const SHARE_TEMPLATES = [
-  { label: "Casual", text: "So... [TEAM] lost [SCORE]-[OPP_SCORE]. Hate to see it. 😬 [LINK]" },
-  { label: "Receipts", text: "FINAL: [TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. See for yourself: [LINK]" },
-  { label: "Toxic", text: "IMAGINE LOSING [SCORE]-[OPP_SCORE] TO [OPPONENT]. [TEAM] DOWN BAD. 📉🤡 [LINK]" },
-];
+// --- UPDATED: Dynamic Template Library ---
+const TEMPLATE_LIBRARY = {
+  Casual: [
+    "So... [TEAM] lost [SCORE]-[OPP_SCORE]. Hate to see it. 😬 [LINK]",
+    "Just checking in. You see [TEAM] lost [SCORE]-[OPP_SCORE]? [LINK]",
+    "Oof. [TEAM] dropped one. [SCORE]-[OPP_SCORE]. [LINK]",
+    "Hey, did you see [TEAM] lost? [SCORE]-[OPP_SCORE]. [LINK]",
+    "Tough look for [TEAM] today. [SCORE]-[OPP_SCORE]. [LINK]"
+  ],
+  Receipts: [
+    "FINAL: [TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. See for yourself: [LINK]",
+    "Scoreboard: [TEAM] [SCORE] - [OPPONENT] [OPP_SCORE]. [LINK]",
+    "In case you missed it: [TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. [LINK]",
+    "Just stating facts: [TEAM] lost [SCORE]-[OPP_SCORE]. [LINK]",
+    "[TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. Just leaving this here. [LINK]"
+  ],
+  Toxic: [
+    "IMAGINE LOSING [SCORE]-[OPP_SCORE] TO [OPPONENT]. [TEAM] DOWN BAD. 📉🤡 [LINK]",
+    "lol [TEAM] lost. [SCORE]-[OPP_SCORE]. Trash franchise. 🗑️ [LINK]",
+    "[TEAM] fans real quiet after losing [SCORE]-[OPP_SCORE]. 😂 [LINK]",
+    "Hold this L. [TEAM] [SCORE]-[OPP_SCORE]. 🤡 [LINK]",
+    "Imagine being a [TEAM] fan right now. Couldn't be me. [SCORE]-[OPP_SCORE]. 📉 [LINK]"
+  ]
+};
 
 // --- ONBOARDING COMPONENT ---
 const Onboarding = ({ onComplete, currentTheme }) => {
@@ -694,13 +706,12 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [noGamesMsg, setNoGamesMsg] = useState(null);
-  // Removed internal notification state
   
   // NEW STATE FOR SHARE OPTIONS
   const [shareOptions, setShareOptions] = useState([]);
 
 
-  const styles = THEMES[activeTheme];
+  const styles = THEMES[activeTheme] || THEMES.professional;
 
   // Ensure activeLeague is always enabled
   useEffect(() => {
@@ -740,17 +751,8 @@ export default function App() {
     setCelebration(null);
     setNoGamesMsg(null);
     setGameResults([]);
-    // Removed notification call
-
+    
     try {
-      const liveData = await fetchScoreboard(activeLeague);
-      
-      if (!liveData || liveData.length === 0) {
-        setNoGamesMsg(`No active/completed ${activeLeague} games found right now.`);
-        setLoading(false);
-        return;
-      }
-
       // --- NEW FUZZY MATCH LOGIC ---
       const isHated = (apiId, gameLeague) => {
           return hatedTeams.some(hatedId => {
@@ -810,6 +812,8 @@ export default function App() {
         
         const internalTeam = findInternalTeam(hatedTeamObj.id);
 
+        if (!internalTeam) return null;
+
         return {
           team: internalTeam || { ...hatedTeamObj, color: '#333', name: hatedTeamObj.name, league: game.league }, 
           opponent: opponentObj.name,
@@ -820,13 +824,12 @@ export default function App() {
           isLive: true,
           isYesterday: game.isYesterday
         };
-      });
+      }).filter(Boolean);
 
       setGameResults(relevantGames);
       
       const losers = relevantGames.filter(r => r.status === 'LOST');
       if (losers.length > 0) {
-          // Directly trigger celebration instead of internal notification
           triggerCelebration(losers.length);
       } else {
           processResults(relevantGames);
@@ -839,6 +842,52 @@ export default function App() {
       setLoading(false);
     }
   };
+
+  // MOCK SIMULATION
+  const simulateGames = () => {
+    setConsolationFact(null);
+    setCelebration(null);
+    setNoGamesMsg(null);
+    
+    setLoading(true);
+
+    setTimeout(() => {
+        const results = hatedTeams.map(teamId => {
+        const team = ALL_TEAMS.find(t => t.id === teamId);
+        if (!team) return null;
+        if (team.league !== activeLeague) return null;
+
+        const teamScore = generateScore(team.league);
+        const opponentScore = generateScore(team.league);
+        const adjustedOpponentScore = opponentScore === teamScore ? opponentScore + 1 : opponentScore;
+        const isLoss = teamScore < adjustedOpponentScore;
+        const gameId = Math.floor(Math.random() * 1000000000); 
+        const isYesterday = Math.random() > 0.7;
+
+        return {
+            team,
+            opponent: 'Generic Opponent',
+            teamScore,
+            opponentScore: adjustedOpponentScore,
+            status: isLoss ? 'LOST' : 'WON',
+            gameId: gameId,
+            isLive: false,
+            isYesterday: isYesterday 
+        };
+        }).filter(Boolean);
+
+        setGameResults(results);
+        
+        const losers = results.filter(r => r.status === 'LOST');
+        if (losers.length > 0) {
+            triggerCelebration(losers.length);
+        } else {
+            processResults(results); 
+        }
+        setLoading(false);
+    }, 1500); 
+  };
+
 
   const processResults = (results) => {
     const losers = results.filter(r => r.status === 'LOST');
@@ -902,14 +951,11 @@ export default function App() {
   };
 
   const openShareModal = (game) => {
-    // 1. Generate random options from library
     const newOptions = [
       { label: "Casual", text: TEMPLATE_LIBRARY.Casual[Math.floor(Math.random() * TEMPLATE_LIBRARY.Casual.length)] },
       { label: "Receipts", text: TEMPLATE_LIBRARY.Receipts[Math.floor(Math.random() * TEMPLATE_LIBRARY.Receipts.length)] },
       { label: "Toxic", text: TEMPLATE_LIBRARY.Toxic[Math.floor(Math.random() * TEMPLATE_LIBRARY.Toxic.length)] },
     ];
-    
-    // 2. Store them in state so they don't change on re-render
     setShareOptions(newOptions);
     setShareModal(game);
   };
@@ -1010,6 +1056,15 @@ export default function App() {
             <h1 className="font-black text-xl tracking-tight italic">THEY LOST!</h1>
           </div>
           <div className="flex gap-2">
+            {/* SIMULATE BUTTON RE-ADDED FOR TESTING, BUT VISUALLY SUBTLE */}
+            <button 
+              onClick={simulateGames}
+              className={`p-2 rounded-lg transition hover:opacity-80 opacity-50 hover:opacity-100`}
+              title="Simulate"
+            >
+              <RefreshCw size={20} />
+            </button>
+
             <button 
               onClick={() => setView('scoreboard')}
               className={`p-2 rounded-lg transition hover:opacity-80 ${view === 'scoreboard' ? 'bg-black/20 shadow-inner' : ''}`}
@@ -1118,7 +1173,6 @@ export default function App() {
               </p>
               
               <div className="flex gap-2">
-                {/* SIMULATE BUTTON REMOVED FROM UI */}
                 <button 
                   onClick={checkLiveScores}
                   disabled={loading}
