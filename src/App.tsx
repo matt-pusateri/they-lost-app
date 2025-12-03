@@ -420,46 +420,31 @@ const ALL_TEAMS = [
   { id: 'sas', league: 'NBA', name: 'San Antonio', mascot: 'Spurs', color: '#C4CED4', conf: 'West' },
 ];
 
-const HISTORIC_LOSSES = {
-  duke: [
-    { winnerId: 'mercer', headline: "Mercer danced on Duke in 2014", score: "Mercer 78, Duke 71", date: "March 21, 2014", desc: "A roster with Jabari Parker, Rodney Hood, and Quinn Cook lost to a senior mid-major squad that flat-out out-executed them." },
-    { winnerId: 'lehigh', headline: "Lehigh stunned Duke in 2012", score: "Lehigh 75, Duke 70", date: "March 16, 2012", desc: "CJ McCollum dropped 30 points on the #2 seed Blue Devils in Greensboro, essentially a home game for Duke." },
-  ],
-  dal: [
-    { winnerId: 'sea', headline: "Tony Romo fumbled the snap in 2007", score: "Seahawks 21, Cowboys 20", date: "Jan 6, 2007", desc: "A chip-shot field goal to win a playoff game turned into a disaster when the ball slipped right through Romo's hands." },
-    { winnerId: 'gb', headline: "Dez didn't catch it (technically)", score: "Packers 26, Cowboys 21", date: "Jan 11, 2015", desc: "Whatever you believe, the record book says incomplete. Another playoff heartbreak for 'America's Team'." }
-  ],
-  chi: [
-    // Added 'intro' override for noun phrase
-    { winnerId: 'phi', headline: "The Double Doink", intro: "Remember", score: "Eagles 16, Bears 15", date: "Jan 6, 2019", desc: "Cody Parkey's game-winning field goal attempt hit the upright... and then the crossbar. Silence fell over Soldier Field." }
-  ],
-  atl: [
-    { winnerId: 'ne', headline: "28-3 happened in the Super Bowl", score: "Patriots 34, Falcons 28", date: "Feb 5, 2017", desc: "The greatest collapse in Super Bowl history. They had a 25-point lead late in the third quarter. Tom Brady did the rest." }
-  ],
-  gs: [
-    { winnerId: 'cle_c', headline: "The Warriors blew a 3-1 lead", score: "Cavs 93, Warriors 89", date: "June 19, 2016", desc: "The 73-9 greatest regular season team of all time failed to close out the Finals. LeBron James brought a title to Cleveland." }
-  ],
-  lal: [
-    { winnerId: 'det_p', headline: "The Pistons dismantled the Super Team", score: "Pistons 100, Lakers 87", date: "June 15, 2004", desc: "Kobe, Shaq, Gary Payton, and Karl Malone were supposed to be invincible. Chauncey Billups and Detroit destroyed them in 5 games." }
-  ],
-  ala_fb: [
-    // Added 'intro' override for noun phrase
-    { winnerId: 'aub', headline: "The Kick Six", intro: "Remember", score: "Auburn 34, Alabama 28", date: "Nov 30, 2013", desc: "Chris Davis returned a missed field goal 109 yards as time expired to stun the #1 Crimson Tide. Pure pandemonium." }
-  ],
-  uga: [
-    // Added 'intro' override for noun phrase
-    { winnerId: 'ala_fb', headline: "2nd and 26", intro: "Remember", score: "Alabama 26, Georgia 23", date: "Jan 8, 2018", desc: "Tua Tagovailoa found DeVonta Smith in overtime to rip the National Championship out of Georgia's hands." }
-  ],
-  mich_fb: [
-    // Added 'intro' override for noun phrase
-    { winnerId: 'app_st', headline: "The Horror in Ann Arbor", intro: "Remember", score: "App State 34, Michigan 32", date: "Sept 1, 2007", desc: "The #5 ranked Wolverines were stunned by an FCS team in the Big House. Arguably the biggest upset in college football history." }
-  ],
-  generic: [
-    { winnerId: 'cham', headline: "Chaminade beat #1 Virginia in 1982", score: "Chaminade 77, Virginia 72", date: "Dec 23, 1982", desc: "Not your team, but remember: Ralph Sampson and #1 UVA lost to an NAIA school. Anything is possible." }
-  ]
-};
-
 const CELEBRATION_GIFS = [
+  "https://media.giphy.com/media/blSTtZemaWgPQ/giphy.gif",
+  "https://media.giphy.com/media/UO5elnTqo4vSg/giphy.gif",
+  "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
+  "https://media.giphy.com/media/l46CimW38a7EQxMcM/giphy.gif",
+  "https://media.giphy.com/media/HhBea19lrGaJO/giphy.gif",
+  "https://media.giphy.com/media/26u4cqiYI30juCOk0/giphy.gif",
+  "https://media.giphy.com/media/P7JmDW7IkB7TW/giphy.gif",
+  "https://media.giphy.com/media/pa37AAGzKXoek/giphy.gif",
+  "https://media.giphy.com/media/lu38au6O3SEj6/giphy.gif",
+  "https://media.giphy.com/media/BPJmthQ3YRwD6/giphy.gif",
+  "https://media.giphy.com/media/cO39srN2EUIRaVqaVq/giphy.gif",
+  "https://media.giphy.com/media/xl5QdxfNonh3q/giphy.gif",
+  "https://media.giphy.com/media/BFYLNwlsSNtcc/giphy.gif",
+  "https://media.giphy.com/media/10hzvF9FTulLxK/giphy.gif",
+  "https://media.giphy.com/media/HUHf3QyX7OXxm/giphy.gif",
+  "https://media.giphy.com/media/j0eRJzyW7XjMpx1Tlx/giphy.gif",
+  "https://media.giphy.com/media/l4Jz3a8jO92crUlWM/giphy.gif",
+  "https://media.giphy.com/media/nNxT5qXR02FOM/giphy.gif",
+  "https://media.giphy.com/media/l0HlCqV35hdEg2LSM/giphy.gif",
+  "https://media.giphy.com/media/ebAfdhOr5mn0LG1mme/giphy.gif",
+  "https://media.giphy.com/media/gtakVlnStZUbe/giphy.gif",
+  "https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif",
+  "https://media.giphy.com/media/l3V0lsGtTMSB5YNgc/giphy.gif",
+  "https://media.giphy.com/media/Is1O1TWV0LEJi/giphy.gif",
   "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
@@ -714,7 +699,7 @@ export default function App() {
     CFB: false, // Defaulting CFB to False for Post-Season
     NBA: true,
     NFL: true,
-    MLB: true
+    MLB: false // Default MLB to OFF
   });
 
   // --- PERSISTENT ENEMIES STATE ---
@@ -731,6 +716,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [noGamesMsg, setNoGamesMsg] = useState(null);
+  // Removed internal notification state
   
   // NEW STATE FOR SHARE OPTIONS
   const [shareOptions, setShareOptions] = useState([]);
@@ -1306,7 +1292,7 @@ export default function App() {
                         </div>
                       )}
 
-                      <p className="text-[10px] opacity-50 mt-6 uppercase tracking-widest font-bold">Try simulating again</p>
+                      {/* REMOVED: "Try simulating again" link */}
                     </div>
                   )}
 
