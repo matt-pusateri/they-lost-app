@@ -1,0 +1,1590 @@
+import React, { useState, useEffect } from 'react';
+import { Trophy, AlertTriangle, RefreshCw, Share2, Plus, Trash2, X, Copy, PartyPopper, History, Filter, Search, Globe, Bell, ExternalLink, Palette, Settings, ToggleLeft, ToggleRight, Target, ChevronRight, Check, Activity, LogOut } from 'lucide-react';
+
+// --- THEME CONFIGURATION ---
+const THEMES = {
+  professional: {
+    name: "Professional",
+    bg: "bg-slate-100",
+    text: "text-slate-900",
+    header: "bg-blue-600 text-white shadow-md",
+    card: "bg-white border-slate-200 shadow-sm rounded-2xl",
+    cardBorder: "border-2",
+    accent: "text-blue-600",
+    accentBg: "bg-blue-50",
+    buttonPrimary: "bg-blue-900 text-white hover:bg-blue-800",
+    buttonSecondary: "bg-slate-200 text-slate-700 hover:bg-slate-300",
+    nav: "bg-white border-t border-slate-200",
+    navActive: "text-blue-600 bg-blue-50",
+    navInactive: "text-slate-400 hover:bg-slate-50",
+    font: "font-sans",
+    lossBanner: "bg-green-600 text-white",
+    winBanner: "bg-slate-200 text-slate-600"
+  },
+  midnight: {
+    name: "Midnight",
+    bg: "bg-slate-950",
+    text: "text-slate-100",
+    header: "bg-slate-900 text-white border-b border-slate-800",
+    card: "bg-slate-900 border-slate-800 shadow-lg rounded-xl",
+    cardBorder: "border",
+    accent: "text-indigo-400",
+    accentBg: "bg-slate-800",
+    buttonPrimary: "bg-indigo-600 text-white hover:bg-indigo-500",
+    buttonSecondary: "bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700",
+    nav: "bg-slate-900 border-t border-slate-800",
+    navActive: "text-indigo-400 bg-slate-800",
+    navInactive: "text-slate-500 hover:text-slate-300",
+    font: "font-sans",
+    lossBanner: "bg-indigo-600 text-white",
+    winBanner: "bg-slate-800 text-slate-500"
+  },
+  playbook: {
+    name: "Playbook",
+    bg: "bg-emerald-50",
+    text: "text-emerald-950",
+    header: "bg-emerald-800 text-white border-b-4 border-emerald-600",
+    card: "bg-white border-emerald-200 shadow-sm rounded-lg",
+    cardBorder: "border",
+    accent: "text-emerald-700",
+    accentBg: "bg-emerald-100",
+    buttonPrimary: "bg-emerald-800 text-white hover:bg-emerald-700",
+    buttonSecondary: "bg-white text-emerald-800 border border-emerald-300 hover:bg-emerald-50",
+    nav: "bg-emerald-100 border-t border-emerald-200",
+    navActive: "text-emerald-900 bg-white border border-emerald-200 font-bold",
+    navInactive: "text-emerald-600 hover:text-emerald-800",
+    font: "font-mono", // Technical/Tactical feel
+    lossBanner: "bg-emerald-700 text-white",
+    winBanner: "bg-emerald-100 text-emerald-700"
+  }
+};
+
+// --- SPORTS DATA SERVICE ---
+const BASE_URL = 'https://site.api.espn.com/apis/site/v2/sports';
+const PROXY_URL = 'https://corsproxy.io/?'; 
+
+const LEAGUE_MAP = {
+  'NCAA': 'basketball/mens-college-basketball',
+  'CFB': 'football/college-football', 
+  'NBA': 'basketball/nba',
+  'NFL': 'football/nfl'
+};
+
+const getYYYYMMDD = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+};
+
+const processESPNData = (data, league) => {
+  if (!data.events) return [];
+
+  // Start of today in local time (00:00:00)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  // Lookback window for Weekly sports to filter out "Last Thursday"
+  const lookbackWindow = new Date(todayStart);
+  lookbackWindow.setDate(lookbackWindow.getDate() - 2); // 48 Hours back
+
+  return data.events.filter(event => {
+    // FILTER LOGIC:
+    // 1. For Daily Sports (NBA/NCAA), trust the API. We explicitly asked for specific dates.
+    if (league === 'NBA' || league === 'NCAA') return true;
+
+    // 2. For Weekly Sports (NFL/CFB), the API might return games outside our specific date query if we hit a cached endpoint.
+    // We filter out games older than 48 hours to hide Thursday Night games on Sunday/Monday.
+    const gameDate = new Date(event.date);
+    return gameDate >= lookbackWindow;
+  }).map(event => {
+    const competition = event.competitions[0];
+    const home = competition.competitors.find(c => c.homeAway === 'home');
+    const away = competition.competitors.find(c => c.homeAway === 'away');
+    const isFinal = event.status.type.completed;
+    const homeScore = parseInt(home.score);
+    const awayScore = parseInt(away.score);
+    
+    let loserId = null;
+    if (isFinal) {
+      if (homeScore < awayScore) loserId = home.team.abbreviation.toLowerCase();
+      else if (awayScore < homeScore) loserId = away.team.abbreviation.toLowerCase();
+    }
+
+    // Robust Date Checking
+    const gameDate = new Date(event.date);
+    // If the game started before today's 00:00:00, it is considered "Yesterday" (or older)
+    const isYesterday = gameDate < todayStart;
+
+    return {
+      gameId: event.id,
+      league: league,
+      isFinal: isFinal,
+      isYesterday: isYesterday,
+      homeTeam: {
+        name: home.team.displayName,
+        id: home.team.abbreviation.toLowerCase(),
+        score: homeScore,
+        logo: home.team.logo
+      },
+      awayTeam: {
+        name: away.team.displayName,
+        id: away.team.abbreviation.toLowerCase(),
+        score: awayScore,
+        logo: away.team.logo
+      },
+      loserId: loserId
+    };
+  });
+};
+
+const fetchScoreboard = async (league) => {
+  const sportPath = LEAGUE_MAP[league];
+  if (!sportPath) return [];
+
+  try {
+    const cacheBuster = Math.floor(Math.random() * 10000);
+
+    // FETCH STRATEGY:
+    // Instead of relying on "Default Scoreboard" (which breaks for NFL on Tuesdays),
+    // we now explicitly fetch a 3-DAY WINDOW for ALL sports.
+    // This ensures we catch "Last Night" and "The Night Before" regardless of the API's "Current Week" logic.
+    
+    const today = new Date();
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const dayBefore = new Date();
+    dayBefore.setDate(dayBefore.getDate() - 2);
+
+    const datesToFetch = [
+      getYYYYMMDD(today), 
+      getYYYYMMDD(yesterday),
+      getYYYYMMDD(dayBefore)
+    ];
+
+    const promises = datesToFetch.map(dateStr => {
+      let targetUrl = `${BASE_URL}/${sportPath}/scoreboard?limit=1000&dates=${dateStr}&cb=${cacheBuster}`;
+      
+      // CRITICAL: Ensure full team lists for NCAA sports
+      if (league === 'NCAA') targetUrl += '&groups=50'; // Div I Basketball
+      if (league === 'CFB') targetUrl += '&groups=80';  // FBS Football
+
+      return fetch(PROXY_URL + encodeURIComponent(targetUrl))
+        .then(res => res.ok ? res.json() : { events: [] })
+        .catch(err => ({ events: [] }));
+    });
+
+    const results = await Promise.all(promises);
+    const allEvents = results.flatMap(data => data.events || []);
+    // Deduplicate events based on ID
+    const uniqueEvents = Array.from(new Map(allEvents.map(item => [item.id, item])).values());
+    
+    return processESPNData({ events: uniqueEvents }, league);
+
+  } catch (error) {
+    console.error(`Error fetching ${league} scores:`, error);
+    return [];
+  }
+};
+
+// --- ICONS ---
+const HappyGuyIcon = ({ className }) => (
+  <span className={`${className} flex items-center justify-center leading-none`} role="img" aria-label="Happy Face">
+    😄
+  </span>
+);
+
+// --- MOCK DATA ---
+const ALL_TEAMS = [
+  // --- NCAA BASKETBALL (NCAA) ---
+  { id: 'duke', league: 'NCAA', name: 'Duke', mascot: 'Blue Devils', color: '#003087', conf: 'ACC' },
+  { id: 'unc', league: 'NCAA', name: 'North Carolina', mascot: 'Tar Heels', color: '#99badd', conf: 'ACC' },
+  { id: 'uva', league: 'NCAA', name: 'Virginia', mascot: 'Cavaliers', color: '#232D4B', conf: 'ACC' },
+  { id: 'mia', league: 'NCAA', name: 'Miami', mascot: 'Hurricanes', color: '#F47321', conf: 'ACC' }, 
+  { id: 'ncst', league: 'NCAA', name: 'NC State', mascot: 'Wolfpack', color: '#CC0000', conf: 'ACC' },
+  { id: 'msu', league: 'NCAA', name: 'Michigan St', mascot: 'Spartans', color: '#18453B', conf: 'Big Ten' },
+  { id: 'mich', league: 'NCAA', name: 'Michigan', mascot: 'Wolverines', color: '#00274C', conf: 'Big Ten' },
+  { id: 'osu', league: 'NCAA', name: 'Ohio State', mascot: 'Buckeyes', color: '#BB0000', conf: 'Big Ten' },
+  { id: 'iu', league: 'NCAA', name: 'Indiana', mascot: 'Hoosiers', color: '#990000', conf: 'Big Ten' },
+  { id: 'pur', league: 'NCAA', name: 'Purdue', mascot: 'Boilermakers', color: '#CEB888', conf: 'Big Ten' },
+  { id: 'ill', league: 'NCAA', name: 'Illinois', mascot: 'Illini', color: '#E84A27', conf: 'Big Ten' },
+  { id: 'ucla', league: 'NCAA', name: 'UCLA', mascot: 'Bruins', color: '#2D68C4', conf: 'Big Ten' },
+  { id: 'usc', league: 'NCAA', name: 'USC', mascot: 'Trojans', color: '#990000', conf: 'Big Ten' },
+  { id: 'md', league: 'NCAA', name: 'Maryland', mascot: 'Terrapins', color: '#E03A3E', conf: 'Big Ten' },
+  { id: 'uky', league: 'NCAA', name: 'Kentucky', mascot: 'Wildcats', color: '#0033A0', conf: 'SEC' },
+  { id: 'ala', league: 'NCAA', name: 'Alabama', mascot: 'Crimson Tide', color: '#9E1B32', conf: 'SEC' },
+  { id: 'aub', league: 'NCAA', name: 'Auburn', mascot: 'Tigers', color: '#0C2340', conf: 'SEC' },
+  { id: 'tenn', league: 'NCAA', name: 'Tennessee', mascot: 'Volunteers', color: '#FF8200', conf: 'SEC' },
+  { id: 'fla', league: 'NCAA', name: 'Florida', mascot: 'Gators', color: '#0021A5', conf: 'SEC' },
+  { id: 'ark', league: 'NCAA', name: 'Arkansas', mascot: 'Razorbacks', color: '#9D2235', conf: 'SEC' },
+  { id: 'tex', league: 'NCAA', name: 'Texas', mascot: 'Longhorns', color: '#BF5700', conf: 'SEC' },
+  { id: 'ku', league: 'NCAA', name: 'Kansas', mascot: 'Jayhawks', color: '#0051BA', conf: 'Big 12' },
+  { id: 'bay', league: 'NCAA', name: 'Baylor', mascot: 'Bears', color: '#154734', conf: 'Big 12' },
+  { id: 'hou', league: 'NCAA', name: 'Houston', mascot: 'Cougars', color: '#C8102E', conf: 'Big 12' },
+  { id: 'isu', league: 'NCAA', name: 'Iowa State', mascot: 'Cyclones', color: '#C8102E', conf: 'Big 12' },
+  { id: 'ari', league: 'NCAA', name: 'Arizona', mascot: 'Wildcats', color: '#CC0033', conf: 'Big 12' },
+  { id: 'conn', league: 'NCAA', name: 'UConn', mascot: 'Huskies', color: '#000E2F', conf: 'Big East' },
+  { id: 'nova', league: 'NCAA', name: 'Villanova', mascot: 'Wildcats', color: '#00205B', conf: 'Big East' },
+  { id: 'marq', league: 'NCAA', name: 'Marquette', mascot: 'Golden Eagles', color: '#003366', conf: 'Big East' },
+  { id: 'stj', league: 'NCAA', name: "St. John's", mascot: 'Red Storm', color: '#BA0C2F', conf: 'Big East' },
+  { id: 'gonz', league: 'NCAA', name: 'Gonzaga', mascot: 'Bulldogs', color: '#041E42', conf: 'WCC' },
+  { id: 'gtown', league: 'NCAA', name: 'Georgetown', mascot: 'Hoyas', color: '#041E42', conf: 'Big East' },
+
+  // --- NCAA FOOTBALL (CFB) - FULL POWER 4 + NOTABLES ---
+  // SEC
+  { id: 'ala_fb', league: 'CFB', name: 'Alabama', mascot: 'Crimson Tide', color: '#9E1B32', conf: 'SEC' },
+  { id: 'uga', league: 'CFB', name: 'Georgia', mascot: 'Bulldogs', color: '#BA0C2F', conf: 'SEC' },
+  { id: 'tex_fb', league: 'CFB', name: 'Texas', mascot: 'Longhorns', color: '#BF5700', conf: 'SEC' },
+  { id: 'lsu', league: 'CFB', name: 'LSU', mascot: 'Tigers', color: '#461D7C', conf: 'SEC' },
+  { id: 'tenn_fb', league: 'CFB', name: 'Tennessee', mascot: 'Volunteers', color: '#FF8200', conf: 'SEC' },
+  { id: 'ole', league: 'CFB', name: 'Ole Miss', mascot: 'Rebels', color: '#CE1126', conf: 'SEC' },
+  { id: 'miz', league: 'CFB', name: 'Missouri', mascot: 'Tigers', color: '#F1B82D', conf: 'SEC' },
+  { id: 'okl', league: 'CFB', name: 'Oklahoma', mascot: 'Sooners', color: '#841617', conf: 'SEC' },
+  { id: 'fla_fb', league: 'CFB', name: 'Florida', mascot: 'Gators', color: '#0021A5', conf: 'SEC' },
+  { id: 'aub_fb', league: 'CFB', name: 'Auburn', mascot: 'Tigers', color: '#0C2340', conf: 'SEC' },
+  { id: 'tam', league: 'CFB', name: 'Texas A&M', mascot: 'Aggies', color: '#500000', conf: 'SEC' },
+  { id: 'ark_fb', league: 'CFB', name: 'Arkansas', mascot: 'Razorbacks', color: '#9D2235', conf: 'SEC' },
+  { id: 'uky_fb', league: 'CFB', name: 'Kentucky', mascot: 'Wildcats', color: '#0033A0', conf: 'SEC' },
+  { id: 'sc', league: 'CFB', name: 'South Carolina', mascot: 'Gamecocks', color: '#73000A', conf: 'SEC' },
+  { id: 'van', league: 'CFB', name: 'Vanderbilt', mascot: 'Commodores', color: '#000000', conf: 'SEC' },
+  { id: 'msst', league: 'CFB', name: 'Miss State', mascot: 'Bulldogs', color: '#660000', conf: 'SEC' },
+  // Big Ten
+  { id: 'mich_fb', league: 'CFB', name: 'Michigan', mascot: 'Wolverines', color: '#00274C', conf: 'Big Ten' },
+  { id: 'osu_fb', league: 'CFB', name: 'Ohio State', mascot: 'Buckeyes', color: '#BB0000', conf: 'Big Ten' },
+  { id: 'psu', league: 'CFB', name: 'Penn State', mascot: 'Nittany Lions', color: '#041E42', conf: 'Big Ten' },
+  { id: 'ore', league: 'CFB', name: 'Oregon', mascot: 'Ducks', color: '#154733', conf: 'Big Ten' },
+  { id: 'wash', league: 'CFB', name: 'Washington', mascot: 'Huskies', color: '#4B2E83', conf: 'Big Ten' },
+  { id: 'usc_fb', league: 'CFB', name: 'USC', mascot: 'Trojans', color: '#990000', conf: 'Big Ten' },
+  { id: 'ucla_fb', league: 'CFB', name: 'UCLA', mascot: 'Bruins', color: '#2D68C4', conf: 'Big Ten' },
+  { id: 'wis_fb', league: 'CFB', name: 'Wisconsin', mascot: 'Badgers', color: '#C5050C', conf: 'Big Ten' },
+  { id: 'iowa', league: 'CFB', name: 'Iowa', mascot: 'Hawkeyes', color: '#FFCD00', conf: 'Big Ten' },
+  { id: 'neb', league: 'CFB', name: 'Nebraska', mascot: 'Cornhuskers', color: '#E41C38', conf: 'Big Ten' },
+  { id: 'msu_fb', league: 'CFB', name: 'Michigan St', mascot: 'Spartans', color: '#18453B', conf: 'Big Ten' },
+  { id: 'minn_fb', league: 'CFB', name: 'Minnesota', mascot: 'Gophers', color: '#7A0019', conf: 'Big Ten' },
+  { id: 'ill_fb', league: 'CFB', name: 'Illinois', mascot: 'Illini', color: '#E84A27', conf: 'Big Ten' },
+  { id: 'pur_fb', league: 'CFB', name: 'Purdue', mascot: 'Boilermakers', color: '#CEB888', conf: 'Big Ten' },
+  { id: 'umd_fb', league: 'CFB', name: 'Maryland', mascot: 'Terrapins', color: '#E03A3E', conf: 'Big Ten' },
+  { id: 'rut', league: 'CFB', name: 'Rutgers', mascot: 'Scarlet Knights', color: '#CC0033', conf: 'Big Ten' },
+  { id: 'ind_fb', league: 'CFB', name: 'Indiana', mascot: 'Hoosiers', color: '#990000', conf: 'Big Ten' },
+  { id: 'nw', league: 'CFB', name: 'Northwestern', mascot: 'Wildcats', color: '#4E2A84', conf: 'Big Ten' },
+  // ACC
+  { id: 'fsu_fb', league: 'CFB', name: 'Florida St', mascot: 'Seminoles', color: '#782F40', conf: 'ACC' },
+  { id: 'clem_fb', league: 'CFB', name: 'Clemson', mascot: 'Tigers', color: '#F56600', conf: 'ACC' },
+  { id: 'mia_fb', league: 'CFB', name: 'Miami', mascot: 'Hurricanes', color: '#F47321', conf: 'ACC' },
+  { id: 'unc_fb', league: 'CFB', name: 'North Carolina', mascot: 'Tar Heels', color: '#99badd', conf: 'ACC' },
+  { id: 'ncst_fb', league: 'CFB', name: 'NC State', mascot: 'Wolfpack', color: '#CC0000', conf: 'ACC' },
+  { id: 'duke_fb', league: 'CFB', name: 'Duke', mascot: 'Blue Devils', color: '#003087', conf: 'ACC' },
+  { id: 'vt', league: 'CFB', name: 'Virginia Tech', mascot: 'Hokies', color: '#630031', conf: 'ACC' },
+  { id: 'uva_fb', league: 'CFB', name: 'Virginia', mascot: 'Cavaliers', color: '#232D4B', conf: 'ACC' },
+  { id: 'lou_fb', league: 'CFB', name: 'Louisville', mascot: 'Cardinals', color: '#C90031', conf: 'ACC' },
+  { id: 'pitt', league: 'CFB', name: 'Pittsburgh', mascot: 'Panthers', color: '#003594', conf: 'ACC' },
+  { id: 'syr_fb', league: 'CFB', name: 'Syracuse', mascot: 'Orange', color: '#F76900', conf: 'ACC' },
+  { id: 'gt', league: 'CFB', name: 'Georgia Tech', mascot: 'Yellow Jackets', color: '#B3A369', conf: 'ACC' },
+  { id: 'bc', league: 'CFB', name: 'Boston College', mascot: 'Eagles', color: '#98002E', conf: 'ACC' },
+  { id: 'wake_fb', league: 'CFB', name: 'Wake Forest', mascot: 'Demon Deacons', color: '#9E7E38', conf: 'ACC' },
+  { id: 'cal', league: 'CFB', name: 'Cal', mascot: 'Golden Bears', color: '#003262', conf: 'ACC' },
+  { id: 'stan', league: 'CFB', name: 'Stanford', mascot: 'Cardinal', color: '#8C1515', conf: 'ACC' },
+  { id: 'smu', league: 'CFB', name: 'SMU', mascot: 'Mustangs', color: '#0033A0', conf: 'ACC' },
+  // Big 12
+  { id: 'okst', league: 'CFB', name: 'Oklahoma St', mascot: 'Cowboys', color: '#FF7300', conf: 'Big 12' },
+  { id: 'ksu', league: 'CFB', name: 'Kansas St', mascot: 'Wildcats', color: '#512888', conf: 'Big 12' },
+  { id: 'ku_fb', league: 'CFB', name: 'Kansas', mascot: 'Jayhawks', color: '#0051BA', conf: 'Big 12' },
+  { id: 'isu_fb', league: 'CFB', name: 'Iowa State', mascot: 'Cyclones', color: '#C8102E', conf: 'Big 12' },
+  { id: 'utah', league: 'CFB', name: 'Utah', mascot: 'Utes', color: '#CC0000', conf: 'Big 12' },
+  { id: 'ari_fb', league: 'CFB', name: 'Arizona', mascot: 'Wildcats', color: '#CC0033', conf: 'Big 12' },
+  { id: 'asu', league: 'CFB', name: 'Arizona St', mascot: 'Sun Devils', color: '#8C1D40', conf: 'Big 12' },
+  { id: 'colo', league: 'CFB', name: 'Colorado', mascot: 'Buffaloes', color: '#CFB87C', conf: 'Big 12' },
+  { id: 'byu', league: 'CFB', name: 'BYU', mascot: 'Cougars', color: '#002E5D', conf: 'Big 12' },
+  { id: 'tcu', league: 'CFB', name: 'TCU', mascot: 'Horned Frogs', color: '#4D1979', conf: 'Big 12' },
+  { id: 'bay_fb', league: 'CFB', name: 'Baylor', mascot: 'Bears', color: '#154734', conf: 'Big 12' },
+  { id: 'tt', league: 'CFB', name: 'Texas Tech', mascot: 'Red Raiders', color: '#CC0000', conf: 'Big 12' },
+  { id: 'wvu', league: 'CFB', name: 'West Virginia', mascot: 'Mountaineers', color: '#002855', conf: 'Big 12' },
+  { id: 'ucf', league: 'CFB', name: 'UCF', mascot: 'Knights', color: '#BA9B37', conf: 'Big 12' },
+  { id: 'cin_fb', league: 'CFB', name: 'Cincinnati', mascot: 'Bearcats', color: '#E00122', conf: 'Big 12' },
+  { id: 'hou_fb', league: 'CFB', name: 'Houston', mascot: 'Cougars', color: '#C8102E', conf: 'Big 12' },
+  // Independent / Pac-2
+  { id: 'nd', league: 'CFB', name: 'Notre Dame', mascot: 'Fighting Irish', color: '#0C2340', conf: 'Ind' },
+  { id: 'orst', league: 'CFB', name: 'Oregon St', mascot: 'Beavers', color: '#DC4405', conf: 'Pac-12' },
+  { id: 'wsu', league: 'CFB', name: 'Wash State', mascot: 'Cougars', color: '#981E32', conf: 'Pac-12' },
+
+  // --- NFL ---
+  { id: 'dal', league: 'NFL', name: 'Dallas', mascot: 'Cowboys', color: '#003594', conf: 'NFC East' },
+  { id: 'phi', league: 'NFL', name: 'Philadelphia', mascot: 'Eagles', color: '#004C54', conf: 'NFC East' },
+  { id: 'wsh', league: 'NFL', name: 'Washington', mascot: 'Commanders', color: '#5A1414', conf: 'NFC East' }, 
+  { id: 'nyg', league: 'NFL', name: 'NY Giants', mascot: 'Giants', color: '#0B2265', conf: 'NFC East' },
+  { id: 'chi', league: 'NFL', name: 'Chicago', mascot: 'Bears', color: '#0B162A', conf: 'NFC North' },
+  { id: 'gb', league: 'NFL', name: 'Green Bay', mascot: 'Packers', color: '#203731', conf: 'NFC North' },
+  { id: 'min', league: 'NFL', name: 'Minnesota', mascot: 'Vikings', color: '#4F2683', conf: 'NFC North' },
+  { id: 'det', league: 'NFL', name: 'Detroit', mascot: 'Lions', color: '#0076B6', conf: 'NFC North' },
+  { id: 'atl', league: 'NFL', name: 'Atlanta', mascot: 'Falcons', color: '#a71930', conf: 'NFC South' },
+  { id: 'no', league: 'NFL', name: 'New Orleans', mascot: 'Saints', color: '#D3BC8D', conf: 'NFC South' },
+  { id: 'tb', league: 'NFL', name: 'Tampa Bay', mascot: 'Buccaneers', color: '#D50A0A', conf: 'NFC South' },
+  { id: 'car', league: 'NFL', name: 'Carolina', mascot: 'Panthers', color: '#0085CA', conf: 'NFC South' },
+  { id: 'sf', league: 'NFL', name: 'San Fran', mascot: '49ers', color: '#AA0000', conf: 'NFC West' },
+  { id: 'sea', league: 'NFL', name: 'Seattle', mascot: 'Seahawks', color: '#002244', conf: 'NFC West' },
+  { id: 'lar', league: 'NFL', name: 'LA Rams', mascot: 'Rams', color: '#003594', conf: 'NFC West' },
+  { id: 'ari', league: 'NFL', name: 'Arizona', mascot: 'Cardinals', color: '#97233F', conf: 'NFC West' },
+  { id: 'ne', league: 'NFL', name: 'New England', mascot: 'Patriots', color: '#002244', conf: 'AFC East' },
+  { id: 'buf', league: 'NFL', name: 'Buffalo', mascot: 'Bills', color: '#00338D', conf: 'AFC East' },
+  { id: 'mia', league: 'NFL', name: 'Miami', mascot: 'Dolphins', color: '#008E97', conf: 'AFC East' },
+  { id: 'nyj', league: 'NFL', name: 'NY Jets', mascot: 'Jets', color: '#125740', conf: 'AFC East' },
+  { id: 'pit', league: 'NFL', name: 'Pittsburgh', mascot: 'Steelers', color: '#FFB612', conf: 'AFC North' },
+  { id: 'bal', league: 'NFL', name: 'Baltimore', mascot: 'Ravens', color: '#241773', conf: 'AFC North' },
+  { id: 'cin', league: 'NFL', name: 'Cincinnati', mascot: 'Bengals', color: '#FB4F14', conf: 'AFC North' },
+  { id: 'cle', league: 'NFL', name: 'Cleveland', mascot: 'Browns', color: '#311D00', conf: 'AFC North' },
+  { id: 'ind', league: 'NFL', name: 'Indianapolis', mascot: 'Colts', color: '#002C5F', conf: 'AFC South' },
+  { id: 'ten', league: 'NFL', name: 'Tennessee', mascot: 'Titans', color: '#0C2340', conf: 'AFC South' },
+  { id: 'jax', league: 'NFL', name: 'Jacksonville', mascot: 'Jaguars', color: '#006778', conf: 'AFC South' },
+  { id: 'hou', league: 'NFL', name: 'Houston', mascot: 'Texans', color: '#03202F', conf: 'AFC South' },
+  { id: 'kc', league: 'NFL', name: 'Kansas City', mascot: 'Chiefs', color: '#E31837', conf: 'AFC West' },
+  { id: 'lv', league: 'NFL', name: 'Las Vegas', mascot: 'Raiders', color: '#000000', conf: 'AFC West' },
+  { id: 'den', league: 'NFL', name: 'Denver', mascot: 'Broncos', color: '#FB4F14', conf: 'AFC West' },
+  { id: 'lac', league: 'NFL', name: 'LA Chargers', mascot: 'Chargers', color: '#0080C6', conf: 'AFC West' },
+
+  // --- NBA ---
+  { id: 'bos', league: 'NBA', name: 'Boston', mascot: 'Celtics', color: '#007A33', conf: 'East' },
+  { id: 'bkn', league: 'NBA', name: 'Brooklyn', mascot: 'Nets', color: '#000000', conf: 'East' },
+  { id: 'ny', league: 'NBA', name: 'New York', mascot: 'Knicks', color: '#F58426', conf: 'East' }, 
+  { id: 'phi', league: 'NBA', name: 'Philly', mascot: '76ers', color: '#006BB6', conf: 'East' },
+  { id: 'tor', league: 'NBA', name: 'Toronto', mascot: 'Raptors', color: '#CE1141', conf: 'East' },
+  { id: 'chi', league: 'NBA', name: 'Chicago', mascot: 'Bulls', color: '#CE1141', conf: 'East' },
+  { id: 'cle', league: 'NBA', name: 'Cleveland', mascot: 'Cavaliers', color: '#860038', conf: 'East' },
+  { id: 'det', league: 'NBA', name: 'Detroit', mascot: 'Pistons', color: '#C8102E', conf: 'East' },
+  { id: 'ind', league: 'NBA', name: 'Indiana', mascot: 'Pacers', color: '#FDBB30', conf: 'East' },
+  { id: 'mil', league: 'NBA', name: 'Milwaukee', mascot: 'Bucks', color: '#00471B', conf: 'East' },
+  { id: 'atl', league: 'NBA', name: 'Atlanta', mascot: 'Hawks', color: '#E03A3E', conf: 'East' },
+  { id: 'cha', league: 'NBA', name: 'Charlotte', mascot: 'Hornets', color: '#1D1160', conf: 'East' },
+  { id: 'mia', league: 'NBA', name: 'Miami', mascot: 'Heat', color: '#98002E', conf: 'East' },
+  { id: 'orl', league: 'NBA', name: 'Orlando', mascot: 'Magic', color: '#0077C0', conf: 'East' },
+  { id: 'wsh', league: 'NBA', name: 'Washington', mascot: 'Wizards', color: '#002B5C', conf: 'East' },
+  { id: 'den', league: 'NBA', name: 'Denver', mascot: 'Nuggets', color: '#0E2240', conf: 'East' },
+  { id: 'min', league: 'NBA', name: 'Minnesota', mascot: 'Timberwolves', color: '#0C2340', conf: 'West' },
+  { id: 'okc', league: 'NBA', name: 'OKC', mascot: 'Thunder', color: '#007AC1', conf: 'West' },
+  { id: 'por', league: 'NBA', name: 'Portland', mascot: 'Trail Blazers', color: '#E03A3E', conf: 'West' },
+  { id: 'uta', league: 'NBA', name: 'Utah', mascot: 'Jazz', color: '#002B5C', conf: 'West' },
+  { id: 'gs', league: 'NBA', name: 'Golden State', mascot: 'Warriors', color: '#1D428A', conf: 'West' }, 
+  { id: 'lac', league: 'NBA', name: 'LA Clippers', mascot: 'Clippers', color: '#C8102E', conf: 'West' },
+  { id: 'lal', league: 'NBA', name: 'L.A.', mascot: 'Lakers', color: '#552583', conf: 'West' },
+  { id: 'phx', league: 'NBA', name: 'Phoenix', mascot: 'Suns', color: '#1D1160', conf: 'West' },
+  { id: 'sac', league: 'NBA', name: 'Sacramento', mascot: 'Kings', color: '#5A2D81', conf: 'West' },
+  { id: 'dal', league: 'NBA', name: 'Dallas', mascot: 'Mavericks', color: '#00538C', conf: 'West' },
+  { id: 'hou', league: 'NBA', name: 'Houston', mascot: 'Rockets', color: '#CE1141', conf: 'West' },
+  { id: 'mem', league: 'NBA', name: 'Memphis', mascot: 'Grizzlies', color: '#5D76A9', conf: 'West' },
+  { id: 'no', league: 'NBA', name: 'New Orleans', mascot: 'Pelicans', color: '#0C2340', conf: 'West' },
+  { id: 'sas', league: 'NBA', name: 'San Antonio', mascot: 'Spurs', color: '#C4CED4', conf: 'West' },
+];
+
+const HISTORIC_LOSSES = {
+  duke: [
+    { winnerId: 'mercer', headline: "Mercer danced on Duke in 2014", score: "Mercer 78, Duke 71", date: "March 21, 2014", desc: "A roster with Jabari Parker, Rodney Hood, and Quinn Cook lost to a senior mid-major squad that flat-out out-executed them." },
+    { winnerId: 'lehigh', headline: "Lehigh stunned Duke in 2012", score: "Lehigh 75, Duke 70", date: "March 16, 2012", desc: "CJ McCollum dropped 30 points on the #2 seed Blue Devils in Greensboro, essentially a home game for Duke." },
+  ],
+  dal: [
+    { winnerId: 'sea', headline: "Tony Romo fumbled the snap in 2007", score: "Seahawks 21, Cowboys 20", date: "Jan 6, 2007", desc: "A chip-shot field goal to win a playoff game turned into a disaster when the ball slipped right through Romo's hands." },
+    { winnerId: 'gb', headline: "Dez didn't catch it (technically)", score: "Packers 26, Cowboys 21", date: "Jan 11, 2015", desc: "Whatever you believe, the record book says incomplete. Another playoff heartbreak for 'America's Team'." }
+  ],
+  chi: [
+    // Added 'intro' override for noun phrase
+    { winnerId: 'phi', headline: "The Double Doink", intro: "Remember", score: "Eagles 16, Bears 15", date: "Jan 6, 2019", desc: "Cody Parkey's game-winning field goal attempt hit the upright... and then the crossbar. Silence fell over Soldier Field." }
+  ],
+  atl: [
+    { winnerId: 'ne', headline: "28-3 happened in the Super Bowl", score: "Patriots 34, Falcons 28", date: "Feb 5, 2017", desc: "The greatest collapse in Super Bowl history. They had a 25-point lead late in the third quarter. Tom Brady did the rest." }
+  ],
+  gs: [
+    { winnerId: 'cle_c', headline: "The Warriors blew a 3-1 lead", score: "Cavs 93, Warriors 89", date: "June 19, 2016", desc: "The 73-9 greatest regular season team of all time failed to close out the Finals. LeBron James brought a title to Cleveland." }
+  ],
+  lal: [
+    { winnerId: 'det_p', headline: "The Pistons dismantled the Super Team", score: "Pistons 100, Lakers 87", date: "June 15, 2004", desc: "Kobe, Shaq, Gary Payton, and Karl Malone were supposed to be invincible. Chauncey Billups and Detroit destroyed them in 5 games." }
+  ],
+  ala_fb: [
+    // Added 'intro' override for noun phrase
+    { winnerId: 'aub', headline: "The Kick Six", intro: "Remember", score: "Auburn 34, Alabama 28", date: "Nov 30, 2013", desc: "Chris Davis returned a missed field goal 109 yards as time expired to stun the #1 Crimson Tide. Pure pandemonium." }
+  ],
+  uga: [
+    // Added 'intro' override for noun phrase
+    { winnerId: 'ala_fb', headline: "2nd and 26", intro: "Remember", score: "Alabama 26, Georgia 23", date: "Jan 8, 2018", desc: "Tua Tagovailoa found DeVonta Smith in overtime to rip the National Championship out of Georgia's hands." }
+  ],
+  mich_fb: [
+    // Added 'intro' override for noun phrase
+    { winnerId: 'app_st', headline: "The Horror in Ann Arbor", intro: "Remember", score: "App State 34, Michigan 32", date: "Sept 1, 2007", desc: "The #5 ranked Wolverines were stunned by an FCS team in the Big House. Arguably the biggest upset in college football history." }
+  ],
+  generic: [
+    { winnerId: 'cham', headline: "Chaminade beat #1 Virginia in 1982", score: "Chaminade 77, Virginia 72", date: "Dec 23, 1982", desc: "Not your team, but remember: Ralph Sampson and #1 UVA lost to an NAIA school. Anything is possible." }
+  ]
+};
+
+const CELEBRATION_GIFS = [
+  "https://media.giphy.com/media/blSTtZemaWgPQ/giphy.gif",
+  "https://media.giphy.com/media/UO5elnTqo4vSg/giphy.gif",
+  "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
+  "https://media.giphy.com/media/l46CimW38a7EQxMcM/giphy.gif",
+  "https://media.giphy.com/media/HhBea19lrGaJO/giphy.gif",
+  "https://media.giphy.com/media/26u4cqiYI30juCOk0/giphy.gif",
+  "https://media.giphy.com/media/P7JmDW7IkB7TW/giphy.gif",
+  "https://media.giphy.com/media/pa37AAGzKXoek/giphy.gif",
+  "https://media.giphy.com/media/lu38au6O3SEj6/giphy.gif",
+  "https://media.giphy.com/media/BPJmthQ3YRwD6/giphy.gif",
+  "https://media.giphy.com/media/cO39srN2EUIRaVqaVq/giphy.gif",
+  "https://media.giphy.com/media/xl5QdxfNonh3q/giphy.gif",
+  "https://media.giphy.com/media/BFYLNwlsSNtcc/giphy.gif",
+  "https://media.giphy.com/media/10hzvF9FTulLxK/giphy.gif",
+  "https://media.giphy.com/media/HUHf3QyX7OXxm/giphy.gif",
+  "https://media.giphy.com/media/j0eRJzyW7XjMpx1Tlx/giphy.gif",
+  "https://media.giphy.com/media/l4Jz3a8jO92crUlWM/giphy.gif",
+  "https://media.giphy.com/media/nNxT5qXR02FOM/giphy.gif",
+  "https://media.giphy.com/media/l0HlCqV35hdEg2LSM/giphy.gif",
+  "https://media.giphy.com/media/ebAfdhOr5mn0LG1mme/giphy.gif",
+  "https://media.giphy.com/media/gtakVlnStZUbe/giphy.gif",
+  "https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif",
+  "https://media.giphy.com/media/l3V0lsGtTMSB5YNgc/giphy.gif",
+  "https://media.giphy.com/media/Is1O1TWV0LEJi/giphy.gif",
+  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/9Y6n9TR7U07ew/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3NtY188QaxDdC/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kEKcOWl8RMLde/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/aq6Thivv9V9lu/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kKo2x2QSWMNfW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3oEjHI8WJv4x6UPDB6/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/inyqrgp9o3NUA/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3NWFibGJuOGZwdmdwOXBlaTdseGt0eXo1cG10c3N2cGZ2b245OW8xbyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/XR9Dp54ZC4dji/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aDk0OXJieXl2NWloNzU1dG9yZXB1dHJnaXlyN2xsYms3N20yM3BwdSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1LweXxLwVT0J2/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3YXJ1aWprZnVlMDd3ajdlMGpnM2ljNHN6czVyaGZqdDE3N3hsdmtuNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DpB9NBjny7jF1pd0yt2/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eHgzYzl2bHJvZmRkaG85eGhuYmkwaWIwa3dpdWtzNnJseWEyc3htbCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uxLVaMUiycgpO/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/T87BZ7cyOH7TwDBgwy/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/61MN4zqj333nTdtLEH/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/fPRwBcYd71Lox1v7p2/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eDR3dnJkZWYzd2Q4N242enBocnRzZDZycXN6bGp3bWlzOXA0dHp5ZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VABbCpX94WCfS/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/unAjVtjhUeYFMJ8jFc/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1PMVNNKVIL8Ig/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/yCjr0U8WCOQM0/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o7abldj0b3rxrZUxW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/10Jpr9KSaXLchW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3ohzdIuqJoo8QdKlnW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DffShiJ47fPqM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3WCNY2RhcmnwGbKbCi/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/rdma0nDFZMR32/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/12PIT4DOj6Tgek/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWV5NGd5NWV3Y24yN3p0ZXV2ZnlkMXoxNXZkazE4ZDB4b2d6Y3ZjeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4GuFtlz4IhKSt89E7q/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KB7Moe2Oj0BXeDjvDp/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DYH297XiCS2Ck/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/SA613Nxg1h6zO1nRsg/giphy.gif"
+];
+
+const TRASH_TALK = [
+  "Couldn't happen to a nicer team.",
+  "Thoughts and prayers. 🙏",
+  "Someone check on their fans. 😂",
+  "Inject this into my veins. 💉",
+  "Nature is healing. 🌿",
+  "Down bad. 📉",
+  "Holding that L. 🥡",
+  "RIP Bozo. 💀",
+  "Chef's kiss. 🤌",
+  "Pure cinema. 🍿",
+  "Not a serious franchise.",
+  "Fraud alert. 🚨",
+  "Exposed.",
+  "They are who we thought they were.",
+  "Hang the banner: 'Participated'.",
+  "Sucks to suck.",
+  "Have a safe flight home! 👋",
+  "Call the waaaambulance. 🚑",
+  "Keep crying.",
+  "Delicious tears. 💧",
+  "We love to see it.",
+  "Oof. Big oof.",
+  "Warm up the bus!",
+  "Scoreboard.",
+  "This sparks joy. ✨",
+  "Emotional damage. 💥",
+  "Someone give them a hug.",
+  "That wasn't a game, it was a cry for help."
+];
+
+const TEASE_TITLES = [
+  "Guess what?",
+  "Great news, Matt! 📉",
+  "Haterade Alert! 🥤",
+  "You're gonna love this...",
+  "Schadenfreude incoming... 😈",
+  "It happened again.",
+  "Tap to see who choked.",
+  "Spoiler Alert: They lost!",
+  "Alert: They lost!",
+  "Not surprised, but...",
+  "Heh heh. Guess who lost...",
+  "Pure joy awaits inside."
+];
+
+// --- UPDATED: Dynamic Template Library ---
+const TEMPLATE_LIBRARY = {
+  Casual: [
+    "So... [TEAM] lost [SCORE]-[OPP_SCORE]. Hate to see it. 😬 [LINK]",
+    "Just checking in. You see [TEAM] lost [SCORE]-[OPP_SCORE]? [LINK]",
+    "Oof. [TEAM] dropped one. [SCORE]-[OPP_SCORE]. [LINK]",
+    "Hey, did you see [TEAM] lost? [SCORE]-[OPP_SCORE]. [LINK]",
+    "Tough look for [TEAM] today. [SCORE]-[OPP_SCORE]. [LINK]"
+  ],
+  Receipts: [
+    "FINAL: [TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. See for yourself: [LINK]",
+    "Scoreboard: [TEAM] [SCORE] - [OPPONENT] [OPP_SCORE]. [LINK]",
+    "In case you missed it: [TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. [LINK]",
+    "Just stating facts: [TEAM] lost [SCORE]-[OPP_SCORE]. [LINK]",
+    "[TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. Just leaving this here. [LINK]"
+  ],
+  Toxic: [
+    "IMAGINE LOSING [SCORE]-[OPP_SCORE] TO [OPPONENT]. [TEAM] DOWN BAD. 📉🤡 [LINK]",
+    "lol [TEAM] lost. [SCORE]-[OPP_SCORE]. Trash franchise. 🗑️ [LINK]",
+    "[TEAM] fans real quiet after losing [SCORE]-[OPP_SCORE]. 😂 [LINK]",
+    "Hold this L. [TEAM] [SCORE]-[OPP_SCORE]. 🤡 [LINK]",
+    "Imagine being a [TEAM] fan right now. Couldn't be me. [SCORE]-[OPP_SCORE]. 📉 [LINK]"
+  ]
+};
+
+// --- ONBOARDING COMPONENT ---
+const Onboarding = ({ onComplete, currentTheme }) => {
+  const [step, setStep] = useState(0);
+  
+  const nextStep = () => setStep(s => s + 1);
+
+  // New function to actually request permission
+  const handleEnableNotifications = async () => {
+    if ('Notification' in window) {
+      try {
+        const permission = await Notification.requestPermission();
+        console.log('Permission result:', permission);
+      } catch (e) {
+        console.error('Notification permission error', e);
+      }
+    }
+    // Proceed regardless of the answer
+    onComplete();
+  }
+
+  // Step 1: Value Prop
+  if (step === 0) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-blue-600 text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+        <div className="bg-white/20 p-6 rounded-full mb-6">
+            <HappyGuyIcon className="text-6xl text-white" />
+        </div>
+        <h1 className="text-3xl font-black italic mb-4">Fill your hater's heart with joy</h1>
+        <div className="text-lg font-medium opacity-90 mb-8 max-w-xs mx-auto space-y-4">
+          <p>
+            Love the jolt of joy you get when you see that a team you hate loses?
+          </p>
+          <p>
+            This app tracks the teams you hate and sends you an alert every time they lose. And ONLY when they lose.
+          </p>
+        </div>
+        <button 
+          onClick={nextStep}
+          className="bg-white text-blue-600 text-lg font-bold py-4 px-8 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-transform w-full max-w-xs"
+        >
+          Let your hate flow
+        </button>
+      </div>
+    );
+  }
+
+  // Step 2: Pick Enemies (Just a visual placeholder for the concept, we direct them to Manage)
+  if (step === 1) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-slate-50 text-slate-900 flex flex-col p-6 animate-in slide-in-from-right duration-300">
+        <div className="flex-1 flex flex-col items-center justify-center text-center">
+            <div className="mb-6 relative">
+                <Target size={64} className="text-red-500" />
+                <div className="absolute -bottom-2 -right-2 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    STEP 1
+                </div>
+            </div>
+            <h2 className="text-2xl font-black mb-2">Pick Your Targets</h2>
+            <p className="text-slate-500 mb-8 max-w-xs">
+                Search for teams across NCAA, NFL, and NBA. Add them to your "Enemies List."
+            </p>
+            
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 w-full max-w-xs mb-8 text-left">
+                <div className="flex items-center gap-3 border-b border-slate-100 pb-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-900 text-white flex items-center justify-center text-xs font-bold">DUK</div>
+                    <div className="flex-1">
+                        <div className="font-bold text-sm">Duke</div>
+                        <div className="text-[10px] text-slate-400">NCAA</div>
+                    </div>
+                    <Trash2 size={16} className="text-red-500" />
+                </div>
+                <div className="flex items-center gap-3 opacity-50">
+                    <div className="w-8 h-8 rounded-full bg-blue-900 text-white flex items-center justify-center text-xs font-bold">DAL</div>
+                    <div className="flex-1">
+                        <div className="font-bold text-sm">Dallas</div>
+                        <div className="text-[10px] text-slate-400">NFL</div>
+                    </div>
+                    <Target size={16} />
+                </div>
+            </div>
+        </div>
+        <button 
+          onClick={nextStep}
+          className="bg-slate-900 text-white text-lg font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-slate-800 transition-colors w-full"
+        >
+          Got it, next
+        </button>
+      </div>
+    );
+  }
+
+  // Step 3: Notifications
+  if (step === 2) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-slate-900 text-white flex flex-col p-6 animate-in slide-in-from-right duration-300">
+        <div className="flex-1 flex flex-col items-center justify-center text-center">
+            <div className="mb-6 bg-white/10 p-6 rounded-full">
+                <Bell size={48} className="text-yellow-400 animate-bounce" />
+            </div>
+            <h2 className="text-2xl font-black mb-2">Don't Miss the Moment</h2>
+            <p className="text-slate-400 mb-8 max-w-xs">
+                We'll send you a notification any time that rival team blows it.
+            </p>
+
+            {/* Fake Notification Preview */}
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl w-full max-w-xs flex items-center gap-3 mb-8 text-left">
+                <div className="bg-blue-600 p-2 rounded-lg">
+                    <Bell size={16} className="text-white" />
+                </div>
+                <div>
+                    <div className="text-xs font-bold opacity-80">THEY LOST</div>
+                    <div className="text-sm font-bold">Guess what happened? 📉</div>
+                </div>
+            </div>
+        </div>
+        <div className="space-y-3 w-full">
+            <button 
+            onClick={handleEnableNotifications}
+            className="bg-white text-slate-900 text-lg font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-slate-100 transition-colors w-full"
+            >
+            Enable Notifications
+            </button>
+            <button 
+            onClick={onComplete}
+            className="text-slate-500 text-sm font-bold py-2 w-full hover:text-white transition-colors"
+            >
+            Maybe Later
+            </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+
+export default function App() {
+  const [view, setView] = useState('scoreboard');
+  const [activeLeague, setActiveLeague] = useState('NCAA');
+  const [activeTheme, setActiveTheme] = useState('professional');
+  
+  // --- ONBOARDING STATE ---
+  const [showOnboarding, setShowOnboarding] = useState(
+    // Check local storage on initial render
+    () => !localStorage.getItem('tl_onboarded')
+  );
+
+  // --- SETTINGS STATE ---
+  const [enabledLeagues, setEnabledLeagues] = useState({
+    NCAA: true,
+    CFB: false, // Defaulting CFB to False for Post-Season
+    NBA: true,
+    NFL: true
+  });
+
+  // Updated defaults with your new curated list of enemies
+  const [hatedTeams, setHatedTeams] = useState([
+    'bos', 'hou', 'dal_m', 'lac_c',  // NBA
+    'det', 'min', 'gb', 'sf', 'pit', // NFL
+    'duke', 'mich', 'ncst', 'stj',    // NCAA Basketball
+    'nd', 'ncst_fb', 'duke_fb', 'ala_fb', 'mich_fb' // CFB: Updated defaults
+  ]);
+  const [gameResults, setGameResults] = useState([]);
+  const [celebration, setCelebration] = useState(null);
+  const [shareModal, setShareModal] = useState(null);
+  const [consolationFact, setConsolationFact] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [noGamesMsg, setNoGamesMsg] = useState(null);
+  const [notification, setNotification] = useState(null); 
+  
+  // NEW STATE FOR SHARE OPTIONS
+  const [shareOptions, setShareOptions] = useState([]);
+
+
+  const styles = THEMES[activeTheme];
+
+  // Ensure activeLeague is always enabled
+  useEffect(() => {
+    if (!enabledLeagues[activeLeague]) {
+      const firstEnabled = Object.keys(enabledLeagues).find(k => enabledLeagues[k]);
+      if (firstEnabled) setActiveLeague(firstEnabled);
+    }
+  }, [enabledLeagues, activeLeague]);
+
+  const completeOnboarding = () => {
+      localStorage.setItem('tl_onboarded', 'true');
+      setShowOnboarding(false);
+  };
+
+  // --- LOGIC ---
+
+  const generateScore = (league) => {
+    if (league === 'NFL' || league === 'CFB') {
+      const score = Math.floor(Math.random() * 45) + 3; // Increased variance for CFB
+      return score;
+    } else if (league === 'NBA') {
+      return Math.floor(Math.random() * 50) + 80;
+    } else {
+      return Math.floor(Math.random() * 40) + 50;
+    }
+  };
+
+  // MOCK SIMULATION
+  const simulateGames = () => {
+    setConsolationFact(null);
+    setCelebration(null);
+    setNoGamesMsg(null);
+    setNotification(null); 
+
+    setLoading(true);
+
+    setTimeout(() => {
+        const results = hatedTeams.map(teamId => {
+        const team = ALL_TEAMS.find(t => t.id === teamId);
+        if (!team) return null;
+        if (team.league !== activeLeague) return null;
+
+        const teamScore = generateScore(team.league);
+        const opponentScore = generateScore(team.league);
+        const adjustedOpponentScore = opponentScore === teamScore ? opponentScore + 1 : opponentScore;
+        const isLoss = teamScore < adjustedOpponentScore;
+        const gameId = Math.floor(Math.random() * 1000000000); 
+        const isYesterday = Math.random() > 0.7;
+
+        return {
+            team,
+            opponent: 'Generic Opponent',
+            teamScore,
+            opponentScore: adjustedOpponentScore,
+            status: isLoss ? 'LOST' : 'WON',
+            gameId: gameId,
+            isLive: false,
+            isYesterday: isYesterday 
+        };
+        }).filter(Boolean);
+
+        setGameResults(results);
+        
+        const losers = results.filter(r => r.status === 'LOST');
+        if (losers.length > 0) {
+            triggerNotification();
+        } else {
+            processResults(results); 
+        }
+        setLoading(false);
+    }, 1500); 
+  };
+
+  // REAL LIVE DATA FETCH
+  const checkLiveScores = async () => {
+    setLoading(true);
+    setConsolationFact(null);
+    setCelebration(null);
+    setNoGamesMsg(null);
+    setGameResults([]);
+    setNotification(null);
+
+    try {
+      const liveData = await fetchScoreboard(activeLeague);
+      
+      if (!liveData || liveData.length === 0) {
+        setNoGamesMsg(`No active/completed ${activeLeague} games found right now.`);
+        setLoading(false);
+        return;
+      }
+
+      // --- NEW FUZZY MATCH LOGIC ---
+      const isHated = (apiId, gameLeague) => {
+          return hatedTeams.some(hatedId => {
+              // 1. Exact Match (e.g. 'duke' === 'duke')
+              if (hatedId === apiId) return true;
+              
+              // 2. Suffix Match for Conflicts (e.g. 'duke' matches 'duke_fb' IF we are in CFB mode)
+              const internalTeamConfig = ALL_TEAMS.find(t => t.id === hatedId);
+              if (internalTeamConfig && internalTeamConfig.league === gameLeague) {
+                  // Check if the hated ID starts with the API ID plus an underscore
+                  // This covers '_fb', '_m', '_c' etc.
+                  if (hatedId.startsWith(apiId + '_')) return true;
+              }
+              return false;
+          });
+      };
+
+      // --- LEAGUE DETECTION FIX ---
+      // We need to know which leagues to check based on the hated teams.
+      // BUT, because IDs like 'hou' are duplicated in ALL_TEAMS, we need to check ALL potential matches for an ID.
+      const leaguesToCheck = ['NCAA', 'CFB', 'NBA', 'NFL'].filter(league => 
+        enabledLeagues[league] && 
+        hatedTeams.some(teamId => {
+          // FIX: Filter instead of Find to handle duplicate IDs (like 'hou') across leagues
+          const matchingTeams = ALL_TEAMS.filter(at => at.id === teamId);
+          return matchingTeams.some(t => t.league === league);
+        })
+      );
+
+      const results = await Promise.all(leaguesToCheck.map(l => fetchScoreboard(l)));
+      const allGames = results.flat();
+      
+      if (!allGames || allGames.length === 0) {
+        setNoGamesMsg(`No active/completed games found right now.`);
+        setLoading(false);
+        return;
+      }
+
+      const relevantGames = allGames.filter(game => {
+        return isHated(game.homeTeam.id, game.league) || isHated(game.awayTeam.id, game.league);
+      }).map(game => {
+        
+        // We need to find the "Internal Team Object" to get the right colors/names.
+        // We use the same fuzzy logic in reverse.
+        const findInternalTeam = (apiId) => {
+             return ALL_TEAMS.find(t => {
+                 if (t.league !== game.league) return false;
+                 if (t.id === apiId) return true;
+                 if (t.id.startsWith(apiId + '_')) return true;
+                 return false;
+             });
+        };
+
+        const isHomeHated = isHated(game.homeTeam.id, game.league);
+        const hatedTeamObj = isHomeHated ? game.homeTeam : game.awayTeam;
+        const opponentObj = isHomeHated ? game.awayTeam : game.homeTeam;
+        
+        const internalTeam = findInternalTeam(hatedTeamObj.id);
+
+        return {
+          team: internalTeam || { ...hatedTeamObj, color: '#333', name: hatedTeamObj.name, league: game.league }, 
+          opponent: opponentObj.name,
+          teamScore: hatedTeamObj.score,
+          opponentScore: opponentObj.score,
+          status: game.loserId === hatedTeamObj.id ? 'LOST' : (game.isFinal ? 'WON' : 'PLAYING'),
+          gameId: game.gameId,
+          isLive: true,
+          isYesterday: game.isYesterday
+        };
+      });
+
+      setGameResults(relevantGames);
+      
+      const losers = relevantGames.filter(r => r.status === 'LOST');
+      if (losers.length > 0) {
+          triggerNotification();
+      } else {
+          processResults(relevantGames);
+      }
+
+    } catch (err) {
+      console.error(err);
+      setNoGamesMsg("Error fetching data. Try simulating instead.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const triggerNotification = () => {
+      const randomTitle = TEASE_TITLES[Math.floor(Math.random() * TEASE_TITLES.length)];
+      setNotification({
+          title: randomTitle,
+          body: "Tap to view the beautiful details."
+      });
+  };
+
+  const handleNotificationClick = () => {
+      setNotification(null);
+      processResults(gameResults); 
+  };
+
+  const processResults = (results) => {
+    const losers = results.filter(r => r.status === 'LOST');
+    
+    if (losers.length > 0) {
+      triggerCelebration(losers.length);
+    } else if (results.length > 0) {
+      pickHistoricLoss();
+    } else {
+      // Changed message to be less definitive/gaslighting
+      if (!loading && !noGamesMsg) setNoGamesMsg("No active games found for your enemies.");
+    }
+  };
+
+  const pickHistoricLoss = () => {
+    const candidates = hatedTeams.filter(id => HISTORIC_LOSSES[id]);
+    
+    const validFacts = [];
+    candidates.forEach(teamId => {
+      const facts = HISTORIC_LOSSES[teamId];
+      if (facts) {
+        facts.forEach(fact => {
+          if (!hatedTeams.includes(fact.winnerId)) {
+            validFacts.push({ team: ALL_TEAMS.find(t => t.id === teamId), ...fact });
+          }
+        });
+      }
+    });
+
+    if (validFacts.length === 0) {
+      const genericFact = HISTORIC_LOSSES.generic[0];
+      setConsolationFact({ team: { name: "Sports History" }, ...genericFact });
+      return;
+    }
+
+    const randomFact = validFacts[Math.floor(Math.random() * validFacts.length)];
+    setConsolationFact(randomFact);
+  };
+
+  const triggerCelebration = (count) => {
+    const randomMsg = TRASH_TALK[Math.floor(Math.random() * TRASH_TALK.length)];
+    const randomGif = CELEBRATION_GIFS[Math.floor(Math.random() * CELEBRATION_GIFS.length)];
+    
+    setCelebration({ count, message: randomMsg, gif: randomGif });
+    setTimeout(() => setCelebration(null), 8000);
+  };
+
+  const toggleHate = (teamId) => {
+    if (hatedTeams.includes(teamId)) {
+      setHatedTeams(hatedTeams.filter(id => id !== teamId));
+    } else {
+      setHatedTeams([...hatedTeams, teamId]);
+    }
+  };
+
+  const toggleLeague = (leagueCode) => {
+    setEnabledLeagues(prev => ({
+      ...prev,
+      [leagueCode]: !prev[leagueCode]
+    }));
+  };
+
+  const openShareModal = (game) => {
+    // 1. Generate random options from library
+    const newOptions = [
+      { label: "Casual", text: TEMPLATE_LIBRARY.Casual[Math.floor(Math.random() * TEMPLATE_LIBRARY.Casual.length)] },
+      { label: "Receipts", text: TEMPLATE_LIBRARY.Receipts[Math.floor(Math.random() * TEMPLATE_LIBRARY.Receipts.length)] },
+      { label: "Toxic", text: TEMPLATE_LIBRARY.Toxic[Math.floor(Math.random() * TEMPLATE_LIBRARY.Toxic.length)] },
+    ];
+    
+    // 2. Store them in state so they don't change on re-render
+    setShareOptions(newOptions);
+    setShareModal(game);
+  };
+
+  const handleShare = async (text) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'They Lost!',
+          text: text,
+        });
+        setShareModal(null);
+      } catch (err) {
+        console.log('Error sharing:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(text);
+      setShareModal(null);
+      alert("Copied to clipboard: " + text);
+    }
+  };
+
+  const displayResults = gameResults.filter(g => g.status === 'LOST');
+
+  const teamsToManage = ALL_TEAMS
+    .filter(t => t.league === activeLeague)
+    .filter(t => 
+      searchTerm === '' || 
+      t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      t.mascot.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  // --- COMPONENTS ---
+
+  const Confetti = () => {
+    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+    return (
+      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+        {[...Array(50)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute animate-fall"
+            style={{
+              left: `${Math.random() * 100}vw`,
+              top: `-20px`,
+              backgroundColor: colors[Math.floor(Math.random() * colors.length)],
+              width: '10px',
+              height: '10px',
+              animationDuration: `${Math.random() * 3 + 2}s`,
+              animationDelay: `${Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const PushNotification = ({ title, body, onClick }) => (
+    <div 
+        onClick={onClick}
+        className="fixed top-4 left-4 right-4 z-[60] bg-white/95 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-2xl p-3 flex items-center gap-3 cursor-pointer animate-slide-in-top active:scale-95 transition-transform"
+    >
+        <div className="bg-blue-600 p-2 rounded-xl">
+            <Bell size={20} className="text-white" />
+        </div>
+        <div className="flex-1">
+            <h4 className="font-bold text-slate-800 text-sm">{title}</h4>
+            <p className="text-slate-500 text-xs">{body}</p>
+        </div>
+        <div className="text-xs text-slate-300 font-bold">NOW</div>
+    </div>
+  );
+
+  return (
+    <div className={`min-h-screen ${styles.bg} ${styles.font} ${styles.text} max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-slate-200 flex flex-col`}>
+      <style>{`
+        @keyframes fall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        .animate-fall {
+          animation-name: fall;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+        @keyframes slideDownBounce {
+          0% { transform: translateY(-100%); opacity: 0; }
+          60% { transform: translateY(10%); opacity: 1; }
+          80% { transform: translateY(-5%); }
+          100% { transform: translateY(0); opacity: 1; }
+        }
+        .animate-enter-banner {
+          animation: slideDownBounce 0.8s ease-out forwards;
+        }
+        @keyframes slideInTop {
+            0% { transform: translateY(-120%); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-in-top {
+            animation: slideInTop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+      `}</style>
+
+      {/* ONBOARDING MODAL */}
+      {showOnboarding && <Onboarding onComplete={completeOnboarding} currentTheme={activeTheme} />}
+
+      {/* NOTIFICATION OVERLAY */}
+      {notification && (
+          <PushNotification 
+            title={notification.title} 
+            body={notification.body} 
+            onClick={handleNotificationClick} 
+          />
+      )}
+
+      {/* HEADER */}
+      <header className={`p-4 sticky top-0 z-30 ${styles.header}`}>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            {/* Removed container div and explicit text color. It now inherits white from the header. */}
+            <HappyGuyIcon className="text-4xl" />
+            <h1 className="font-black text-xl tracking-tight italic">THEY LOST!</h1>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setView('scoreboard')}
+              className={`p-2 rounded-lg transition hover:opacity-80 ${view === 'scoreboard' ? 'bg-black/20 shadow-inner' : ''}`}
+            >
+              <PartyPopper size={20} />
+            </button>
+            <button 
+              onClick={() => setView('manage')}
+              className={`p-2 rounded-lg transition hover:opacity-80 ${view === 'manage' ? 'bg-black/20 shadow-inner' : ''}`}
+            >
+              <Target size={20} />
+            </button>
+             {/* NEW SETTINGS BUTTON */}
+            <button 
+              onClick={() => setView('settings')}
+              className={`p-2 rounded-lg transition hover:opacity-80 ${view === 'settings' ? 'bg-black/20 shadow-inner' : ''}`}
+            >
+              <Settings size={20} />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* CELEBRATION BANNER */}
+      {celebration && (
+        <>
+          <Confetti />
+          <div className={`p-4 text-center animate-enter-banner shadow-lg relative z-20 shrink-0 ${styles.lossBanner}`}>
+            {celebration.gif && (
+              <div className="w-full mb-3 flex justify-center">
+                <img 
+                  src={celebration.gif} 
+                  alt="Celebration" 
+                  className="max-h-48 w-auto object-contain rounded-lg border-2 border-white/50 shadow-sm"
+                />
+              </div>
+            )}
+            <h2 className="text-xl font-black uppercase tracking-widest leading-none mb-1">IT HAPPENED!</h2>
+            <p className="text-xs font-bold uppercase opacity-90">{celebration.message}</p>
+          </div>
+        </>
+      )}
+
+      {/* SHARE MODAL */}
+      {shareModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-300">
+            <div className="bg-slate-100 p-4 border-b border-slate-200 flex justify-between items-center">
+              <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                <Share2 size={18} />
+                Spread the News
+              </h3>
+              <button onClick={() => setShareModal(null)} className="p-1 hover:bg-slate-200 rounded-full">
+                <X size={20} className="text-slate-500" />
+              </button>
+            </div>
+            <div className="p-4 space-y-3">
+              <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-2">Select your vibe:</p>
+              
+              {/* RENDER DYNAMIC OPTIONS FROM STATE */}
+              {shareOptions.map((option, i) => {
+                
+                let leagueUrl = "https://www.espn.com";
+                if (shareModal.team.league === 'NBA') leagueUrl = `https://www.espn.com/nba/game/_/gameId/${shareModal.gameId}`;
+                else if (shareModal.team.league === 'NFL') leagueUrl = `https://www.espn.com/nfl/game/_/gameId/${shareModal.gameId}`;
+                else if (shareModal.team.league === 'NCAA') leagueUrl = `https://www.espn.com/mens-college-basketball/game/_/gameId/${shareModal.gameId}`;
+                else if (shareModal.team.league === 'CFB') leagueUrl = `https://www.espn.com/college-football/game/_/gameId/${shareModal.gameId}`;
+
+                const filledText = option.text
+                  .replace('[TEAM]', shareModal.team.name)
+                  .replace('[SCORE]', shareModal.teamScore)
+                  .replace('[OPP_SCORE]', shareModal.opponentScore)
+                  .replace('[OPPONENT]', shareModal.opponent)
+                  .replace('[LINK]', leagueUrl);
+                
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handleShare(filledText)}
+                    className="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-green-500 hover:bg-green-50 transition group"
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-xs font-bold text-slate-400 group-hover:text-green-600 uppercase">{option.label}</span>
+                      <Copy size={14} className="text-slate-300 group-hover:text-green-500" />
+                    </div>
+                    <p className="text-sm font-medium text-slate-800 leading-snug">{filledText}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SCROLLABLE CONTENT AREA */}
+      <main className="flex-1 overflow-y-auto p-4 pb-24">
+        
+        {/* --- SCOREBOARD VIEW --- */}
+        {view === 'scoreboard' && (
+          <div className="space-y-6">
+            
+            {/* CONTROLS */}
+            <div className={`p-5 text-center ${styles.card}`}>
+              <p className={`text-sm mb-4 opacity-70 ${styles.text}`}>
+                Tracking <strong>{hatedTeams.length}</strong> enemies
+              </p>
+              
+              <div className="flex gap-2">
+                <button 
+                  onClick={simulateGames}
+                  className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition ${styles.buttonSecondary}`}
+                >
+                  <RefreshCw size={18} />
+                  Simulate
+                </button>
+                <button 
+                  onClick={checkLiveScores}
+                  disabled={loading}
+                  className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition disabled:opacity-50 ${styles.buttonPrimary}`}
+                >
+                  {loading ? <RefreshCw className="animate-spin" size={18} /> : <Globe size={18} />}
+                  Check Live
+                </button>
+              </div>
+              <p className="text-[10px] opacity-50 mt-3 uppercase tracking-widest font-bold">
+                {loading ? "Checking ESPN..." : "Tap simulate for instant joy"}
+              </p>
+            </div>
+
+            {/* RESULTS LIST */}
+            <div className="space-y-4">
+              {noGamesMsg && (
+                <div className={`text-center py-8 rounded-xl border ${styles.card} opacity-80`}>
+                  <p className="text-sm font-medium">{noGamesMsg}</p>
+                </div>
+              )}
+
+              {/* STATE: No games run yet */}
+              {!noGamesMsg && gameResults.length === 0 && (
+                <div className="text-center py-12 px-6">
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${styles.accentBg}`}>
+                    <RefreshCw className={styles.accent} size={24} />
+                  </div>
+                  <h3 className={`font-bold text-lg ${styles.text}`}>No Scores Yet</h3>
+                  <p className="opacity-60 text-sm mt-1">Tap a button above to check on your enemies.</p>
+                </div>
+              )}
+
+              {/* STATE: Games run, but EVERYONE WON (Gross) + Consolation Fact */}
+              {gameResults.length > 0 && displayResults.length === 0 && (
+                <div className={`text-center py-8 px-5 ${styles.card} border-dashed`}>
+                  <div className="mb-6">
+                    {gameResults.some(g => g.status === 'PLAYING') ? (
+                        <>
+                            <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse">
+                                <Activity className="text-yellow-600" size={24} />
+                            </div>
+                            <h3 className="text-slate-800 font-bold text-lg">One or more enemies are active right now...</h3>
+                            <p className="text-slate-500 text-xs mt-1">We are monitoring the situation. Stand by.</p>
+                        </>
+                    ) : (
+                        <>
+                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <AlertTriangle className="text-red-500" size={24} />
+                            </div>
+                            <h3 className="text-slate-800 font-bold text-lg">Nobody you hate lost today (yet).</h3>
+                            <p className="text-slate-500 text-xs mt-1">We'll keep watching.</p>
+                        </>
+                    )}
+                  </div>
+
+                  {consolationFact && (
+                    <div className={`${styles.accentBg} border-2 border-current rounded-xl p-5 relative shadow-sm text-left rotate-1 transition hover:rotate-0`}>
+                      <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${styles.header}`}>
+                        <History size={10} /> History Lesson
+                      </div>
+                      
+                      <div className="mb-2 border-b border-current/20 pb-2">
+                        {/* UPDATED: Dynamic header prefix based on data 'intro' field */}
+                        <span className="text-xs font-bold opacity-80 uppercase">
+                          {consolationFact.intro || "Remember when"} {consolationFact.headline}?
+                        </span>
+                      </div>
+                      
+                      <h4 className="font-black text-lg mb-1">{consolationFact.score}</h4>
+                      <p className="text-xs font-bold opacity-60 mb-3 uppercase">{consolationFact.date}</p>
+                      <p className="text-sm font-medium leading-relaxed opacity-90">{consolationFact.desc}</p>
+                    </div>
+                  )}
+
+                  <p className="text-[10px] opacity-50 mt-6 uppercase tracking-widest font-bold">Try simulating again</p>
+                </div>
+              )}
+
+              {/* STATE: Happy Times (Losses Displayed) */}
+              {displayResults.map((game, idx) => (
+                <div 
+                  key={idx} 
+                  className={`relative overflow-hidden transition-all duration-500 animate-in slide-in-from-bottom-5 ${styles.card} ${styles.cardBorder}`}
+                >
+                  {/* Result Header */}
+                  <div className={`p-2 text-center text-[10px] font-black uppercase tracking-widest flex justify-center items-center gap-2 ${
+                     game.isYesterday ? 'bg-slate-200 text-slate-600' : styles.lossBanner
+                  }`}>
+                    {game.isYesterday && <History size={12} />} 
+                    {game.status === 'LOST' ? 'THEY LOST!' : 'SCORES'} 
+                    {game.isYesterday && <span className="opacity-75 ml-1">(YESTERDAY)</span>}
+                    {!game.isYesterday && <PartyPopper size={12} />}
+                    {!game.isYesterday && <PartyPopper size={12} />}
+                  </div>
+
+                  <div className="p-5 flex justify-between items-center">
+                    {/* Hated Team */}
+                    <div className="flex flex-col items-center w-1/3">
+                      <div 
+                        className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-sm mb-2 shadow-md border-2 border-white ring-1 ring-slate-100"
+                        style={{ backgroundColor: game.team.color }}
+                      >
+                        {game.team.id.substring(0,3).toUpperCase()}
+                      </div>
+                      <span className={`font-bold leading-tight text-center text-sm ${styles.text}`}>{game.team.name}</span>
+                      <span className="text-[10px] font-bold opacity-50 uppercase tracking-wider">{game.team.league}</span>
+                      <span className="text-3xl font-black mt-1 text-red-500">
+                        {game.teamScore}
+                      </span>
+                    </div>
+
+                    <div className="text-slate-300 font-black text-xl italic opacity-50">VS</div>
+
+                    {/* Opponent */}
+                    <div className="flex flex-col items-center w-1/3 opacity-80">
+                      <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs mb-2 border-2 border-white">
+                        OPP
+                      </div>
+                      <span className="font-medium text-slate-600 text-xs leading-tight text-center uppercase tracking-wide">{game.opponent}</span>
+                      <span className="text-3xl font-bold mt-1 text-slate-500">{game.opponentScore}</span>
+                    </div>
+                  </div>
+
+                  {/* Action Bar */}
+                  <div className={`p-3 flex gap-2 border-t ${activeTheme === 'retro' ? 'border-black' : 'border-slate-100 bg-slate-50'}`}>
+                    <button 
+                      onClick={() => openShareModal(game)}
+                      className={`flex-1 text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-sm ${styles.buttonPrimary}`}
+                    >
+                      <Share2 size={16} />
+                      Rub It In
+                    </button>
+                    <a 
+                      href={
+                        game.team.league === 'NBA' ? `https://www.espn.com/nba/game/_/gameId/${game.gameId}` :
+                        game.team.league === 'NFL' ? `https://www.espn.com/nfl/game/_/gameId/${game.gameId}` :
+                        game.team.league === 'CFB' ? `https://www.espn.com/college-football/game/_/gameId/${game.gameId}` :
+                        `https://www.espn.com/mens-college-basketball/game/_/gameId/${game.gameId}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex-1 text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-sm ${styles.buttonSecondary}`}
+                    >
+                      <ExternalLink size={16} />
+                      View Story
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* --- MANAGE VIEW --- */}
+        {view === 'manage' && (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className={`p-5 ${styles.card} ${styles.cardBorder}`}>
+              <h2 className={`font-bold text-lg mb-4 flex items-center gap-2 ${styles.text}`}>
+                <AlertTriangle className={styles.accent} size={20} />
+                Manage Your Enemies
+              </h2>
+
+              {/* League Tabs - FILTERED BY SETTINGS */}
+              <div className={`flex gap-1 mb-4 p-1 rounded-lg overflow-x-auto ${activeTheme === 'retro' ? 'bg-black' : 'bg-slate-100'}`}>
+                {['NCAA', 'CFB', 'NFL', 'NBA'].filter(l => enabledLeagues[l]).map(league => (
+                  <button
+                    key={league}
+                    onClick={() => {
+                        setActiveLeague(league);
+                        setSearchTerm('');
+                    }}
+                    className={`flex-1 py-1.5 px-3 text-xs font-bold rounded-md transition whitespace-nowrap ${
+                      activeLeague === league 
+                        ? 'bg-white text-black shadow-sm' 
+                        : 'text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    {league === 'NCAA' ? 'NCAA BB' : league}
+                  </button>
+                ))}
+              </div>
+
+               {/* Search Input */}
+               <div className="relative mb-4">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search size={16} className="opacity-40" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={`Search ${activeLeague === 'NCAA' ? 'NCAA BB' : activeLeague} teams...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 bg-transparent ${styles.text} border-current/20`}
+                />
+              </div>
+
+              <div className="space-y-2">
+                {teamsToManage.length === 0 ? (
+                    <div className="text-center opacity-50 py-8 text-sm">
+                        No teams found. Try a different search.
+                    </div>
+                ) : (
+                    teamsToManage.map(team => {
+                    const isHated = hatedTeams.includes(team.id);
+                    return (
+                        <button
+                        key={team.id}
+                        onClick={() => toggleHate(team.id)}
+                        className={`w-full p-3 rounded-xl flex items-center justify-between border transition group ${
+                            isHated 
+                            ? `border-red-500 ${styles.accentBg} ${styles.text}` 
+                            : `border-transparent hover:border-current/10 hover:bg-black/5`
+                        }`}
+                        >
+                        <div className="flex items-center gap-3">
+                            <div 
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm"
+                            style={{ backgroundColor: team.color }}
+                            >
+                            {team.id.substring(0,3).toUpperCase()}
+                            </div>
+                            <div className="text-left">
+                            <div className={`font-bold text-sm ${styles.text}`}>{team.name}</div>
+                            <div className="text-[10px] font-bold opacity-60 uppercase tracking-wider">{team.conf}</div>
+                            </div>
+                        </div>
+                        {isHated ? (
+                            <div className={`p-2 rounded-full shadow-sm ${styles.accent}`}>
+                            <Target size={16} />
+                            </div>
+                        ) : (
+                            <div className="text-[10px] font-bold opacity-50 px-3 py-1.5 rounded-full bg-black/5">
+                            <Target size={16} />
+                            </div>
+                        )}
+                        </button>
+                    );
+                    })
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- SETTINGS VIEW --- */}
+        {view === 'settings' && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className={`p-5 ${styles.card} ${styles.cardBorder}`}>
+                    <h2 className={`font-bold text-lg mb-6 flex items-center gap-2 ${styles.text}`}>
+                        <Settings className={styles.accent} size={20} />
+                        Settings
+                    </h2>
+
+                    {/* SECTION: SPORTS TO TRACK */}
+                    <div className="mb-8">
+                        <h3 className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 flex items-center gap-1">
+                            <Globe size={12} /> Sports to Track
+                        </h3>
+                        <div className="space-y-2">
+                            {[
+                                { id: 'NCAA', label: 'NCAA Basketball' },
+                                { id: 'CFB', label: 'NCAA Football' },
+                                { id: 'NBA', label: 'NBA' },
+                                { id: 'NFL', label: 'NFL' }
+                            ].map(sport => (
+                                <div key={sport.id} className="flex justify-between items-center p-3 rounded-lg border border-current/10">
+                                    <span className={`text-sm font-medium ${!enabledLeagues[sport.id] && 'opacity-50'}`}>{sport.label}</span>
+                                    <button 
+                                        onClick={() => toggleLeague(sport.id)}
+                                        className={`text-2xl transition-colors ${enabledLeagues[sport.id] ? 'text-green-500' : 'text-slate-300'}`}
+                                    >
+                                        {enabledLeagues[sport.id] ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* SECTION: APPEARANCE */}
+                    <div className="mb-8">
+                        <h3 className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 flex items-center gap-1">
+                            <Palette size={12} /> Appearance
+                        </h3>
+                        <div className="space-y-3">
+                            <p className={`text-sm mb-2 opacity-80 ${styles.text}`}>Choose your vibe:</p>
+                            <div className="grid grid-cols-1 gap-2">
+                                {Object.keys(THEMES).map(key => (
+                                <button
+                                    key={key}
+                                    onClick={() => setActiveTheme(key)}
+                                    className={`w-full p-3 text-sm font-bold rounded-lg border-2 transition-all flex items-center justify-between ${
+                                    activeTheme === key 
+                                        ? 'border-current opacity-100 ring-1 ring-current' 
+                                        : 'border-transparent opacity-60 hover:opacity-100 hover:bg-black/5'
+                                    }`}
+                                    style={{ 
+                                        backgroundColor: THEMES[key].bg === 'bg-slate-950' ? '#0f172a' : (THEMES[key].bg === 'bg-emerald-50' ? '#ecfdf5' : '#f1f5f9'), 
+                                        color: THEMES[key].name === 'Midnight' ? '#fff' : '#000' 
+                                    }}
+                                >
+                                    <span>{THEMES[key].name}</span>
+                                    {activeTheme === key && <div className="w-2 h-2 rounded-full bg-green-500"></div>}
+                                </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="text-center pt-4 border-t border-current/10">
+                        <p className="text-[10px] opacity-40">THEY LOST v0.9.5 (Beta)</p>
+                        <p className="text-[10px] opacity-40">Built for Haters, by Haters.</p>
+                        {/* Reset Onboarding Button */}
+                        <button 
+                            onClick={() => {
+                                localStorage.removeItem('tl_onboarded');
+                                window.location.reload();
+                            }}
+                            className="mt-4 text-xs font-bold text-red-400 hover:text-red-500 flex items-center justify-center gap-1 mx-auto"
+                        >
+                            <LogOut size={10} /> Reset Onboarding
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        )}
+
+      </main>
+
+      {/* Tab Bar */}
+      <nav className={`shrink-0 flex justify-around p-3 pb-8 z-30 text-[10px] font-bold tracking-widest uppercase ${styles.nav}`}>
+        <button 
+          onClick={() => setView('scoreboard')}
+          className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition w-20 ${view === 'scoreboard' ? styles.navActive : styles.navInactive}`}
+        >
+          <PartyPopper size={22} strokeWidth={view === 'scoreboard' ? 2.5 : 2} />
+          <span>Scores</span>
+        </button>
+        <button 
+          onClick={() => setView('manage')}
+          className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition w-20 ${view === 'manage' ? styles.navActive : styles.navInactive}`}
+        >
+          <Target size={22} strokeWidth={view === 'manage' ? 2.5 : 2} />
+          <span>Enemies</span>
+        </button>
+        <button 
+          onClick={() => setView('settings')}
+          className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition w-20 ${view === 'settings' ? styles.navActive : styles.navInactive}`}
+        >
+          <Settings size={22} strokeWidth={view === 'settings' ? 2.5 : 2} />
+          <span>Settings</span>
+        </button>
+      </nav>
+
+    </div>
+  );
+}
