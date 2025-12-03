@@ -409,12 +409,30 @@ const HISTORIC_LOSSES = {
 };
 
 const CELEBRATION_GIFS = [
+  "https://media.giphy.com/media/blSTtZemaWgPQ/giphy.gif",
   "https://media.giphy.com/media/UO5elnTqo4vSg/giphy.gif",
+  "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
+  "https://media.giphy.com/media/l46CimW38a7EQxMcM/giphy.gif",
   "https://media.giphy.com/media/HhBea19lrGaJO/giphy.gif",
+  "https://media.giphy.com/media/26u4cqiYI30juCOk0/giphy.gif",
   "https://media.giphy.com/media/P7JmDW7IkB7TW/giphy.gif",
   "https://media.giphy.com/media/pa37AAGzKXoek/giphy.gif",
+  "https://media.giphy.com/media/lu38au6O3SEj6/giphy.gif",
+  "https://media.giphy.com/media/BPJmthQ3YRwD6/giphy.gif",
+  "https://media.giphy.com/media/cO39srN2EUIRaVqaVq/giphy.gif",
+  "https://media.giphy.com/media/xl5QdxfNonh3q/giphy.gif",
   "https://media.giphy.com/media/BFYLNwlsSNtcc/giphy.gif",
+  "https://media.giphy.com/media/10hzvF9FTulLxK/giphy.gif",
+  "https://media.giphy.com/media/HUHf3QyX7OXxm/giphy.gif",
+  "https://media.giphy.com/media/j0eRJzyW7XjMpx1Tlx/giphy.gif",
+  "https://media.giphy.com/media/l4Jz3a8jO92crUlWM/giphy.gif",
+  "https://media.giphy.com/media/nNxT5qXR02FOM/giphy.gif",
+  "https://media.giphy.com/media/l0HlCqV35hdEg2LSM/giphy.gif",
+  "https://media.giphy.com/media/ebAfdhOr5mn0LG1mme/giphy.gif",
+  "https://media.giphy.com/media/gtakVlnStZUbe/giphy.gif",
+  "https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif",
   "https://media.giphy.com/media/l3V0lsGtTMSB5YNgc/giphy.gif",
+  "https://media.giphy.com/media/Is1O1TWV0LEJi/giphy.gif",
   "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
@@ -675,7 +693,7 @@ export default function App() {
   });
 
   // --- PERSISTENT ENEMIES STATE ---
-  // FIXED: Removed hardcoded defaults. Now starts empty or loads from storage.
+  // Initialize from localStorage if available, otherwise default to empty array
   const [hatedTeams, setHatedTeams] = useState(() => {
     const saved = localStorage.getItem('tl_hated_teams');
     return saved ? JSON.parse(saved) : [];
