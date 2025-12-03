@@ -409,6 +409,12 @@ const HISTORIC_LOSSES = {
 };
 
 const CELEBRATION_GIFS = [
+  "https://media.giphy.com/media/UO5elnTqo4vSg/giphy.gif",
+  "https://media.giphy.com/media/HhBea19lrGaJO/giphy.gif",
+  "https://media.giphy.com/media/P7JmDW7IkB7TW/giphy.gif",
+  "https://media.giphy.com/media/pa37AAGzKXoek/giphy.gif",
+  "https://media.giphy.com/media/BFYLNwlsSNtcc/giphy.gif",
+  "https://media.giphy.com/media/l3V0lsGtTMSB5YNgc/giphy.gif",
   "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
@@ -493,13 +499,6 @@ const TEASE_TITLES = [
   "Not surprised, but...",
   "Heh heh. Guess who lost...",
   "Pure joy awaits inside."
-];
-
-const SHARE_TEMPLATES = [
-  { label: "Casual", text: "So... [TEAM] lost [SCORE]-[OPP_SCORE]. Hate to see it. 😬 [LINK]" },
-  { label: "Receipts", text: "FINAL: [TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. See for yourself: [LINK]" },
-  { label: "Toxic", text: "IMAGINE LOSING [SCORE]-[OPP_SCORE] TO [OPPONENT]. [TEAM] DOWN BAD. 📉🤡 [LINK]" },
-  { label: "Philosophical", text: "The universe tends towards justice. [TEAM] losing [SCORE]-[OPP_SCORE] is proof. [LINK]" }
 ];
 
 // --- UPDATED: Dynamic Template Library ---
@@ -675,13 +674,13 @@ export default function App() {
     NFL: true
   });
 
-  // Updated defaults with your new curated list of enemies
-  const [hatedTeams, setHatedTeams] = useState([
-    'bos', 'hou', 'dal_m', 'lac_c',  // NBA
-    'det', 'min', 'gb', 'sf', 'pit', // NFL
-    'duke', 'mich', 'ncst', 'stj',    // NCAA Basketball
-    'nd', 'ncst_fb', 'duke_fb', 'ala_fb', 'mich_fb' // CFB: Updated defaults
-  ]);
+  // --- PERSISTENT ENEMIES STATE ---
+  // FIXED: Removed hardcoded defaults. Now starts empty or loads from storage.
+  const [hatedTeams, setHatedTeams] = useState(() => {
+    const saved = localStorage.getItem('tl_hated_teams');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [gameResults, setGameResults] = useState([]);
   const [celebration, setCelebration] = useState(null);
   const [shareModal, setShareModal] = useState(null);
@@ -689,6 +688,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [noGamesMsg, setNoGamesMsg] = useState(null);
+  // Removed internal notification state
   
   // NEW STATE FOR SHARE OPTIONS
   const [shareOptions, setShareOptions] = useState([]);
@@ -708,6 +708,11 @@ export default function App() {
   useEffect(() => {
     checkLiveScores();
   }, []); 
+
+  // Persist hatedTeams to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('tl_hated_teams', JSON.stringify(hatedTeams));
+  }, [hatedTeams]);
 
   const completeOnboarding = () => {
       localStorage.setItem('tl_onboarded', 'true');
@@ -736,6 +741,14 @@ export default function App() {
     setGameResults([]);
     
     try {
+      const liveData = await fetchScoreboard(activeLeague);
+      
+      if (!liveData || liveData.length === 0) {
+        setNoGamesMsg(`No active/completed ${activeLeague} games found right now.`);
+        setLoading(false);
+        return;
+      }
+
       // --- NEW FUZZY MATCH LOGIC ---
       const isHated = (apiId, gameLeague) => {
           return hatedTeams.some(hatedId => {
@@ -1034,6 +1047,9 @@ export default function App() {
       {/* ONBOARDING MODAL */}
       {showOnboarding && <Onboarding onComplete={completeOnboarding} currentTheme={activeTheme} />}
 
+      {/* NOTIFICATION OVERLAY */}
+      {/* Notification component removed to fix reference errors */}
+
       {/* HEADER */}
       <header className={`p-4 sticky top-0 z-30 ${styles.header}`}>
         <div className="flex justify-between items-center">
@@ -1154,151 +1170,172 @@ export default function App() {
           <div className="space-y-6">
             
             {/* CONTROLS SECTION REMOVED */}
-
-            {/* RESULTS LIST */}
-            <div className="space-y-4">
-              {noGamesMsg && (
-                <div className={`text-center py-8 rounded-xl border ${styles.card} opacity-80`}>
-                  <p className="text-sm font-medium">{noGamesMsg}</p>
-                </div>
-              )}
-
-              {/* STATE: No games run yet */}
-              {!noGamesMsg && gameResults.length === 0 && (
-                <div className="text-center py-12 px-6">
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${styles.accentBg}`}>
-                    <RefreshCw className={styles.accent} size={24} />
-                  </div>
-                  <h3 className={`font-bold text-lg ${styles.text}`}>No Scores Yet</h3>
-                  <p className="opacity-60 text-sm mt-1">Checking scores...</p>
-                </div>
-              )}
-
-              {/* STATE: Games run, but EVERYONE WON (Gross) + Consolation Fact */}
-              {gameResults.length > 0 && displayResults.length === 0 && (
-                <div className={`text-center py-8 px-5 ${styles.card} border-dashed`}>
-                  <div className="mb-6">
-                    {gameResults.some(g => g.status === 'PLAYING') ? (
-                        <>
-                            <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse">
-                                <Activity className="text-yellow-600" size={24} />
-                            </div>
-                            <h3 className="text-slate-800 font-bold text-lg">One or more enemies are active right now...</h3>
-                            <p className="text-slate-500 text-xs mt-1">We are monitoring the situation. Stand by.</p>
-                        </>
-                    ) : (
-                        <>
-                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <AlertTriangle className="text-red-500" size={24} />
-                            </div>
-                            <h3 className="text-slate-800 font-bold text-lg">Nobody you hate lost today (yet).</h3>
-                            <p className="text-slate-500 text-xs mt-1">We'll keep watching.</p>
-                        </>
-                    )}
-                  </div>
-
-                  {consolationFact && (
-                    <div className={`${styles.accentBg} border-2 border-current rounded-xl p-5 relative shadow-sm text-left rotate-1 transition hover:rotate-0`}>
-                      <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${styles.header}`}>
-                        <History size={10} /> History Lesson
-                      </div>
-                      
-                      <div className="mb-2 border-b border-current/20 pb-2">
-                        {/* UPDATED: Dynamic header prefix based on data 'intro' field */}
-                        <span className="text-xs font-bold opacity-80 uppercase">
-                          {consolationFact.intro || "Remember when"} {consolationFact.headline}?
-                        </span>
-                      </div>
-                      
-                      <h4 className="font-black text-lg mb-1">{consolationFact.score}</h4>
-                      <p className="text-xs font-bold opacity-60 mb-3 uppercase">{consolationFact.date}</p>
-                      <p className="text-sm font-medium leading-relaxed opacity-90">{consolationFact.desc}</p>
-                    </div>
-                  )}
-
-                  <p className="text-[10px] opacity-50 mt-6 uppercase tracking-widest font-bold">Try simulating again</p>
-                </div>
-              )}
-
-              {/* STATE: Happy Times (Losses Displayed) */}
-              {displayResults.map((game, idx) => (
-                <div 
-                  key={idx} 
-                  className={`relative overflow-hidden transition-all duration-500 animate-in slide-in-from-bottom-5 ${styles.card} ${styles.cardBorder}`}
-                >
-                  {/* Result Header */}
-                  <div className={`p-2 text-center text-[10px] font-black uppercase tracking-widest flex justify-center items-center gap-2 ${
-                     game.isYesterday ? 'bg-slate-200 text-slate-600' : styles.lossBanner
-                  }`}>
-                    {game.isYesterday && <History size={12} />} 
-                    {game.status === 'LOST' ? 'THEY LOST!' : 'SCORES'} 
-                    {game.isYesterday && <span className="opacity-75 ml-1">(YESTERDAY)</span>}
-                    {!game.isYesterday && <PartyPopper size={12} />}
-                    {!game.isYesterday && <PartyPopper size={12} />}
-                  </div>
-
-                  <div className="p-5 flex justify-between items-center">
-                    {/* Hated Team */}
-                    <div className="flex flex-col items-center w-1/3">
-                      <div 
-                        className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-sm mb-2 shadow-md border-2 border-white ring-1 ring-slate-100"
-                        style={{ backgroundColor: game.team.color }}
-                      >
-                        {game.team.id.substring(0,3).toUpperCase()}
-                      </div>
-                      <span className={`font-bold leading-tight text-center text-sm ${styles.text}`}>{game.team.name}</span>
-                      <span className="text-[10px] font-bold opacity-50 uppercase tracking-wider">{game.team.league}</span>
-                      <span className="text-3xl font-black mt-1 text-red-500">
-                        {game.teamScore}
-                      </span>
-                    </div>
-
-                    <div className="text-slate-300 font-black text-xl italic opacity-50">VS</div>
-
-                    {/* Opponent */}
-                    <div className="flex flex-col items-center w-1/3 opacity-80">
-                      <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs mb-2 border-2 border-white">
-                        OPP
-                      </div>
-                      <span className="font-medium text-slate-600 text-xs leading-tight text-center uppercase tracking-wide">{game.opponent}</span>
-                      <span className="text-3xl font-bold mt-1 text-slate-500">{game.opponentScore}</span>
-                    </div>
-                  </div>
-
-                  {/* Action Bar */}
-                  <div className={`p-3 flex gap-2 border-t ${activeTheme === 'retro' ? 'border-black' : 'border-slate-100 bg-slate-50'}`}>
-                    <button 
-                      onClick={() => openShareModal(game)}
-                      className={`flex-1 text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-sm ${styles.buttonPrimary}`}
-                    >
-                      <Share2 size={16} />
-                      Rub It In
-                    </button>
-                    <a 
-                      href={
-                        game.team.league === 'NBA' ? `https://www.espn.com/nba/game/_/gameId/${game.gameId}` :
-                        game.team.league === 'NFL' ? `https://www.espn.com/nfl/game/_/gameId/${game.gameId}` :
-                        game.team.league === 'CFB' ? `https://www.espn.com/college-football/game/_/gameId/${game.gameId}` :
-                        `https://www.espn.com/mens-college-basketball/game/_/gameId/${game.gameId}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`flex-1 text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-sm ${styles.buttonSecondary}`}
-                    >
-                      <ExternalLink size={16} />
-                      View Story
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* FOOTER: TRACKING COUNT (Moved to bottom of list) */}
-            <div className="text-center pt-8 pb-4 opacity-40">
+             {/* FOOTER: TRACKING COUNT */}
+            <div className="text-center pt-4 pb-2 opacity-40">
                <p className="text-xs font-bold tracking-widest uppercase">
                  Tracking {hatedTeams.length} Enemies
                </p>
             </div>
+
+            {/* RESULTS LIST */}
+            <div className="space-y-4">
+               {/* EMPTY STATE CHECK */}
+               {hatedTeams.length === 0 ? (
+                   <div className="text-center py-12 px-6 animate-in fade-in duration-500">
+                       <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-slate-100`}>
+                            <Target className="text-slate-300" size={40} />
+                       </div>
+                       <h3 className="text-xl font-black mb-2 text-slate-800">Peaceful... too peaceful.</h3>
+                       <p className="text-slate-500 mb-8 text-sm">You have no enemies yet. That sounds boring.</p>
+                       <button 
+                         onClick={() => setView('manage')}
+                         className={`px-6 py-3 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-transform ${styles.buttonPrimary}`}
+                       >
+                         Pick Your Enemies
+                       </button>
+                   </div>
+               ) : (
+                 <>
+                  {noGamesMsg && (
+                    <div className={`text-center py-8 rounded-xl border ${styles.card} opacity-80`}>
+                      <p className="text-sm font-medium">{noGamesMsg}</p>
+                    </div>
+                  )}
+
+                  {/* STATE: No games run yet */}
+                  {!noGamesMsg && gameResults.length === 0 && (
+                    <div className="text-center py-12 px-6">
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${styles.accentBg}`}>
+                        <RefreshCw className={styles.accent} size={24} />
+                      </div>
+                      <h3 className={`font-bold text-lg ${styles.text}`}>No Scores Yet</h3>
+                      <p className="opacity-60 text-sm mt-1">Checking scores...</p>
+                    </div>
+                  )}
+
+                  {/* STATE: Games run, but EVERYONE WON (Gross) + Consolation Fact */}
+                  {gameResults.length > 0 && displayResults.length === 0 && (
+                    <div className={`text-center py-8 px-5 ${styles.card} border-dashed`}>
+                      <div className="mb-6">
+                        {gameResults.some(g => g.status === 'PLAYING') ? (
+                            <>
+                                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse">
+                                    <Activity className="text-yellow-600" size={24} />
+                                </div>
+                                <h3 className="text-slate-800 font-bold text-lg">One or more enemies are active right now...</h3>
+                                <p className="text-slate-500 text-xs mt-1">We are monitoring the situation. Stand by.</p>
+                            </>
+                        ) : (
+                            <>
+                                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <AlertTriangle className="text-red-500" size={24} />
+                                </div>
+                                <h3 className="text-slate-800 font-bold text-lg">Nobody you hate lost today (yet).</h3>
+                                <p className="text-slate-500 text-xs mt-1">We'll keep watching.</p>
+                            </>
+                        )}
+                      </div>
+
+                      {consolationFact && (
+                        <div className={`${styles.accentBg} border-2 border-current rounded-xl p-5 relative shadow-sm text-left rotate-1 transition hover:rotate-0`}>
+                          <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${styles.header}`}>
+                            <History size={10} /> History Lesson
+                          </div>
+                          
+                          <div className="mb-2 border-b border-current/20 pb-2">
+                            {/* UPDATED: Dynamic header prefix based on data 'intro' field */}
+                            <span className="text-xs font-bold opacity-80 uppercase">
+                              {consolationFact.intro || "Remember when"} {consolationFact.headline}?
+                            </span>
+                          </div>
+                          
+                          <h4 className="font-black text-lg mb-1">{consolationFact.score}</h4>
+                          <p className="text-xs font-bold opacity-60 mb-3 uppercase">{consolationFact.date}</p>
+                          <p className="text-sm font-medium leading-relaxed opacity-90">{consolationFact.desc}</p>
+                        </div>
+                      )}
+
+                      <p className="text-[10px] opacity-50 mt-6 uppercase tracking-widest font-bold">Try simulating again</p>
+                    </div>
+                  )}
+
+                  {/* STATE: Happy Times (Losses Displayed) */}
+                  {displayResults.map((game, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`relative overflow-hidden transition-all duration-500 animate-in slide-in-from-bottom-5 ${styles.card} ${styles.cardBorder}`}
+                    >
+                      {/* Result Header */}
+                      <div className={`p-2 text-center text-[10px] font-black uppercase tracking-widest flex justify-center items-center gap-2 ${
+                        game.isYesterday ? 'bg-slate-200 text-slate-600' : styles.lossBanner
+                      }`}>
+                        {game.isYesterday && <History size={12} />} 
+                        {game.status === 'LOST' ? 'THEY LOST!' : 'SCORES'} 
+                        {game.isYesterday && <span className="opacity-75 ml-1">(YESTERDAY)</span>}
+                        {!game.isYesterday && <PartyPopper size={12} />}
+                        {!game.isYesterday && <PartyPopper size={12} />}
+                      </div>
+
+                      <div className="p-5 flex justify-between items-center">
+                        {/* Hated Team */}
+                        <div className="flex flex-col items-center w-1/3">
+                          <div 
+                            className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-sm mb-2 shadow-md border-2 border-white ring-1 ring-slate-100"
+                            style={{ backgroundColor: game.team.color }}
+                          >
+                            {game.team.id.substring(0,3).toUpperCase()}
+                          </div>
+                          <span className={`font-bold leading-tight text-center text-sm ${styles.text}`}>{game.team.name}</span>
+                          <span className="text-[10px] font-bold opacity-50 uppercase tracking-wider">{game.team.league}</span>
+                          <span className="text-3xl font-black mt-1 text-red-500">
+                            {game.teamScore}
+                          </span>
+                        </div>
+
+                        <div className="text-slate-300 font-black text-xl italic opacity-50">VS</div>
+
+                        {/* Opponent */}
+                        <div className="flex flex-col items-center w-1/3 opacity-80">
+                          <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs mb-2 border-2 border-white">
+                            OPP
+                          </div>
+                          <span className="font-medium text-slate-600 text-xs leading-tight text-center uppercase tracking-wide">{game.opponent}</span>
+                          <span className="text-3xl font-bold mt-1 text-slate-500">{game.opponentScore}</span>
+                        </div>
+                      </div>
+
+                      {/* Action Bar */}
+                      <div className={`p-3 flex gap-2 border-t ${activeTheme === 'retro' ? 'border-black' : 'border-slate-100 bg-slate-50'}`}>
+                        <button 
+                          onClick={() => openShareModal(game)}
+                          className={`flex-1 text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-sm ${styles.buttonPrimary}`}
+                        >
+                          <Share2 size={16} />
+                          Rub It In
+                        </button>
+                        <a 
+                          href={
+                            game.team.league === 'NBA' ? `https://www.espn.com/nba/game/_/gameId/${game.gameId}` :
+                            game.team.league === 'NFL' ? `https://www.espn.com/nfl/game/_/gameId/${game.gameId}` :
+                            game.team.league === 'CFB' ? `https://www.espn.com/college-football/game/_/gameId/${game.gameId}` :
+                            `https://www.espn.com/mens-college-basketball/game/_/gameId/${game.gameId}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`flex-1 text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-sm ${styles.buttonSecondary}`}
+                        >
+                          <ExternalLink size={16} />
+                          View Story
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                  </>
+               )}
+
+            </div>
+            
+           
 
           </div>
         )}
