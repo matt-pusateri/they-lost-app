@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, AlertTriangle, RefreshCw, Share2, Plus, Trash2, X, Copy, PartyPopper, History, Filter, Search, Globe, Bell, ExternalLink, Palette, Settings, ToggleLeft, ToggleRight, Target, ChevronRight, Check, Activity, LogOut } from 'lucide-react';
+import { Trophy, AlertTriangle, RefreshCw, Share2, Plus, Trash2, X, Copy, PartyPopper, History, Filter, Search, Globe, Bell, ExternalLink, Palette, Settings, ToggleLeft, ToggleRight, Target, ChevronRight, Check, Activity, LogOut, Clock } from 'lucide-react';
+
+// --- FIREBASE INTEGRATION (See comments for Production usage) ---
+
+// [PRODUCTION STEP]: In your real app, delete this dummy function and uncomment the import below:
+// import { requestNotificationPermission } from './firebase';
+
+const requestNotificationPermission = async () => {
+  console.log("Simulating Notification Request (Preview Mode)");
+  return "demo-token";
+};
 
 // --- THEME CONFIGURATION ---
 const THEMES = {
@@ -67,7 +77,8 @@ const LEAGUE_MAP = {
   'NCAA': 'basketball/mens-college-basketball',
   'CFB': 'football/college-football', 
   'NBA': 'basketball/nba',
-  'NFL': 'football/nfl'
+  'NFL': 'football/nfl',
+  'MLB': 'baseball/mlb'
 };
 
 const getYYYYMMDD = (date) => {
@@ -90,7 +101,7 @@ const processESPNData = (data, league) => {
 
   return data.events.filter(event => {
     // Filter logic:
-    if (league === 'NBA' || league === 'NCAA') return true;
+    if (league === 'NBA' || league === 'NCAA' || league === 'MLB') return true;
     const gameDate = new Date(event.date);
     return gameDate >= lookbackWindow;
   }).map(event => {
@@ -105,13 +116,20 @@ const processESPNData = (data, league) => {
     // -----------------------------
 
     const isFinal = event.status.type.completed;
+    const isPreGame = event.status.type.state === 'pre'; // Check if game hasn't started
+    
     const homeScore = parseInt(home.score || '0');
     const awayScore = parseInt(away.score || '0');
     
     let loserId = null;
+    let status = 'UPCOMING'; // Default to upcoming
+
     if (isFinal) {
       if (homeScore < awayScore) loserId = home.team.abbreviation.toLowerCase();
       else if (awayScore < homeScore) loserId = away.team.abbreviation.toLowerCase();
+      status = (loserId === null) ? 'WON' : 'LOST'; // Simplified, checked later against hated ID
+    } else if (!isPreGame) {
+      status = 'PLAYING';
     }
 
     // Robust Date Checking
@@ -123,6 +141,7 @@ const processESPNData = (data, league) => {
       league: league,
       isFinal: isFinal,
       isYesterday: isYesterday,
+      rawStatus: status, // Store raw status for calculation below
       homeTeam: {
         name: home.team.displayName,
         id: home.team.abbreviation.toLowerCase(),
@@ -191,6 +210,38 @@ const HappyGuyIcon = ({ className }) => (
 
 // --- MOCK DATA ---
 const ALL_TEAMS = [
+  // --- MLB ---
+  { id: 'bal_mlb', league: 'MLB', name: 'Baltimore', mascot: 'Orioles', color: '#DF4601', conf: 'AL East' },
+  { id: 'bos_mlb', league: 'MLB', name: 'Boston', mascot: 'Red Sox', color: '#BD3039', conf: 'AL East' },
+  { id: 'nyy_mlb', league: 'MLB', name: 'NY Yankees', mascot: 'Yankees', color: '#003087', conf: 'AL East' },
+  { id: 'tb_mlb', league: 'MLB', name: 'Tampa Bay', mascot: 'Rays', color: '#092C5C', conf: 'AL East' },
+  { id: 'tor_mlb', league: 'MLB', name: 'Toronto', mascot: 'Blue Jays', color: '#134A8E', conf: 'AL East' },
+  { id: 'cws_mlb', league: 'MLB', name: 'Chi White Sox', mascot: 'White Sox', color: '#27251F', conf: 'AL Central' },
+  { id: 'cle_mlb', league: 'MLB', name: 'Cleveland', mascot: 'Guardians', color: '#00385D', conf: 'AL Central' },
+  { id: 'det_mlb', league: 'MLB', name: 'Detroit', mascot: 'Tigers', color: '#0C2340', conf: 'AL Central' },
+  { id: 'kc_mlb', league: 'MLB', name: 'Kansas City', mascot: 'Royals', color: '#004687', conf: 'AL Central' },
+  { id: 'min_mlb', league: 'MLB', name: 'Minnesota', mascot: 'Twins', color: '#002B5C', conf: 'AL Central' },
+  { id: 'hou_mlb', league: 'MLB', name: 'Houston', mascot: 'Astros', color: '#002D62', conf: 'AL West' },
+  { id: 'laa_mlb', league: 'MLB', name: 'LA Angels', mascot: 'Angels', color: '#BA0021', conf: 'AL West' },
+  { id: 'oak_mlb', league: 'MLB', name: 'Oakland', mascot: 'Athletics', color: '#003831', conf: 'AL West' },
+  { id: 'sea_mlb', league: 'MLB', name: 'Seattle', mascot: 'Mariners', color: '#0C2C56', conf: 'AL West' },
+  { id: 'tex_mlb', league: 'MLB', name: 'Texas', mascot: 'Rangers', color: '#003278', conf: 'AL West' },
+  { id: 'atl_mlb', league: 'MLB', name: 'Atlanta', mascot: 'Braves', color: '#13274F', conf: 'NL East' },
+  { id: 'mia_mlb', league: 'MLB', name: 'Miami', mascot: 'Marlins', color: '#00A3E0', conf: 'NL East' },
+  { id: 'nym_mlb', league: 'MLB', name: 'NY Mets', mascot: 'Mets', color: '#002D72', conf: 'NL East' },
+  { id: 'phi_mlb', league: 'MLB', name: 'Philadelphia', mascot: 'Phillies', color: '#E81828', conf: 'NL East' },
+  { id: 'wsh_mlb', league: 'MLB', name: 'Washington', mascot: 'Nationals', color: '#AB0003', conf: 'NL East' },
+  { id: 'chc_mlb', league: 'MLB', name: 'Chi Cubs', mascot: 'Cubs', color: '#0E3386', conf: 'NL Central' },
+  { id: 'cin_mlb', league: 'MLB', name: 'Cincinnati', mascot: 'Reds', color: '#C6011F', conf: 'NL Central' },
+  { id: 'mil_mlb', league: 'MLB', name: 'Milwaukee', mascot: 'Brewers', color: '#12284B', conf: 'NL Central' },
+  { id: 'pit_mlb', league: 'MLB', name: 'Pittsburgh', mascot: 'Pirates', color: '#FDB827', conf: 'NL Central' },
+  { id: 'stl_mlb', league: 'MLB', name: 'St. Louis', mascot: 'Cardinals', color: '#C41E3A', conf: 'NL Central' },
+  { id: 'ari_mlb', league: 'MLB', name: 'Arizona', mascot: 'Diamondbacks', color: '#A71930', conf: 'NL West' },
+  { id: 'col_mlb', league: 'MLB', name: 'Colorado', mascot: 'Rockies', color: '#333366', conf: 'NL West' },
+  { id: 'lad_mlb', league: 'MLB', name: 'LA Dodgers', mascot: 'Dodgers', color: '#005A9C', conf: 'NL West' },
+  { id: 'sd_mlb', league: 'MLB', name: 'San Diego', mascot: 'Padres', color: '#2F241D', conf: 'NL West' },
+  { id: 'sf_mlb', league: 'MLB', name: 'San Francisco', mascot: 'Giants', color: '#FD5A1E', conf: 'NL West' },
+
   // --- NCAA BASKETBALL (NCAA) ---
   { id: 'duke', league: 'NCAA', name: 'Duke', mascot: 'Blue Devils', color: '#003087', conf: 'ACC' },
   { id: 'unc', league: 'NCAA', name: 'North Carolina', mascot: 'Tar Heels', color: '#99badd', conf: 'ACC' },
@@ -408,71 +459,6 @@ const HISTORIC_LOSSES = {
   ]
 };
 
-const CELEBRATION_GIFS = [
-  "https://media.giphy.com/media/blSTtZemaWgPQ/giphy.gif",
-  "https://media.giphy.com/media/UO5elnTqo4vSg/giphy.gif",
-  "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
-  "https://media.giphy.com/media/l46CimW38a7EQxMcM/giphy.gif",
-  "https://media.giphy.com/media/HhBea19lrGaJO/giphy.gif",
-  "https://media.giphy.com/media/26u4cqiYI30juCOk0/giphy.gif",
-  "https://media.giphy.com/media/P7JmDW7IkB7TW/giphy.gif",
-  "https://media.giphy.com/media/pa37AAGzKXoek/giphy.gif",
-  "https://media.giphy.com/media/lu38au6O3SEj6/giphy.gif",
-  "https://media.giphy.com/media/BPJmthQ3YRwD6/giphy.gif",
-  "https://media.giphy.com/media/cO39srN2EUIRaVqaVq/giphy.gif",
-  "https://media.giphy.com/media/xl5QdxfNonh3q/giphy.gif",
-  "https://media.giphy.com/media/BFYLNwlsSNtcc/giphy.gif",
-  "https://media.giphy.com/media/10hzvF9FTulLxK/giphy.gif",
-  "https://media.giphy.com/media/HUHf3QyX7OXxm/giphy.gif",
-  "https://media.giphy.com/media/j0eRJzyW7XjMpx1Tlx/giphy.gif",
-  "https://media.giphy.com/media/l4Jz3a8jO92crUlWM/giphy.gif",
-  "https://media.giphy.com/media/nNxT5qXR02FOM/giphy.gif",
-  "https://media.giphy.com/media/l0HlCqV35hdEg2LSM/giphy.gif",
-  "https://media.giphy.com/media/ebAfdhOr5mn0LG1mme/giphy.gif",
-  "https://media.giphy.com/media/gtakVlnStZUbe/giphy.gif",
-  "https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif",
-  "https://media.giphy.com/media/l3V0lsGtTMSB5YNgc/giphy.gif",
-  "https://media.giphy.com/media/Is1O1TWV0LEJi/giphy.gif",
-  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/9Y6n9TR7U07ew/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3NtY188QaxDdC/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kEKcOWl8RMLde/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/aq6Thivv9V9lu/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kKo2x2QSWMNfW/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3oEjHI8WJv4x6UPDB6/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/inyqrgp9o3NUA/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3NWFibGJuOGZwdmdwOXBlaTdseGt0eXo1cG10c3N2cGZ2b245OW8xbyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/XR9Dp54ZC4dji/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aDk0OXJieXl2NWloNzU1dG9yZXB1dHJnaXlyN2xsYms3N20yM3BwdSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1LweXxLwVT0J2/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3YXJ1aWprZnVlMDd3ajdlMGpnM2ljNHN6czVyaGZqdDE3N3hsdmtuNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DpB9NBjny7jF1pd0yt2/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eHgzYzl2bHJvZmRkaG85eGhuYmkwaWIwa3dpdWtzNnJseWEyc3htbCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uxLVaMUiycgpO/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/T87BZ7cyOH7TwDBgwy/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/61MN4zqj333nTdtLEH/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/fPRwBcYd71Lox1v7p2/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eDR3dnJkZWYzd2Q4N242enBocnRzZDZycXN6bGp3bWlzOXA0dHp5ZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VABbCpX94WCfS/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/unAjVtjhUeYFMJ8jFc/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1PMVNNKVIL8Ig/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/yCjr0U8WCOQM0/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o7abldj0b3rxrZUxW/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/10Jpr9KSaXLchW/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3ohzdIuqJoo8QdKlnW/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DffShiJ47fPqM/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3WCNY2RhcmnwGbKbCi/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/rdma0nDFZMR32/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/12PIT4DOj6Tgek/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWV5NGd5NWV3Y24yN3p0ZXV2ZnlkMXoxNXZkazE4ZDB4b2d6Y3ZjeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4GuFtlz4IhKSt89E7q/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KB7Moe2Oj0BXeDjvDp/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DYH297XiCS2Ck/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/SA613Nxg1h6zO1nRsg/giphy.gif"
-];
-
 const TRASH_TALK = [
   "Couldn't happen to a nicer team.",
   "Thoughts and prayers. 🙏",
@@ -519,6 +505,12 @@ const TEASE_TITLES = [
   "Pure joy awaits inside."
 ];
 
+const SHARE_TEMPLATES = [
+  { label: "Casual", text: "So... [TEAM] lost [SCORE]-[OPP_SCORE]. Hate to see it. 😬 [LINK]" },
+  { label: "Receipts", text: "FINAL: [TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. See for yourself: [LINK]" },
+  { label: "Toxic", text: "IMAGINE LOSING [SCORE]-[OPP_SCORE] TO [OPPONENT]. [TEAM] DOWN BAD. 📉🤡 [LINK]" },
+];
+
 // --- UPDATED: Dynamic Template Library ---
 const TEMPLATE_LIBRARY = {
   Casual: [
@@ -552,13 +544,10 @@ const Onboarding = ({ onComplete, currentTheme }) => {
 
   // New function to actually request permission
   const handleEnableNotifications = async () => {
-    if ('Notification' in window) {
-      try {
-        const permission = await Notification.requestPermission();
-        console.log('Permission result:', permission);
-      } catch (e) {
-        console.error('Notification permission error', e);
-      }
+    try {
+        await requestNotificationPermission();
+    } catch(e) {
+        console.log("Notification setup skipped or failed in demo mode");
     }
     // Proceed regardless of the answer
     onComplete();
@@ -689,7 +678,8 @@ export default function App() {
     NCAA: true,
     CFB: false, // Defaulting CFB to False for Post-Season
     NBA: true,
-    NFL: true
+    NFL: true,
+    MLB: true
   });
 
   // --- PERSISTENT ENEMIES STATE ---
@@ -706,7 +696,6 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [noGamesMsg, setNoGamesMsg] = useState(null);
-  // Removed internal notification state
   
   // NEW STATE FOR SHARE OPTIONS
   const [shareOptions, setShareOptions] = useState([]);
@@ -787,7 +776,7 @@ export default function App() {
       // --- LEAGUE DETECTION FIX ---
       // We need to know which leagues to check based on the hated teams.
       // BUT, because IDs like 'hou' are duplicated in ALL_TEAMS, we need to check ALL potential matches for an ID.
-      const leaguesToCheck = ['NCAA', 'CFB', 'NBA', 'NFL'].filter(league => 
+      const leaguesToCheck = ['NCAA', 'CFB', 'NBA', 'NFL', 'MLB'].filter(league => 
         enabledLeagues[league] && 
         hatedTeams.some(teamId => {
           // FIX: Filter instead of Find to handle duplicate IDs (like 'hou') across leagues
@@ -834,6 +823,7 @@ export default function App() {
           teamScore: hatedTeamObj.score,
           opponentScore: opponentObj.score,
           status: game.loserId === hatedTeamObj.id ? 'LOST' : (game.isFinal ? 'WON' : 'PLAYING'),
+          rawStatus: game.rawStatus, // Pass through raw status
           gameId: game.gameId,
           isLive: true,
           isYesterday: game.isYesterday
@@ -1235,13 +1225,21 @@ export default function App() {
                   {gameResults.length > 0 && displayResults.length === 0 && (
                     <div className={`text-center py-8 px-5 ${styles.card} border-dashed`}>
                       <div className="mb-6">
-                        {gameResults.some(g => g.status === 'PLAYING') ? (
+                        {gameResults.some(g => g.rawStatus === 'PLAYING') ? (
                             <>
                                 <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse">
                                     <Activity className="text-yellow-600" size={24} />
                                 </div>
                                 <h3 className="text-slate-800 font-bold text-lg">One or more enemies are active right now...</h3>
                                 <p className="text-slate-500 text-xs mt-1">We are monitoring the situation. Stand by.</p>
+                            </>
+                        ) : gameResults.some(g => g.rawStatus === 'UPCOMING') ? (
+                            <>
+                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <Clock className="text-blue-600" size={24} />
+                                </div>
+                                <h3 className="text-slate-800 font-bold text-lg">Patience, hater.</h3>
+                                <p className="text-slate-500 text-xs mt-1">Your enemies haven't started failing yet. Check back later.</p>
                             </>
                         ) : (
                             <>
@@ -1514,8 +1512,7 @@ export default function App() {
                     </div>
 
                     <div className="text-center pt-4 border-t border-current/10">
-                        <p className="text-[10px] opacity-40">THEY LOST v0.9.5 (Beta)</p>
-                        <p className="text-[10px] opacity-40">Built for Haters, by Haters.</p>
+                        <p className="text-[10px] opacity-40">THEY LOST v1.1</p>
                         {/* Reset Onboarding Button */}
                         <button 
                             onClick={() => {
