@@ -1,15 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, AlertTriangle, RefreshCw, Share2, Plus, Trash2, X, Copy, PartyPopper, History, Filter, Search, Globe, Bell, ExternalLink, Palette, Settings, ToggleLeft, ToggleRight, Target, ChevronRight, Check, Activity, LogOut, Clock } from 'lucide-react';
 
-// --- FIREBASE INTEGRATION (See comments for Production usage) ---
-
-// [PRODUCTION STEP]: In your real app, delete this dummy function and uncomment the import below:
+// --- FIREBASE INTEGRATION (Mocked for Preview) ---
+// In production, uncomment the import and remove this const:
 // import { requestNotificationPermission } from './firebase';
-
 const requestNotificationPermission = async () => {
   console.log("Simulating Notification Request (Preview Mode)");
   return "demo-token";
 };
+
+// --- ASSET DEFINITION ---
+const CELEBRATION_GIFS = [
+"https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/9Y6n9TR7U07ew/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3NtY188QaxDdC/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kEKcOWl8RMLde/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/aq6Thivv9V9lu/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kKo2x2QSWMNfW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3oEjHI8WJv4x6UPDB6/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/inyqrgp9o3NUA/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3NWFibGJuOGZwdmdwOXBlaTdseGt0eXo1cG10c3N2cGZ2b245OW8xbyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/XR9Dp54ZC4dji/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aDk0OXJieXl2NWloNzU1dG9yZXB1dHJnaXlyN2xsYms3N20yM3BwdSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1LweXxLwVT0J2/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3YXJ1aWprZnVlMDd3ajdlMGpnM2ljNHN6czVyaGZqdDE3N3hsdmtuNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DpB9NBjny7jF1pd0yt2/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eHgzYzl2bHJvZmRkaG85eGhuYmkwaWIwa3dpdWtzNnJseWEyc3htbCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uxLVaMUiycgpO/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/T87BZ7cyOH7TwDBgwy/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/61MN4zqj333nTdtLEH/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/fPRwBcYd71Lox1v7p2/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eDR3dnJkZWYzd2Q4N242enBocnRzZDZycXN6bGp3bWlzOXA0dHp5ZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VABbCpX94WCfS/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/unAjVtjhUeYFMJ8jFc/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1PMVNNKVIL8Ig/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/yCjr0U8WCOQM0/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o7abldj0b3rxrZUxW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/10Jpr9KSaXLchW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3ohzdIuqJoo8QdKlnW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DffShiJ47fPqM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3WCNY2RhcmnwGbKbCi/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/rdma0nDFZMR32/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/12PIT4DOj6Tgek/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWV5NGd5NWV3Y24yN3p0ZXV2ZnlkMXoxNXZkazE4ZDB4b2d6Y3ZjeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4GuFtlz4IhKSt89E7q/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KB7Moe2Oj0BXeDjvDp/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DYH297XiCS2Ck/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/SA613Nxg1h6zO1nRsg/giphy.gif"
+];
 
 // --- THEME CONFIGURATION ---
 const THEMES = {
@@ -91,21 +131,17 @@ const getYYYYMMDD = (date) => {
 const processESPNData = (data, league) => {
   if (!data.events) return [];
 
-  // Start of today in local time (00:00:00)
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   
-  // Lookback window (48 hours)
   const lookbackWindow = new Date(todayStart);
   lookbackWindow.setDate(lookbackWindow.getDate() - 2);
 
   return data.events.filter(event => {
-    // Filter logic:
     if (league === 'NBA' || league === 'NCAA' || league === 'MLB') return true;
     const gameDate = new Date(event.date);
     return gameDate >= lookbackWindow;
   }).map(event => {
-    // --- CRITICAL SAFETY CHECKS ---
     const competition = event.competitions?.[0];
     if (!competition) return null;
 
@@ -113,16 +149,15 @@ const processESPNData = (data, league) => {
     const away = competition.competitors?.find(c => c.homeAway === 'away');
     
     if (!home || !away) return null;
-    // -----------------------------
 
     const isFinal = event.status.type.completed;
-    const isPreGame = event.status.type.state === 'pre'; // Check if game hasn't started
+    const isPreGame = event.status.type.state === 'pre'; 
     
     const homeScore = parseInt(home.score || '0');
     const awayScore = parseInt(away.score || '0');
     
     let loserId = null;
-    let status = 'UPCOMING'; // Default to upcoming
+    let status = 'UPCOMING'; 
 
     if (isFinal) {
       if (homeScore < awayScore) loserId = home.team.abbreviation.toLowerCase();
@@ -132,7 +167,6 @@ const processESPNData = (data, league) => {
       status = 'PLAYING';
     }
 
-    // Robust Date Checking
     const gameDate = new Date(event.date);
     const isYesterday = gameDate < todayStart;
 
@@ -141,7 +175,7 @@ const processESPNData = (data, league) => {
       league: league,
       isFinal: isFinal,
       isYesterday: isYesterday,
-      rawStatus: status, // Store raw status for calculation below
+      rawStatus: status,
       homeTeam: {
         name: home.team.displayName,
         id: home.team.abbreviation.toLowerCase(),
@@ -156,7 +190,7 @@ const processESPNData = (data, league) => {
       },
       loserId: loserId
     };
-  }).filter(Boolean); // Filter out any nulls
+  }).filter(Boolean);
 };
 
 const fetchScoreboard = async (league) => {
@@ -179,8 +213,8 @@ const fetchScoreboard = async (league) => {
 
     const promises = datesToFetch.map(dateStr => {
       let targetUrl = `${BASE_URL}/${sportPath}/scoreboard?limit=1000&dates=${dateStr}&cb=${cacheBuster}`;
-      if (league === 'NCAA') targetUrl += '&groups=50'; // Div I Basketball
-      if (league === 'CFB') targetUrl += '&groups=80';  // FBS Football
+      if (league === 'NCAA') targetUrl += '&groups=50';
+      if (league === 'CFB') targetUrl += '&groups=80';
       return fetch(PROXY_URL + encodeURIComponent(targetUrl))
         .then(res => res.ok ? res.json() : { events: [] })
         .catch(err => {
@@ -201,16 +235,15 @@ const fetchScoreboard = async (league) => {
   }
 };
 
-// --- ICONS ---
 const HappyGuyIcon = ({ className }) => (
   <span className={`${className} flex items-center justify-center leading-none`} role="img" aria-label="Happy Face">
     😄
   </span>
 );
 
-// --- MOCK DATA ---
+// --- TEAMS DATA ---
 const ALL_TEAMS = [
-  // --- MLB ---
+  // MLB
   { id: 'bal_mlb', league: 'MLB', name: 'Baltimore', mascot: 'Orioles', color: '#DF4601', conf: 'AL East' },
   { id: 'bos_mlb', league: 'MLB', name: 'Boston', mascot: 'Red Sox', color: '#BD3039', conf: 'AL East' },
   { id: 'nyy_mlb', league: 'MLB', name: 'NY Yankees', mascot: 'Yankees', color: '#003087', conf: 'AL East' },
@@ -241,8 +274,7 @@ const ALL_TEAMS = [
   { id: 'lad_mlb', league: 'MLB', name: 'LA Dodgers', mascot: 'Dodgers', color: '#005A9C', conf: 'NL West' },
   { id: 'sd_mlb', league: 'MLB', name: 'San Diego', mascot: 'Padres', color: '#2F241D', conf: 'NL West' },
   { id: 'sf_mlb', league: 'MLB', name: 'San Francisco', mascot: 'Giants', color: '#FD5A1E', conf: 'NL West' },
-
-  // --- NCAA BASKETBALL (NCAA) ---
+  // NCAA BB
   { id: 'duke', league: 'NCAA', name: 'Duke', mascot: 'Blue Devils', color: '#003087', conf: 'ACC' },
   { id: 'unc', league: 'NCAA', name: 'North Carolina', mascot: 'Tar Heels', color: '#99badd', conf: 'ACC' },
   { id: 'uva', league: 'NCAA', name: 'Virginia', mascot: 'Cavaliers', color: '#232D4B', conf: 'ACC' },
@@ -275,9 +307,7 @@ const ALL_TEAMS = [
   { id: 'stj', league: 'NCAA', name: "St. John's", mascot: 'Red Storm', color: '#BA0C2F', conf: 'Big East' },
   { id: 'gonz', league: 'NCAA', name: 'Gonzaga', mascot: 'Bulldogs', color: '#041E42', conf: 'WCC' },
   { id: 'gtown', league: 'NCAA', name: 'Georgetown', mascot: 'Hoyas', color: '#041E42', conf: 'Big East' },
-
-  // --- NCAA FOOTBALL (CFB) - FULL POWER 4 + NOTABLES ---
-  // SEC
+  // CFB
   { id: 'ala_fb', league: 'CFB', name: 'Alabama', mascot: 'Crimson Tide', color: '#9E1B32', conf: 'SEC' },
   { id: 'uga', league: 'CFB', name: 'Georgia', mascot: 'Bulldogs', color: '#BA0C2F', conf: 'SEC' },
   { id: 'tex_fb', league: 'CFB', name: 'Texas', mascot: 'Longhorns', color: '#BF5700', conf: 'SEC' },
@@ -294,7 +324,6 @@ const ALL_TEAMS = [
   { id: 'sc', league: 'CFB', name: 'South Carolina', mascot: 'Gamecocks', color: '#73000A', conf: 'SEC' },
   { id: 'van', league: 'CFB', name: 'Vanderbilt', mascot: 'Commodores', color: '#000000', conf: 'SEC' },
   { id: 'msst', league: 'CFB', name: 'Miss State', mascot: 'Bulldogs', color: '#660000', conf: 'SEC' },
-  // Big Ten
   { id: 'mich_fb', league: 'CFB', name: 'Michigan', mascot: 'Wolverines', color: '#00274C', conf: 'Big Ten' },
   { id: 'osu_fb', league: 'CFB', name: 'Ohio State', mascot: 'Buckeyes', color: '#BB0000', conf: 'Big Ten' },
   { id: 'psu', league: 'CFB', name: 'Penn State', mascot: 'Nittany Lions', color: '#041E42', conf: 'Big Ten' },
@@ -313,7 +342,6 @@ const ALL_TEAMS = [
   { id: 'rut', league: 'CFB', name: 'Rutgers', mascot: 'Scarlet Knights', color: '#CC0033', conf: 'Big Ten' },
   { id: 'ind_fb', league: 'CFB', name: 'Indiana', mascot: 'Hoosiers', color: '#990000', conf: 'Big Ten' },
   { id: 'nw', league: 'CFB', name: 'Northwestern', mascot: 'Wildcats', color: '#4E2A84', conf: 'Big Ten' },
-  // ACC
   { id: 'fsu_fb', league: 'CFB', name: 'Florida St', mascot: 'Seminoles', color: '#782F40', conf: 'ACC' },
   { id: 'clem_fb', league: 'CFB', name: 'Clemson', mascot: 'Tigers', color: '#F56600', conf: 'ACC' },
   { id: 'mia_fb', league: 'CFB', name: 'Miami', mascot: 'Hurricanes', color: '#F47321', conf: 'ACC' },
@@ -331,7 +359,6 @@ const ALL_TEAMS = [
   { id: 'cal', league: 'CFB', name: 'Cal', mascot: 'Golden Bears', color: '#003262', conf: 'ACC' },
   { id: 'stan', league: 'CFB', name: 'Stanford', mascot: 'Cardinal', color: '#8C1515', conf: 'ACC' },
   { id: 'smu', league: 'CFB', name: 'SMU', mascot: 'Mustangs', color: '#0033A0', conf: 'ACC' },
-  // Big 12
   { id: 'okst', league: 'CFB', name: 'Oklahoma St', mascot: 'Cowboys', color: '#FF7300', conf: 'Big 12' },
   { id: 'ksu', league: 'CFB', name: 'Kansas St', mascot: 'Wildcats', color: '#512888', conf: 'Big 12' },
   { id: 'ku_fb', league: 'CFB', name: 'Kansas', mascot: 'Jayhawks', color: '#0051BA', conf: 'Big 12' },
@@ -348,7 +375,6 @@ const ALL_TEAMS = [
   { id: 'ucf', league: 'CFB', name: 'UCF', mascot: 'Knights', color: '#BA9B37', conf: 'Big 12' },
   { id: 'cin_fb', league: 'CFB', name: 'Cincinnati', mascot: 'Bearcats', color: '#E00122', conf: 'Big 12' },
   { id: 'hou_fb', league: 'CFB', name: 'Houston', mascot: 'Cougars', color: '#C8102E', conf: 'Big 12' },
-  // Independent / Pac-2
   { id: 'nd', league: 'CFB', name: 'Notre Dame', mascot: 'Fighting Irish', color: '#0C2340', conf: 'Ind' },
   { id: 'orst', league: 'CFB', name: 'Oregon St', mascot: 'Beavers', color: '#DC4405', conf: 'Pac-12' },
   { id: 'wsu', league: 'CFB', name: 'Wash State', mascot: 'Cougars', color: '#981E32', conf: 'Pac-12' },
@@ -421,122 +447,147 @@ const ALL_TEAMS = [
 ];
 
 const HISTORIC_LOSSES = {
+  // --- NCAA ---
   duke: [
-    { winnerId: 'mercer', headline: "Mercer danced on Duke in 2014", score: "Mercer 78, Duke 71", date: "March 21, 2014", desc: "A roster with Jabari Parker, Rodney Hood, and Quinn Cook lost to a senior mid-major squad that flat-out out-executed them." },
-    { winnerId: 'lehigh', headline: "Lehigh stunned Duke in 2012", score: "Lehigh 75, Duke 70", date: "March 16, 2012", desc: "CJ McCollum dropped 30 points on the #2 seed Blue Devils in Greensboro, essentially a home game for Duke." },
+    { winnerId: 'unc', headline: "The Final Four Nightmare", score: "UNC 81, Duke 77", date: "April 2, 2022", desc: "The first ever tournament meeting. Coach K's final season. Caleb Love's dagger three sent K into retirement with an L." },
+    { winnerId: 'unc', headline: "K's Final Home Game", score: "UNC 94, Duke 81", date: "March 5, 2022", desc: "The 'uninvited guests' ruined the retirement party. 96 former players watched Duke get blown out at Cameron." },
+    { winnerId: 'unc', headline: "The Cormac Ryan Game", score: "UNC 84, Duke 79", date: "March 9, 2024", desc: "UNC swept the season series. Cormac Ryan dropped 31 points and waved goodbye to the Crazies." },
+    { winnerId: 'unc', headline: "The Austin Rivers Shot", score: "Duke 85, UNC 84", date: "Feb 8, 2012", desc: "Wait, this is a Duke win... oh wait, you mean when UNC blew them out later? No, remember 2021? UNC 91, Duke 73. Roy's final win at Cameron." },
+    { winnerId: 'unc', headline: "Jerami Grant's Dunk", score: "UNC 74, Duke 66", date: "Feb 20, 2014", desc: "UNC rallied from 11 down in the second half. Duke fans stormed the court... oh wait, they lost." },
+    { winnerId: 'mercer', headline: "Mercer danced on them", score: "Mercer 78, Duke 71", date: "March 21, 2014", desc: "A #3 seed Duke team with Jabari Parker lost to a bunch of seniors from the Atlantic Sun." },
+    { winnerId: 'lehigh', headline: "CJ McCollum happened", score: "Lehigh 75, Duke 70", date: "March 16, 2012", desc: "A #2 seed lost to a #15 seed. One of the biggest upsets in tournament history." },
+    { winnerId: 'conn', headline: "1999 Championship", score: "UConn 77, Duke 74", date: "March 29, 1999", desc: "This Duke team was considered one of the best ever. Rip Hamilton and Khalid El-Amin had other plans." },
+    { winnerId: 'unlv', headline: "103-73", score: "UNLV 103, Duke 73", date: "April 2, 1990", desc: "The biggest blowout in National Championship history. Men against boys." },
+    { winnerId: 'sc', headline: "South Carolina upset", score: "S. Carolina 88, Duke 81", date: "March 19, 2017", desc: "Playing in South Carolina, the #2 seed Duke got bullied out of the tournament in the Round of 32." }
   ],
-  dal: [
-    { winnerId: 'sea', headline: "Tony Romo fumbled the snap in 2007", score: "Seahawks 21, Cowboys 20", date: "Jan 6, 2007", desc: "A chip-shot field goal to win a playoff game turned into a disaster when the ball slipped right through Romo's hands." },
-    { winnerId: 'gb', headline: "Dez didn't catch it (technically)", score: "Packers 26, Cowboys 21", date: "Jan 11, 2015", desc: "Whatever you believe, the record book says incomplete. Another playoff heartbreak for 'America's Team'." }
+  ncst: [
+    { winnerId: 'pur', headline: "Final Four Heartbreak", score: "Purdue 63, NC State 50", date: "April 6, 2024", desc: "The magic ran out. Edey was too big, and the shots stopped falling. A sad end to a miracle run." },
+    { winnerId: 'vt', headline: "24 Points Total", score: "Va Tech 47, NC State 24", date: "Feb 2, 2019", desc: "State scored 24 points in an entire 40-minute basketball game. 24. They shot 16% from the floor." },
+    { winnerId: 'unc', headline: "The 51-Point Loss", score: "UNC 107, NC State 56", date: "Jan 8, 2017", desc: "The game was postponed for snow. It should have been canceled. A historic beatdown in Chapel Hill." },
+    { winnerId: 'unc', headline: "Roy Williams 5-0", score: "UNC 5-0 vs Gottfried", date: "2012-2017 Era", desc: "Roy Williams absolutely owned PNC Arena for years. It became the 'Dean Dome East'." },
+    { winnerId: 'stl', headline: "The meltdown vs St Louis", score: "St. Louis 83, NC State 80", date: "March 20, 2014", desc: "State led by 16 with 5 minutes left. They forgot how to play basketball and lost in OT." },
+    { winnerId: 'fla', headline: "Gottfried's last stand", score: "Florida 79, NC State 78", date: "March 27, 2005", desc: "Okay, this was actually Herb Sendek, but blowing a lead to lose in the Sweet 16 hurts forever." },
+    { winnerId: 'conn', headline: "Calhoun's dominance", score: "UConn 77, NC State 74", date: "March 19, 2006", desc: "Another close tournament loss where the Wolfpack just couldn't get over the hump." },
+    { winnerId: 'wfu', headline: "The CP3 Game", score: "Wake Forest 95, NC State 82", date: "Jan 2004", desc: "Chris Paul punched Julius Hodge in the... well, you know. State lost the game too." }
   ],
-  chi: [
-    // Added 'intro' override for noun phrase
-    { winnerId: 'phi', headline: "The Double Doink", intro: "Remember", score: "Eagles 16, Bears 15", date: "Jan 6, 2019", desc: "Cody Parkey's game-winning field goal attempt hit the upright... and then the crossbar. Silence fell over Soldier Field." }
+  
+  // --- NBA ---
+  bos: [
+    { winnerId: 'lal', headline: "Game 7, 2010", score: "Lakers 83, Celtics 79", date: "June 17, 2010", desc: "Up 3-2 in the series. Rasheed Wallace played his heart out, but Kobe and Artest took the ring. The sweetest Lakers win ever." },
+    { winnerId: 'lal', headline: "Baby Skyhook", score: "Lakers 107, Celtics 106", date: "June 9, 1987", desc: "Magic Johnson's junior skyhook across the lane stunned the Garden. 'Tragic Johnson' no more." },
+    { winnerId: 'lal', headline: "Memorial Day Massacre", score: "Lakers 148, Celtics 114", date: "May 27, 1985", desc: "The Lakers absolutely destroyed them. The 'Ghost of the Garden' died that day." },
+    { winnerId: 'lal', headline: "Ended the Streak", score: "Lakers 108, Celtics 102", date: "2008 Finals Gm 5", desc: "Okay they won the series, but the Lakers stealing a road game to keep the series alive was classic resistance." },
+    { winnerId: 'lal', headline: "Showtime Arrives", score: "Lakers 4-2 Series", date: "June 1985", desc: "The first time the Lakers beat the Celtics in the Finals. Kareem was MVP at age 38." },
+    { winnerId: 'mia', headline: "Game 7 at Home", score: "Heat 103, Celtics 84", date: "May 29, 2023", desc: "Fought back from 0-3 just to get blown out on their own floor in Game 7. Tatum rolled his ankle immediately." },
+    { winnerId: 'gsw', headline: "Curry's Night Night", score: "Warriors 4-2 Series", date: "June 2022", desc: "Up 2-1 in the Finals. Then Steph Curry destroyed their soul in Boston. TD Garden went silent." },
+    { winnerId: 'mia', headline: "LeBron's Stare", score: "Heat 98, Celtics 79", date: "June 7, 2012", desc: "Game 6. LeBron had 45 points and 15 rebounds. The look in his eyes ended the Pierce/KG era." },
+    { winnerId: 'orl', headline: "Dwight's Block Party", score: "Magic 4-3 Series", date: "May 2009", desc: "The defending champs lost Game 7 at home to Dwight Howard and Hedo Turkoglu." },
+    { winnerId: 'cle', headline: "LeBron again", score: "Cavs 87, Celtics 79", date: "May 27, 2018", desc: "Game 7 at home. Scary Terry couldn't hit a shot. LeBron dragged a terrible Cavs team past them." }
   ],
-  atl: [
-    { winnerId: 'ne', headline: "28-3 happened in the Super Bowl", score: "Patriots 34, Falcons 28", date: "Feb 5, 2017", desc: "The greatest collapse in Super Bowl history. They had a 25-point lead late in the third quarter. Tom Brady did the rest." }
+  det: [
+    { winnerId: 'sas', headline: "Horry left open", score: "Spurs 4-3 Series", date: "June 2005", desc: "Sheed left Robert Horry open in the corner in Game 5. Then they lost Game 7. A dynasty denied." },
+    { winnerId: 'cle', headline: "LeBron's 25 straight", score: "Cavs 109, Pistons 107", date: "May 31, 2007", desc: "LeBron scored the Cavs' last 25 points. He single-handedly dismantled the 'Goin to Work' Pistons." },
+    { winnerId: 'bos', headline: "Bird stole the ball", score: "Celtics 108, Pistons 107", date: "May 26, 1987", desc: "Isiah Thomas threw it away. Bird to DJ. Layup. Heartbreak." },
+    { winnerId: 'lal', headline: "The Phantom Foul", score: "Lakers 103, Pistons 102", date: "June 19, 1988", desc: "Laimbeer didn't touch Kareem. A questionable foul call arguably cost them the title." },
+    { winnerId: 'mia', headline: "Shaq's Revenge", score: "Heat 4-2 Series", date: "May 2006", desc: "The Heat finally got past them. The end of the Ben Wallace era in Detroit." },
+    { winnerId: 'bos', headline: "The Big 3", score: "Celtics 4-2 Series", date: "May 2008", desc: "The last gasp of the Billups/Hamilton core. They couldn't hang with KG and Pierce." },
+    { winnerId: 'all', headline: "28 Straight Losses", score: "The Streak", date: "Dec 2023", desc: "They set the single-season record for consecutive losses. 28 games without a win. Pure misery." },
+    { winnerId: 'draft', headline: "Darko Milicic", score: "Draft Pick #2", date: "2003 NBA Draft", desc: "They took Darko over Carmelo, Bosh, and Wade. Imagine that 2004 team with D-Wade." }
   ],
-  gs: [
-    { winnerId: 'cle_c', headline: "The Warriors blew a 3-1 lead", score: "Cavs 93, Warriors 89", date: "June 19, 2016", desc: "The 73-9 greatest regular season team of all time failed to close out the Finals. LeBron James brought a title to Cleveland." }
+  mia: [
+     { winnerId: 'dal', headline: "LeBron's Meltdown", score: "Mavs 4-2 Series", date: "June 2011", desc: "The Heatles were arrogant. Dirk humbled them. LeBron scored 8 points in a Finals game." },
+     { winnerId: 'sas', headline: "The AC Game", score: "Spurs 110, Heat 95", date: "June 5, 2014", desc: "The AC broke in San Antonio. LeBron cramped up. The Spurs blew them out by record margins in the series." },
+     { winnerId: 'den', headline: "Gentleman's Sweep", score: "Nuggets 4-1 Series", date: "June 2023", desc: "Jimmy Butler ran out of gas. Jokic played with his food." }
+  ],
+  phi: [
+     { winnerId: 'tor', headline: "The Bounce", score: "Raptors 92, 76ers 90", date: "May 12, 2019", desc: "Kawhi's shot bounced four times. Embiid cried in the tunnel. The Process failed." },
+     { winnerId: 'atl', headline: "Ben Simmons passed", score: "Hawks 103, 76ers 96", date: "June 20, 2021", desc: "Simmons had a wide open dunk. He passed it. The Process died that moment." },
+     { winnerId: 'bos', headline: "Tatum 51", score: "Celtics 112, Sixers 88", date: "May 14, 2023", desc: "Game 7. Harden disappeared. Embiid disappeared. Tatum set a record." }
   ],
   lal: [
-    { winnerId: 'det_p', headline: "The Pistons dismantled the Super Team", score: "Pistons 100, Lakers 87", date: "June 15, 2004", desc: "Kobe, Shaq, Gary Payton, and Karl Malone were supposed to be invincible. Chauncey Billups and Detroit destroyed them in 5 games." }
+      { winnerId: 'bos', headline: "The Wheelchair Game", score: "Celtics 4-2 Series", date: "June 2008", desc: "Paul Pierce faked an injury, came back, and the Celtics blew out the Lakers by 39 in the clincher." },
+      { winnerId: 'det', headline: "Five Game Sweep", score: "Pistons 4-1 Series", date: "June 2004", desc: "The Kobe/Shaq divorce was finalized by a Pistons beatdown. Malone retired ringless." },
+      { winnerId: 'phx', headline: "Kobe quit?", score: "Suns 121, Lakers 90", date: "May 6, 2006", desc: "Game 7 against the Suns. Kobe refused to shoot in the second half to prove a point." }
   ],
-  ala_fb: [
-    // Added 'intro' override for noun phrase
-    { winnerId: 'aub', headline: "The Kick Six", intro: "Remember", score: "Auburn 34, Alabama 28", date: "Nov 30, 2013", desc: "Chris Davis returned a missed field goal 109 yards as time expired to stun the #1 Crimson Tide. Pure pandemonium." }
+
+  // --- NFL ---
+  gb: [
+    { winnerId: 'sea', headline: "The NFC Championship Collapse", score: "Seahawks 28, Packers 22", date: "Jan 18, 2015", desc: "Up 19-7 with 3 mins left. Brandon Bostick dropped the onside kick. Ha Ha Clinton-Dix stood still on the 2pt conversion." },
+    { winnerId: 'tb', headline: "Kick the Field Goal?", score: "Bucs 31, Packers 26", date: "Jan 24, 2021", desc: "NFC Championship at home. 4th and Goal. Rodgers wanted to go for it. LaFleur kicked a FG. Brady knelt out the clock." },
+    { winnerId: 'sf', headline: "Blocked Punt", score: "49ers 13, Packers 10", date: "Jan 22, 2022", desc: "Top seed in the NFC. Home field. Offense scored 10 points. Special teams allowed a blocked punt TD." },
+    { winnerId: 'nyg', headline: "15-1 Season Ruined", score: "Giants 37, Packers 20", date: "Jan 15, 2012", desc: "Rodgers was MVP. The team was 15-1. Eli Manning came into Lambeau and humiliated them." },
+    { winnerId: 'phi', headline: "4th and 26", score: "Eagles 20, Packers 17", date: "Jan 11, 2004", desc: "Donovan McNabb converted a 4th and 26. Favre threw a duck in OT. Heartbreak." },
+    { winnerId: 'den', headline: "Super Bowl XXXII", score: "Broncos 31, Packers 24", date: "Jan 25, 1998", desc: "Favre vs Elway. The Packers were heavy favorites. Terrell Davis had a migraine and still ran over them." },
+    { winnerId: 'nyg', headline: "Favre's Last Pass", score: "Giants 23, Packers 20", date: "Jan 20, 2008", desc: "Overtime in the frozen tundra. Favre threw an INT on his final pass as a Packer." },
+    { winnerId: 'atl', headline: "Falcons Blowout", score: "Falcons 44, Packers 21", date: "Jan 22, 2017", desc: "NFC Championship. The Packers were down 31-0. It wasn't even competitive." }
   ],
-  uga: [
-    // Added 'intro' override for noun phrase
-    { winnerId: 'ala_fb', headline: "2nd and 26", intro: "Remember", score: "Alabama 26, Georgia 23", date: "Jan 8, 2018", desc: "Tua Tagovailoa found DeVonta Smith in overtime to rip the National Championship out of Georgia's hands." }
+  min: [
+    { winnerId: 'phi', headline: "38-7", score: "Eagles 38, Vikings 7", date: "Jan 21, 2018", desc: "After the Minneapolis Miracle, they laid an absolute egg. Nick Foles looked like Montana." },
+    { winnerId: 'sea', headline: "Blair Walsh Wide Left", score: "Seahawks 10, Vikings 9", date: "Jan 10, 2016", desc: "27 yards. Chip shot. Sub-zero temps. He missed it. The laces were in!" },
+    { winnerId: 'no', headline: "Bountygate Game", score: "Saints 31, Vikings 28", date: "Jan 24, 2010", desc: "Favre threw across his body in field goal range. Tracy Porter picked it off. 12 men in the huddle penalty." },
+    { winnerId: 'nyg', headline: "41-Donut", score: "Giants 41, Vikings 0", date: "Jan 14, 2001", desc: "NFC Championship. Kerry Collins torched them. It was 14-0 before the fans sat down." },
+    { winnerId: 'atl', headline: "Gary Anderson's Miss", score: "Falcons 30, Vikings 27", date: "Jan 17, 1999", desc: "15-1 season. Offense was unstoppable. Anderson hadn't missed all year. He missed the clincher." },
+    { winnerId: 'dal', headline: "The Hail Mary", score: "Cowboys 17, Vikings 14", date: "Dec 28, 1975", desc: "Roger Staubach to Drew Pearson. Drew pushed off. No call. Ref got hit with a whiskey bottle." },
+    { winnerId: 'kc', headline: "Super Bowl IV", score: "Chiefs 23, Vikings 7", date: "Jan 11, 1970", desc: "Heavily favored. Got bullied by Hank Stram's Chiefs." },
+    { winnerId: 'oak', headline: "Super Bowl XI", score: "Raiders 32, Vikings 14", date: "Jan 9, 1977", desc: "Fran Tarkenton couldn't do it. The Purple People Eaters got eaten." }
   ],
-  mich_fb: [
-    // Added 'intro' override for noun phrase
-    { winnerId: 'app_st', headline: "The Horror in Ann Arbor", intro: "Remember", score: "App State 34, Michigan 32", date: "Sept 1, 2007", desc: "The #5 ranked Wolverines were stunned by an FCS team in the Big House. Arguably the biggest upset in college football history." }
+  det_nfl: [
+    { winnerId: 'sf', headline: "24-7 Halftime Lead", score: "49ers 34, Lions 31", date: "Jan 28, 2024", desc: "One half away from the Super Bowl. Dropped passes, a fumble, and analytics decisions led to a historic collapse." },
+    { winnerId: 'gb', headline: "The 0-16 Season", score: "0 Wins, 16 Losses", date: "2008 Season", desc: "The first team to go 0-16. Dan Orlovsky running out of the back of the end zone sums it up." },
+    { winnerId: 'bal', headline: "Record Breaker", score: "Ravens 19, Lions 17", date: "Sept 26, 2021", desc: "Justin Tucker hit a NFL record 66-yard field goal off the crossbar as time expired." },
+    { winnerId: 'gb', headline: "The Hail Mary", score: "Packers 27, Lions 23", date: "Dec 3, 2015", desc: "A phantom facemask penalty gave Rodgers one more play. He threw it to the moon." },
+    { winnerId: 'sea', headline: "The Bat", score: "Seahawks 13, Lions 10", date: "Oct 5, 2015", desc: "Calvin Johnson fumbled at the 1. KJ Wright batted it out of the endzone. Illegal play, but refs missed it." },
+    { winnerId: 'dal', headline: "Flag Picked Up", score: "Cowboys 24, Lions 20", date: "Jan 4, 2015", desc: "Playoff game. Pass interference called. Then the refs picked up the flag without explanation." },
+    { winnerId: 'ret', headline: "Megatron Retires", score: "Early Retirement", date: "March 2016", desc: "Just like Barry Sanders, Calvin Johnson retired early because he was tired of losing." },
+    { winnerId: 'chi', headline: "Process of the Catch", score: "Bears 19, Lions 14", date: "Sept 12, 2010", desc: "Calvin caught the winning TD. Put the ball down. Refs said he didn't 'complete the process'." }
+  ],
+  dal: [
+    { winnerId: 'sea', headline: "The Romo Bobble", score: "Seahawks 21, Cowboys 20", date: "Jan 6, 2007", desc: "A chip shot to win. Romo dropped the snap. He cried in the locker room." },
+    { winnerId: 'gb', headline: "Dez Caught It", score: "Packers 26, Cowboys 21", date: "Jan 11, 2015", desc: "It looked like a catch. The rules said no. Playoff hopes dashed again." },
+    { winnerId: 'gb', headline: "Dak runs out of time", score: "49ers 23, Cowboys 17", date: "Jan 16, 2022", desc: "Dak ran a QB draw with no timeouts. The clock hit zero before they could snap it." },
+    { winnerId: 'gb', headline: "Love destroys Dallas", score: "Packers 48, Cowboys 32", date: "Jan 14, 2024", desc: "The #2 seed Cowboys got absolutely smoked at home by the #7 seed Packers." }
+  ],
+  sf: [
+    { winnerId: 'kc', headline: "Super Bowl LVIII", score: "Chiefs 25, 49ers 22", date: "Feb 11, 2024", desc: "Overtime. Muffed punt. Shanahan blew a 10 point lead in the Super Bowl... again." },
+    { winnerId: 'kc', headline: "Super Bowl LIV", score: "Chiefs 31, 49ers 20", date: "Feb 2, 2020", desc: "Up 20-10 with 7 minutes left. Jimmy G closed his eyes and threw a pick." },
+    { winnerId: 'sea', headline: "Sherman's Tip", score: "Seahawks 23, 49ers 17", date: "Jan 19, 2014", desc: "Kaep threw to Crabtree in the endzone. Sherman tipped it. 'Don't you ever talk about me!'" },
+    { winnerId: 'bal', headline: "Super Bowl XLVII", score: "Ravens 34, 49ers 31", date: "Feb 3, 2013", desc: "4 plays from the 5-yard line to win. Four incompletions. Har-Bowl lost." }
+  ],
+  buf: [
+    { winnerId: 'kc', headline: "13 Seconds", score: "Chiefs 42, Bills 36", date: "Jan 23, 2022", desc: "They scored to take the lead with 13 seconds left. They still lost. Unforgivable defense." },
+    { winnerId: 'nyg', headline: "Wide Right", score: "Giants 20, Bills 19", date: "Jan 27, 1991", desc: "Scott Norwood. 47 yards. It sailed wide right. The start of 4 straight Super Bowl losses." },
+    { winnerId: 'ten', headline: "Music City Miracle", score: "Titans 22, Bills 16", date: "Jan 8, 2000", desc: "It was a forward pass. But the refs didn't see it that way." }
+  ],
+  atl: [
+    { winnerId: 'ne', headline: "28-3", score: "Patriots 34, Falcons 28", date: "Feb 5, 2017", desc: "The biggest choke in sports history. Up 25 late in the 3rd. Kyle Shanahan forgot to run the ball." },
+    { winnerId: 'den', headline: "Super Bowl XXXIII", score: "Broncos 34, Falcons 19", date: "Jan 31, 1999", desc: "Eugene Robinson got arrested the night before. They got torched by Elway." }
+  ],
+  chi: [
+      { winnerId: 'phi', headline: "Double Doink", score: "Eagles 16, Bears 15", date: "Jan 6, 2019", desc: "Cody Parkey's kick hit the upright AND the crossbar. The sound haunts Chicago." },
+      { winnerId: 'gb', headline: "NFC Championship", score: "Packers 21, Bears 14", date: "Jan 23, 2011", desc: "Lost to their arch-rivals at home to go to the Super Bowl. Cutler sat out with a 'knee injury'." }
+  ],
+  cin: [
+      { winnerId: 'lar', headline: "Super Bowl LVI", score: "Rams 23, Bengals 20", date: "Feb 13, 2022", desc: "Aaron Donald blew up the final play. Burrow had no time." },
+      { winnerId: 'pit', headline: "The Fumble", score: "Steelers 18, Bengals 16", date: "Jan 9, 2016", desc: "Jeremy Hill fumbled. Burfict tried to kill Antonio Brown. Pacman Jones fought a ref. Meltdown." }
+  ],
+  cle: [
+      { winnerId: 'den', headline: "The Drive", score: "Broncos 23, Browns 20", date: "Jan 11, 1987", desc: "Elway went 98 yards in 5 minutes. Cleveland hearts broken." },
+      { winnerId: 'den', headline: "The Fumble", score: "Broncos 38, Browns 33", date: "Jan 17, 1988", desc: "Earnest Byner was crossing the goal line to tie the game. He stripped." },
+      { winnerId: 'bal', headline: "The Move", score: "Franchise Left", date: "1995", desc: "Art Modell took the team to Baltimore and won a Super Bowl. Pain." }
   ],
   generic: [
-    { winnerId: 'cham', headline: "Chaminade beat #1 Virginia in 1982", score: "Chaminade 77, Virginia 72", date: "Dec 23, 1982", desc: "Not your team, but remember: Ralph Sampson and #1 UVA lost to an NAIA school. Anything is possible." }
+    { winnerId: 'opponent', headline: "They choked", score: "Big Loss", date: "Recently", desc: "Honestly, they just aren't a serious franchise. You know it, I know it." }
   ]
 };
 
-const CELEBRATION_GIFS = [
-  "https://media.giphy.com/media/blSTtZemaWgPQ/giphy.gif",
-  "https://media.giphy.com/media/UO5elnTqo4vSg/giphy.gif",
-  "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
-  "https://media.giphy.com/media/l46CimW38a7EQxMcM/giphy.gif",
-  "https://media.giphy.com/media/HhBea19lrGaJO/giphy.gif",
-  "https://media.giphy.com/media/26u4cqiYI30juCOk0/giphy.gif",
-  "https://media.giphy.com/media/P7JmDW7IkB7TW/giphy.gif",
-  "https://media.giphy.com/media/pa37AAGzKXoek/giphy.gif",
-  "https://media.giphy.com/media/lu38au6O3SEj6/giphy.gif",
-  "https://media.giphy.com/media/BPJmthQ3YRwD6/giphy.gif",
-  "https://media.giphy.com/media/cO39srN2EUIRaVqaVq/giphy.gif",
-  "https://media.giphy.com/media/xl5QdxfNonh3q/giphy.gif",
-  "https://media.giphy.com/media/BFYLNwlsSNtcc/giphy.gif",
-  "https://media.giphy.com/media/10hzvF9FTulLxK/giphy.gif",
-  "https://media.giphy.com/media/HUHf3QyX7OXxm/giphy.gif",
-  "https://media.giphy.com/media/j0eRJzyW7XjMpx1Tlx/giphy.gif",
-  "https://media.giphy.com/media/l4Jz3a8jO92crUlWM/giphy.gif",
-  "https://media.giphy.com/media/nNxT5qXR02FOM/giphy.gif",
-  "https://media.giphy.com/media/l0HlCqV35hdEg2LSM/giphy.gif",
-  "https://media.giphy.com/media/ebAfdhOr5mn0LG1mme/giphy.gif",
-  "https://media.giphy.com/media/gtakVlnStZUbe/giphy.gif",
-  "https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif",
-  "https://media.giphy.com/media/l3V0lsGtTMSB5YNgc/giphy.gif",
-  "https://media.giphy.com/media/Is1O1TWV0LEJi/giphy.gif",
-  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/9Y6n9TR7U07ew/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3NtY188QaxDdC/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kEKcOWl8RMLde/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/aq6Thivv9V9lu/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kKo2x2QSWMNfW/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3oEjHI8WJv4x6UPDB6/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/inyqrgp9o3NUA/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3NWFibGJuOGZwdmdwOXBlaTdseGt0eXo1cG10c3N2cGZ2b245OW8xbyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/XR9Dp54ZC4dji/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aDk0OXJieXl2NWloNzU1dG9yZXB1dHJnaXlyN2xsYms3N20yM3BwdSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1LweXxLwVT0J2/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3YXJ1aWprZnVlMDd3ajdlMGpnM2ljNHN6czVyaGZqdDE3N3hsdmtuNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DpB9NBjny7jF1pd0yt2/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eHgzYzl2bHJvZmRkaG85eGhuYmkwaWIwa3dpdWtzNnJseWEyc3htbCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uxLVaMUiycgpO/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/T87BZ7cyOH7TwDBgwy/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/61MN4zqj333nTdtLEH/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/fPRwBcYd71Lox1v7p2/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eDR3dnJkZWYzd2Q4N242enBocnRzZDZycXN6bGp3bWlzOXA0dHp5ZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VABbCpX94WCfS/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/unAjVtjhUeYFMJ8jFc/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1PMVNNKVIL8Ig/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/yCjr0U8WCOQM0/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o7abldj0b3rxrZUxW/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/10Jpr9KSaXLchW/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3ohzdIuqJoo8QdKlnW/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DffShiJ47fPqM/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3WCNY2RhcmnwGbKbCi/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/rdma0nDFZMR32/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/12PIT4DOj6Tgek/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWV5NGd5NWV3Y24yN3p0ZXV2ZnlkMXoxNXZkazE4ZDB4b2d6Y3ZjeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4GuFtlz4IhKSt89E7q/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KB7Moe2Oj0BXeDjvDp/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DYH297XiCS2Ck/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/SA613Nxg1h6zO1nRsg/giphy.gif"
-];
-
 const TRASH_TALK = [
-  "Couldn't happen to a nicer team.",
   "Thoughts and prayers. 🙏",
   "Someone check on their fans. 😂",
   "Inject this into my veins. 💉",
-  "Nature is healing. 🌿",
   "Down bad. 📉",
   "Holding that L. 🥡",
-  "RIP Bozo. 💀",
   "Chef's kiss. 🤌",
   "Pure cinema. 🍿",
-  "Not a serious franchise.",
-  "Fraud alert. 🚨",
   "Exposed.",
   "They are who we thought they were.",
   "Hang the banner: 'Participated'.",
@@ -545,32 +596,13 @@ const TRASH_TALK = [
   "Call the waaaambulance. 🚑",
   "Keep crying.",
   "Delicious tears. 💧",
-  "We love to see it.",
   "Oof. Big oof.",
   "Warm up the bus!",
-  "Scoreboard.",
   "This sparks joy. ✨",
   "Emotional damage. 💥",
-  "Someone give them a hug.",
-  "That wasn't a game, it was a cry for help."
+  "Someone give them a hug."
 ];
 
-const TEASE_TITLES = [
-  "Guess what?",
-  "Great news, Matt! 📉",
-  "Haterade Alert! 🥤",
-  "You're gonna love this...",
-  "Schadenfreude incoming... 😈",
-  "It happened again.",
-  "Tap to see who choked.",
-  "Spoiler Alert: They lost!",
-  "Alert: They lost!",
-  "Not surprised, but...",
-  "Heh heh. Guess who lost...",
-  "Pure joy awaits inside."
-];
-
-// --- UPDATED: Dynamic Template Library ---
 const TEMPLATE_LIBRARY = {
   Casual: [
     "So... [TEAM] lost [SCORE]-[OPP_SCORE]. Hate to see it. 😬 [LINK]",
@@ -911,21 +943,40 @@ export default function App() {
   const pickHistoricLoss = () => {
     const candidates = hatedTeams.filter(id => HISTORIC_LOSSES[id]);
     
+    // Fallback ID fix: Some IDs like 'det' are used for both NBA and NFL
+    // We need to check for suffix matches if direct match fails
+    const extendedCandidates = [];
+    hatedTeams.forEach(id => {
+        if (HISTORIC_LOSSES[id]) extendedCandidates.push(id);
+        else {
+            // Check for potential suffix key in HISTORIC_LOSSES (e.g. det_nfl)
+             const foundKey = Object.keys(HISTORIC_LOSSES).find(k => k.startsWith(id + '_'));
+             if (foundKey) extendedCandidates.push(foundKey);
+        }
+    });
+    
     const validFacts = [];
-    candidates.forEach(teamId => {
-      const facts = HISTORIC_LOSSES[teamId];
+    extendedCandidates.forEach(key => {
+      const facts = HISTORIC_LOSSES[key];
+      // Extract original team ID from key (remove _nfl suffix if present for looking up Team Object)
+      const originalTeamId = key.includes('_') ? key.split('_')[0] : key;
+      
       if (facts) {
         facts.forEach(fact => {
           if (!hatedTeams.includes(fact.winnerId)) {
-            validFacts.push({ team: ALL_TEAMS.find(t => t.id === teamId), ...fact });
+            // Try to find team object, handle the suffix matching for the object lookup
+            const teamObj = ALL_TEAMS.find(t => t.id === originalTeamId) || ALL_TEAMS.find(t => t.id === key);
+            validFacts.push({ team: teamObj, ...fact });
           }
         });
       }
     });
 
     if (validFacts.length === 0) {
-      const genericFact = HISTORIC_LOSSES.generic[0];
-      setConsolationFact({ team: { name: "Sports History" }, ...genericFact });
+      const genericFact = HISTORIC_LOSSES.generic ? HISTORIC_LOSSES.generic[0] : null;
+      if (genericFact) {
+        setConsolationFact({ team: { name: "Sports History" }, ...genericFact });
+      }
       return;
     }
 
@@ -1069,8 +1120,6 @@ export default function App() {
             <h1 className="font-black text-xl tracking-tight italic">THEY LOST!</h1>
           </div>
           <div className="flex gap-2">
-            {/* SIMULATE BUTTON REMOVED FROM UI */}
-
             <button 
               onClick={checkLiveScores}
               disabled={loading}
