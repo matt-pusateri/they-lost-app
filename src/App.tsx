@@ -526,30 +526,11 @@ const TEASE_TITLES = [
   "Pure joy awaits inside."
 ];
 
-// --- UPDATED: Dynamic Template Library ---
-const TEMPLATE_LIBRARY = {
-  Casual: [
-    "So... [TEAM] lost [SCORE]-[OPP_SCORE]. Hate to see it. 😬 [LINK]",
-    "Just checking in. You see [TEAM] lost [SCORE]-[OPP_SCORE]? [LINK]",
-    "Oof. [TEAM] dropped one. [SCORE]-[OPP_SCORE]. [LINK]",
-    "Hey, did you see [TEAM] lost? [SCORE]-[OPP_SCORE]. [LINK]",
-    "Tough look for [TEAM] today. [SCORE]-[OPP_SCORE]. [LINK]"
-  ],
-  Receipts: [
-    "FINAL: [TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. See for yourself: [LINK]",
-    "Scoreboard: [TEAM] [SCORE] - [OPPONENT] [OPP_SCORE]. [LINK]",
-    "In case you missed it: [TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. [LINK]",
-    "Just stating facts: [TEAM] lost [SCORE]-[OPP_SCORE]. [LINK]",
-    "[TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. Just leaving this here. [LINK]"
-  ],
-  Toxic: [
-    "IMAGINE LOSING [SCORE]-[OPP_SCORE] TO [OPPONENT]. [TEAM] DOWN BAD. 📉🤡 [LINK]",
-    "lol [TEAM] lost. [SCORE]-[OPP_SCORE]. Trash franchise. 🗑️ [LINK]",
-    "[TEAM] fans real quiet after losing [SCORE]-[OPP_SCORE]. 😂 [LINK]",
-    "Hold this L. [TEAM] [SCORE]-[OPP_SCORE]. 🤡 [LINK]",
-    "Imagine being a [TEAM] fan right now. Couldn't be me. [SCORE]-[OPP_SCORE]. 📉 [LINK]"
-  ]
-};
+const SHARE_TEMPLATES = [
+  { label: "Casual", text: "So... [TEAM] lost [SCORE]-[OPP_SCORE]. Hate to see it. 😬 [LINK]" },
+  { label: "Receipts", text: "FINAL: [TEAM] [SCORE], [OPPONENT] [OPP_SCORE]. See for yourself: [LINK]" },
+  { label: "Toxic", text: "IMAGINE LOSING [SCORE]-[OPP_SCORE] TO [OPPONENT]. [TEAM] DOWN BAD. 📉🤡 [LINK]" },
+];
 
 // --- ONBOARDING COMPONENT ---
 const Onboarding = ({ onComplete, currentTheme }) => {
@@ -654,17 +635,9 @@ const Onboarding = ({ onComplete, currentTheme }) => {
             <p className="text-slate-400 mb-8 max-w-xs">
                 We'll send you a notification any time that rival team blows it.
             </p>
-
-            {/* Fake Notification Preview */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl w-full max-w-xs flex items-center gap-3 mb-8 text-left">
-                <div className="bg-blue-600 p-2 rounded-lg">
-                    <Bell size={16} className="text-white" />
-                </div>
-                <div>
-                    <div className="text-xs font-bold opacity-80">THEY LOST</div>
-                    <div className="text-sm font-bold">Guess what happened? 📉</div>
-                </div>
-            </div>
+            <p className="text-xs text-slate-500 mt-4">
+              (Note: Notifications currently require the app to be open)
+            </p>
         </div>
         <div className="space-y-3 w-full">
             <button 
@@ -696,7 +669,7 @@ export default function App() {
   // --- ONBOARDING STATE ---
   const [showOnboarding, setShowOnboarding] = useState(
     // Check local storage on initial render
-    () => !localStorage.getItem('tl_onboarded')
+    () => localStorage.getItem('tl_onboarded') !== 'true'
   );
 
   // --- SETTINGS STATE ---
@@ -721,7 +694,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [noGamesMsg, setNoGamesMsg] = useState(null);
-  const [notification, setNotification] = useState(null); 
+  // Removed internal notification state
   
   // NEW STATE FOR SHARE OPTIONS
   const [shareOptions, setShareOptions] = useState([]);
@@ -736,6 +709,11 @@ export default function App() {
       if (firstEnabled) setActiveLeague(firstEnabled);
     }
   }, [enabledLeagues, activeLeague]);
+
+  // AUTO-CHECK ON LOAD
+  useEffect(() => {
+    checkLiveScores();
+  }, []); 
 
   const completeOnboarding = () => {
       localStorage.setItem('tl_onboarded', 'true');
@@ -755,52 +733,6 @@ export default function App() {
     }
   };
 
-  // MOCK SIMULATION
-  const simulateGames = () => {
-    setConsolationFact(null);
-    setCelebration(null);
-    setNoGamesMsg(null);
-    setNotification(null); 
-
-    setLoading(true);
-
-    setTimeout(() => {
-        const results = hatedTeams.map(teamId => {
-        const team = ALL_TEAMS.find(t => t.id === teamId);
-        if (!team) return null;
-        if (team.league !== activeLeague) return null;
-
-        const teamScore = generateScore(team.league);
-        const opponentScore = generateScore(team.league);
-        const adjustedOpponentScore = opponentScore === teamScore ? opponentScore + 1 : opponentScore;
-        const isLoss = teamScore < adjustedOpponentScore;
-        const gameId = Math.floor(Math.random() * 1000000000); 
-        const isYesterday = Math.random() > 0.7;
-
-        return {
-            team,
-            opponent: 'Generic Opponent',
-            teamScore,
-            opponentScore: adjustedOpponentScore,
-            status: isLoss ? 'LOST' : 'WON',
-            gameId: gameId,
-            isLive: false,
-            isYesterday: isYesterday 
-        };
-        }).filter(Boolean);
-
-        setGameResults(results);
-        
-        const losers = results.filter(r => r.status === 'LOST');
-        if (losers.length > 0) {
-            triggerNotification();
-        } else {
-            processResults(results); 
-        }
-        setLoading(false);
-    }, 1500); 
-  };
-
   // REAL LIVE DATA FETCH
   const checkLiveScores = async () => {
     setLoading(true);
@@ -808,7 +740,7 @@ export default function App() {
     setCelebration(null);
     setNoGamesMsg(null);
     setGameResults([]);
-    setNotification(null);
+    // Removed notification call
 
     try {
       const liveData = await fetchScoreboard(activeLeague);
@@ -894,7 +826,8 @@ export default function App() {
       
       const losers = relevantGames.filter(r => r.status === 'LOST');
       if (losers.length > 0) {
-          triggerNotification();
+          // Directly trigger celebration instead of internal notification
+          triggerCelebration(losers.length);
       } else {
           processResults(relevantGames);
       }
@@ -905,19 +838,6 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const triggerNotification = () => {
-      const randomTitle = TEASE_TITLES[Math.floor(Math.random() * TEASE_TITLES.length)];
-      setNotification({
-          title: randomTitle,
-          body: "Tap to view the beautiful details."
-      });
-  };
-
-  const handleNotificationClick = () => {
-      setNotification(null);
-      processResults(gameResults); 
   };
 
   const processResults = (results) => {
@@ -1048,22 +968,6 @@ export default function App() {
     );
   };
 
-  const PushNotification = ({ title, body, onClick }) => (
-    <div 
-        onClick={onClick}
-        className="fixed top-4 left-4 right-4 z-[60] bg-white/95 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-2xl p-3 flex items-center gap-3 cursor-pointer animate-slide-in-top active:scale-95 transition-transform"
-    >
-        <div className="bg-blue-600 p-2 rounded-xl">
-            <Bell size={20} className="text-white" />
-        </div>
-        <div className="flex-1">
-            <h4 className="font-bold text-slate-800 text-sm">{title}</h4>
-            <p className="text-slate-500 text-xs">{body}</p>
-        </div>
-        <div className="text-xs text-slate-300 font-bold">NOW</div>
-    </div>
-  );
-
   return (
     <div className={`min-h-screen ${styles.bg} ${styles.font} ${styles.text} max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-slate-200 flex flex-col`}>
       <style>{`
@@ -1096,15 +1000,6 @@ export default function App() {
 
       {/* ONBOARDING MODAL */}
       {showOnboarding && <Onboarding onComplete={completeOnboarding} currentTheme={activeTheme} />}
-
-      {/* NOTIFICATION OVERLAY */}
-      {notification && (
-          <PushNotification 
-            title={notification.title} 
-            body={notification.body} 
-            onClick={handleNotificationClick} 
-          />
-      )}
 
       {/* HEADER */}
       <header className={`p-4 sticky top-0 z-30 ${styles.header}`}>
@@ -1223,13 +1118,7 @@ export default function App() {
               </p>
               
               <div className="flex gap-2">
-                <button 
-                  onClick={simulateGames}
-                  className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition ${styles.buttonSecondary}`}
-                >
-                  <RefreshCw size={18} />
-                  Simulate
-                </button>
+                {/* SIMULATE BUTTON REMOVED FROM UI */}
                 <button 
                   onClick={checkLiveScores}
                   disabled={loading}
@@ -1240,7 +1129,7 @@ export default function App() {
                 </button>
               </div>
               <p className="text-[10px] opacity-50 mt-3 uppercase tracking-widest font-bold">
-                {loading ? "Checking ESPN..." : "Tap simulate for instant joy"}
+                {loading ? "Checking ESPN..." : "Tap for instant joy"}
               </p>
             </div>
 
