@@ -787,17 +787,6 @@ export default function App() {
 
   // --- LOGIC ---
 
-  const generateScore = (league) => {
-    if (league === 'NFL' || league === 'CFB') {
-      const score = Math.floor(Math.random() * 45) + 3; // Increased variance for CFB
-      return score;
-    } else if (league === 'NBA') {
-      return Math.floor(Math.random() * 50) + 80;
-    } else {
-      return Math.floor(Math.random() * 40) + 50;
-    }
-  };
-
   // REAL LIVE DATA FETCH
   const checkLiveScores = async () => {
     setLoading(true);
@@ -1548,24 +1537,24 @@ export default function App() {
       </main>
 
       {/* Tab Bar */}
-      <nav className={`shrink-0 flex justify-around p-3 pb-8 z-30 text-[10px] font-bold tracking-widest uppercase ${styles.nav}`}>
+      <nav className={`shrink-0 flex justify-around p-2 pb-5 z-30 text-[10px] font-bold tracking-widest uppercase ${styles.nav}`}>
         <button 
           onClick={() => setView('scoreboard')}
-          className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition w-20 ${view === 'scoreboard' ? styles.navActive : styles.navInactive}`}
+          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition w-20 ${view === 'scoreboard' ? styles.navActive : styles.navInactive}`}
         >
           <PartyPopper size={22} strokeWidth={view === 'scoreboard' ? 2.5 : 2} />
           <span>Scores</span>
         </button>
         <button 
           onClick={() => setView('manage')}
-          className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition w-20 ${view === 'manage' ? styles.navActive : styles.navInactive}`}
+          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition w-20 ${view === 'manage' ? styles.navActive : styles.navInactive}`}
         >
           <Target size={22} strokeWidth={view === 'manage' ? 2.5 : 2} />
           <span>Enemies</span>
         </button>
         <button 
           onClick={() => setView('settings')}
-          className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition w-20 ${view === 'settings' ? styles.navActive : styles.navInactive}`}
+          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition w-20 ${view === 'settings' ? styles.navActive : styles.navInactive}`}
         >
           <Settings size={22} strokeWidth={view === 'settings' ? 2.5 : 2} />
           <span>Settings</span>
