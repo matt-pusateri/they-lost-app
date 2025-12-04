@@ -318,31 +318,31 @@ const Onboarding = ({ onComplete }) => {
   const [step, setStep] = useState(0);
   return (
     step === 0 ? (
-      <div className="fixed inset-0 z-[100] bg-blue-600 text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-blue-600 to-blue-800 text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
         <div className="bg-white/20 p-6 rounded-full mb-6 text-6xl">😄</div>
         <h1 className="text-3xl font-black italic mb-4">Fill your hater's heart with joy</h1>
         <p className="text-lg font-medium opacity-90 mb-8 max-w-xs">Love the jolt of joy when a team you hate loses? This app alerts you ONLY when they lose.</p>
         <button onClick={() => setStep(1)} className="bg-white text-blue-600 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full max-w-xs hover:scale-105 transition-transform">Let your hate flow</button>
       </div>
     ) : step === 1 ? (
-      <div className="fixed inset-0 z-[100] bg-slate-50 text-slate-900 flex flex-col p-6 animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-indigo-700 to-blue-900 text-white flex flex-col p-6 animate-in slide-in-from-right duration-300">
         <div className="flex-1 flex flex-col items-center justify-center text-center">
             <div className="mb-6 relative"><Target size={64} className="text-red-500" /><div className="absolute -bottom-2 -right-2 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded-full">STEP 1</div></div>
             <h2 className="text-2xl font-black mb-2">Pick Your Targets</h2>
-            <p className="text-slate-500 mb-8 max-w-xs">Search for teams across NCAA, NFL, and NBA. Add them to your "Enemies List."</p>
+            <p className="text-slate-200 mb-8 max-w-xs">Search for teams across NCAA, NFL, and NBA. Add them to your "Enemies List."</p>
         </div>
-        <button onClick={() => setStep(2)} className="bg-slate-900 text-white text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full">Got it, next</button>
+        <button onClick={() => setStep(2)} className="bg-white text-indigo-700 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full">Got it, next</button>
       </div>
     ) : (
-      <div className="fixed inset-0 z-[100] bg-slate-900 text-white flex flex-col p-6 animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-sky-500 to-blue-600 text-white flex flex-col p-6 animate-in slide-in-from-right duration-300">
         <div className="flex-1 flex flex-col items-center justify-center text-center">
-            <div className="mb-6 bg-white/10 p-6 rounded-full"><Bell size={48} className="text-yellow-400 animate-bounce" /></div>
+            <div className="mb-6 bg-white/20 p-6 rounded-full"><Bell size={48} className="text-yellow-300 animate-bounce" /></div>
             <h2 className="text-2xl font-black mb-2">Don't Miss the Moment</h2>
-            <p className="text-slate-400 mb-8 max-w-xs">We'll send a notification any time that rival team blows it.</p>
+            <p className="text-blue-50 mb-8 max-w-xs">We'll send a notification any time a team you hate blows it.</p>
         </div>
         <div className="space-y-3 w-full">
-            <button onClick={() => onComplete()} className="bg-white text-slate-900 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full">Enable Notifications</button>
-            <button onClick={() => onComplete()} className="text-slate-500 text-sm font-bold py-2 w-full">Maybe Later</button>
+            <button onClick={() => onComplete()} className="bg-white text-blue-600 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full">Enable Notifications</button>
+            <button onClick={() => onComplete()} className="text-blue-100 text-sm font-bold py-2 w-full hover:text-white">Maybe Later</button>
         </div>
       </div>
     )
