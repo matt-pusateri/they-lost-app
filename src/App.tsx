@@ -1,46 +1,47 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper, History, Search, Globe, Bell, ExternalLink, Palette, Settings, ToggleLeft, ToggleRight, Target, Activity, LogOut, Clock } from 'lucide-react';
+import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper, History, Search, Globe, Bell, ExternalLink, Palette, Settings, ToggleLeft, ToggleRight, Target, Activity, LogOut, Clock, Check } from 'lucide-react';
 
 // --- 1. UTILITIES & CONFIG ---
 const CELEBRATION_GIFS = [
-"https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/9Y6n9TR7U07ew/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3NtY188QaxDdC/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kEKcOWl8RMLde/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/aq6Thivv9V9lu/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kKo2x2QSWMNfW/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3oEjHI8WJv4x6UPDB6/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/inyqrgp9o3NUA/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3NWFibGJuOGZwdmdwOXBlaTdseGt0eXo1cG10c3N2cGZ2b245OW8xbyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/XR9Dp54ZC4dji/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aDk0OXJieXl2NWloNzU1dG9yZXB1dHJnaXlyN2xsYms3N20yM3BwdSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1LweXxLwVT0J2/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3YXJ1aWprZnVlMDd3ajdlMGpnM2ljNHN6czVyaGZqdDE3N3hsdmtuNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DpB9NBjny7jF1pd0yt2/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eHgzYzl2bHJvZmRkaG85eGhuYmkwaWIwa3dpdWtzNnJseWEyc3htbCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uxLVaMUiycgpO/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/T87BZ7cyOH7TwDBgwy/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/61MN4zqj333nTdtLEH/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/fPRwBcYd71Lox1v7p2/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eDR3dnJkZWYzd2Q4N242enBocnRzZDZycXN6bGp3bWlzOXA0dHp5ZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VABbCpX94WCfS/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/unAjVtjhUeYFMJ8jFc/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1PMVNNKVIL8Ig/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/yCjr0U8WCOQM0/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o7abldj0b3rxrZUxW/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/10Jpr9KSaXLchW/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3ohzdIuqJoo8QdKlnW/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DffShiJ47fPqM/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3WCNY2RhcmnwGbKbCi/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/rdma0nDFZMR32/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/12PIT4DOj6Tgek/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWV5NGd5NWV3Y24yN3p0ZXV2ZnlkMXoxNXZkazE4ZDB4b2d6Y3ZjeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4GuFtlz4IhKSt89E7q/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KB7Moe2Oj0BXeDjvDp/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DYH297XiCS2Ck/giphy.gif",
-"https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/SA613Nxg1h6zO1nRsg/giphy.gif"
+  "https://i.giphy.com/media/HmdsITkYtq5i/giphy.gif", // MJ Laughing
+  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/9Y6n9TR7U07ew/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3NtY188QaxDdC/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aGd2dGp4N2M2cHRlNzc4Yndvczg3N20zdDF2N3IyNXJoeDBmYXVmNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kEKcOWl8RMLde/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/aq6Thivv9V9lu/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Y3Btd3RqN3YzdHM4YTFlMWkzdjA4OGNvbG5iZjR1b2hvaTlxeWY3ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kKo2x2QSWMNfW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3oEjHI8WJv4x6UPDB6/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWMwZnFieGtiOGxyd3ZqcmxqejNjcTVjcjloZHZsdGlvNG1oNGM0YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/inyqrgp9o3NUA/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3NWFibGJuOGZwdmdwOXBlaTdseGt0eXo1cG10c3N2cGZ2b245OW8xbyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/XR9Dp54ZC4dji/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aDk0OXJieXl2NWloNzU1dG9yZXB1dHJnaXlyN2xsYms3N20yM3BwdSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1LweXxLwVT0J2/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3YXJ1aWprZnVlMDd3ajdlMGpnM2ljNHN6czVyaGZqdDE3N3hsdmtuNyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DpB9NBjny7jF1pd0yt2/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eHgzYzl2bHJvZmRkaG85eGhuYmkwaWIwa3dpdWtzNnJseWEyc3htbCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uxLVaMUiycgpO/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/T87BZ7cyOH7TwDBgwy/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/61MN4zqj333nTdtLEH/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/fPRwBcYd71Lox1v7p2/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eDR3dnJkZWYzd2Q4N242enBocnRzZDZycXN6bGp3bWlzOXA0dHp5ZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VABbCpX94WCfS/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/unAjVtjhUeYFMJ8jFc/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1PMVNNKVIL8Ig/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/yCjr0U8WCOQM0/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o7abldj0b3rxrZUxW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/10Jpr9KSaXLchW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3ohzdIuqJoo8QdKlnW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DffShiJ47fPqM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3WCNY2RhcmnwGbKbCi/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/rdma0nDFZMR32/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/12PIT4DOj6Tgek/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWV5NGd5NWV3Y24yN3p0ZXV2ZnlkMXoxNXZkazE4ZDB4b2d6Y3ZjeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4GuFtlz4IhKSt89E7q/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KB7Moe2Oj0BXeDjvDp/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DYH297XiCS2Ck/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/SA613Nxg1h6zO1nRsg/giphy.gif"
 ];
 
 const TRASH_TALK = [
@@ -181,11 +182,25 @@ const RAW_HISTORY = {
     ['unc', "K's Final Home Game", "UNC 94, Duke 81", "March 5, 2022", "The 'uninvited guests' ruined the retirement party. 96 former players watched Duke get blown out at Cameron."],
     ['unc', "The Cormac Ryan Game", "UNC 84, Duke 79", "March 9, 2024", "UNC swept the season series. Cormac Ryan dropped 31 points and waved goodbye to the Crazies."],
     ['unc', "The Austin Rivers Shot", "Duke 85, UNC 84", "Feb 8, 2012", "Wait, this is a Duke win... oh wait, you mean when UNC blew them out later? No, remember 2021? UNC 91, Duke 73. Roy's final win at Cameron."],
+    ['unc', "Jerami Grant's Dunk", "UNC 74, Duke 66", "Feb 20, 2014", "UNC rallied from 11 down in the second half. Duke fans stormed the court... oh wait, they lost."],
     ['mercer', "Mercer danced on them", "Mercer 78, Duke 71", "March 21, 2014", "A #3 seed Duke team with Jabari Parker lost to a bunch of seniors from the Atlantic Sun."],
     ['lehigh', "CJ McCollum happened", "Lehigh 75, Duke 70", "March 16, 2012", "A #2 seed lost to a #15 seed. One of the biggest upsets in tournament history."],
     ['conn', "1999 Championship", "UConn 77, Duke 74", "March 29, 1999", "This Duke team was considered one of the best ever. Rip Hamilton and Khalid El-Amin had other plans."],
     ['unlv', "103-73", "UNLV 103, Duke 73", "April 2, 1990", "The biggest blowout in National Championship history. Men against boys."],
-    ['sc', "South Carolina upset", "S. Carolina 88, Duke 81", "March 19, 2017", "Playing in South Carolina, the #2 seed Duke got bullied out of the tournament in the Round of 32."]
+    ['sc', "South Carolina upset", "S. Carolina 88, Duke 81", "March 19, 2017", "Playing in South Carolina, the #2 seed Duke got bullied out of the tournament in the Round of 32."],
+    ['unc', "The Loudest Noise Ever", "UNC 75, Duke 73", "March 6, 2005", "Duke led late. Marvin Williams grabbed the offensive board, hit the shot, and the free throw. The Dean Dome nearly collapsed from the noise."],
+    ['unc', "Senior Night Ruined", "UNC 83, Duke 76", "March 4, 2006", "It was supposed to be Redick and Shelden Williams' perfect send-off. Instead, unranked UNC and Tyler Hansbrough crashed the party."],
+    ['unc', "88-70 at Cameron", "UNC 88, Duke 70", "March 3, 2012", "Everyone remembers the Rivers shot. They forget that 3 weeks later, UNC walked into Cameron and absolutely demolished Duke by 18 points."],
+    ['unc', "Swept by an 8-seed", "UNC 91, Duke 73", "March 6, 2021", "A mediocre UNC team absolutely steamrolled Duke in Chapel Hill. Duke missed the NCAA tournament entirely this year."],
+    ['unc', "Hansbrough goes 4-0", "UNC 76, Duke 68", "March 8, 2008", "Tyler Hansbrough never lost a game at Cameron Indoor Stadium. Four straight years. He owned that building."],
+    ['vcu', "The Dagger", "VCU 79, Duke 77", "March 15, 2007", "First Round. Eric Maynor hit the jumper over Scheyer with 1.8 seconds left. Duke lost in the first round for the first time in a decade."],
+    ['lsu', "Big Baby Davis", "LSU 62, Duke 54", "March 23, 2006", "The #1 overall seed Duke. JJ Redick shot 3-for-18 in his final college game. Glen 'Big Baby' Davis ate them alive in the paint."],
+    ['iu', "Blowing a 17-Point Lead", "Indiana 74, Duke 73", "March 21, 2002", "Sweet 16. Duke led by 17. They collapsed. Jay Williams missed the game-tying free throw. The defending champs went home."],
+    ['ncst', "DJ Burns Happened", "NC State 76, Duke 64", "March 31, 2024", "Elite Eight. A trip to the Final Four on the line. They got physically bullied by DJ Burns and a Cinderella Wolfpack team."],
+    ['msu', "Zion Goes Home", "Mich St 68, Duke 67", "March 31, 2019", "Elite Eight. A team with Zion, RJ Barrett, and Cam Reddish lost to Cassius Winston. The greatest prospect ever didn't even make a Final Four."],
+    ['wvu', "Joe Alexander", "WVU 73, Duke 67", "March 22, 2008", "Round of 32. Duke was a #2 seed. They got run out of the gym by Joe Alexander and Da'Sean Butler."],
+    ['mia', "The Miami Blowout", "Miami 90, Duke 63", "Jan 23, 2013", "#1 Duke vs #25 Miami. It was a massacre. Duke lost by 27 points. One of the worst regular season losses in the Coach K era."],
+    ['tenn', "Physicality", "Tennessee 65, Duke 52", "March 18, 2023", "NCAA Round of 32. Duke was pushed around, bullied, and physically beaten for 40 minutes. They looked soft."]
   ],
   ncst: [
     ['pur', "Final Four Heartbreak", "Purdue 63, NC State 50", "April 6, 2024", "The magic ran out. Edey was too big, and the shots stopped falling. A sad end to a miracle run."],
@@ -208,7 +223,9 @@ const RAW_HISTORY = {
   ],
   det: [
     ['sas', "Horry left open", "Spurs 4-3 Series", "June 2005", "Sheed left Robert Horry open in the corner in Game 5. Then they lost Game 7. A dynasty denied."],
+    ['cle', "LeBron's 25 straight", "Cavs 109, Pistons 107", "May 31, 2007", "LeBron scored the Cavs' last 25 points. He single-handedly dismantled the 'Goin to Work' Pistons."],
     ['bos', "Bird stole the ball", "Celtics 108, Pistons 107", "May 26, 1987", "Isiah Thomas threw it away. Bird to DJ. Layup. Heartbreak."],
+    ['lal', "The Phantom Foul", "Lakers 103, Pistons 102", "June 19, 1988", "Laimbeer didn't touch Kareem. A questionable foul call arguably cost them the title."],
     ['mia', "Shaq's Revenge", "Heat 4-2 Series", "May 2006", "The Heat finally got past them. The end of the Ben Wallace era in Detroit."],
     ['all', "28 Straight Losses", "The Streak", "Dec 2023", "They set the single-season record for consecutive losses. 28 games without a win. Pure misery."]
   ],
@@ -218,10 +235,12 @@ const RAW_HISTORY = {
   ],
   phi: [
     ['tor', "The Bounce", "Raptors 92, 76ers 90", "May 12, 2019", "Kawhi's shot bounced four times. Embiid cried in the tunnel. The Process failed."],
-    ['atl', "Ben Simmons passed", "Hawks 103, 76ers 96", "June 20, 2021", "Simmons had a wide open dunk. He passed it. The Process died that moment."]
+    ['atl', "Ben Simmons passed", "Hawks 103, 76ers 96", "June 20, 2021", "Simmons had a wide open dunk. He passed it. The Process died that moment."],
+    ['bos', "Tatum 51", "Celtics 112, Sixers 88", "May 14, 2023", "Game 7. Harden disappeared. Embiid disappeared. Tatum set a record."]
   ],
   lal: [
     ['bos', "The Wheelchair Game", "Celtics 4-2 Series", "June 2008", "Paul Pierce faked an injury, came back, and the Celtics blew out the Lakers by 39 in the clincher."],
+    ['det', "Five Game Sweep", "Pistons 4-1 Series", "June 2004", "The Kobe/Shaq divorce was finalized by a Pistons beatdown. Malone retired ringless."],
     ['phx', "Kobe quit?", "Suns 121, Lakers 90", "May 6, 2006", "Game 7 against the Suns. Kobe refused to shoot in the second half to prove a point."]
   ],
   gb: [
@@ -232,13 +251,22 @@ const RAW_HISTORY = {
     ['phi', "4th and 26", "Eagles 20, Packers 17", "Jan 11, 2004", "Donovan McNabb converted a 4th and 26. Favre threw a duck in OT. Heartbreak."],
     ['den', "Super Bowl XXXII", "Broncos 31, Packers 24", "Jan 25, 1998", "Favre vs Elway. The Packers were heavy favorites. Terrell Davis had a migraine and still ran over them."],
     ['nyg', "Favre's Last Pass", "Giants 23, Packers 20", "Jan 20, 2008", "Overtime in the frozen tundra. Favre threw an INT on his final pass as a Packer."],
-    ['atl', "Falcons Blowout", "Falcons 44, Packers 21", "Jan 22, 2017", "NFC Championship. The Packers were down 31-0. It wasn't even competitive."]
+    ['atl', "Falcons Blowout", "Falcons 44, Packers 21", "Jan 22, 2017", "NFC Championship. The Packers were down 31-0. It wasn't even competitive."],
+    ['chi', "Thanksgiving Nightmare", "Bears 17, Packers 13", "Nov 26, 2015", "It was Brett Favre's jersey retirement ceremony at Lambeau on Thanksgiving. The Bears ruined the party. Jay Cutler outplayed Aaron Rodgers in the rain."],
+    ['chi', "The Block for Walter", "Bears 14, Packers 13", "Nov 7, 1999", "Played one week after Walter Payton died. Bryan Robinson blocked a 28-yard field goal as time expired to shock the Packers at Lambeau."],
+    ['chi', "26-Zero", "Bears 26, Packers 0", "Sept 10, 2006", "The season opener at Lambeau. The Bears defense absolutely strangled Brett Favre. It was the first time Favre had ever been shut out in his career."],
+    ['chi', "The Mike Brown Scoop", "Bears 21, Packers 10", "Sept 19, 2004", "Lovie Smith promised his #1 goal was to beat Green Bay. In his first try at Lambeau, Mike Brown returned a fumble 95 yards for a TD to seal it."],
+    ['chi', "The Fridge Scores", "Bears 23, Packers 7", "Oct 21, 1985", "Monday Night Football. Ditka put William 'The Refrigerator' Perry in at fullback. He plowed over the Packers' defense for a TD. Ultimate disrespect."],
+    ['chi', "Devin Hester House Call", "Bears 20, Packers 17", "Sept 27, 2010", "Monday Night Football. Devin Hester took a punt 62 yards to the house. The Bears forced 18 penalties on the undisciplined Packers."],
+    ['chi', "Division Champs", "Bears 24, Packers 17", "Dec 16, 2018", "The Bears finally snapped the streak, clinched the NFC North title, and eliminated the Packers from playoff contention all in one afternoon."]
   ],
   min: [
     ['phi', "38-7", "Eagles 38, Vikings 7", "Jan 21, 2018", "After the Minneapolis Miracle, they laid an absolute egg. Nick Foles looked like Montana."],
     ['sea', "Blair Walsh Wide Left", "Seahawks 10, Vikings 9", "Jan 10, 2016", "27 yards. Chip shot. Sub-zero temps. He missed it. The laces were in!"],
+    ['no', "Bountygate Game", "Saints 31, Vikings 28", "Jan 24, 2010", "Favre threw across his body in field goal range. Tracy Porter picked it off. 12 men in the huddle penalty."],
     ['nyg', "41-Donut", "Giants 41, Vikings 0", "Jan 14, 2001", "NFC Championship. Kerry Collins torched them. It was 14-0 before the fans sat down."],
     ['atl', "Gary Anderson's Miss", "Falcons 30, Vikings 27", "Jan 17, 1999", "15-1 season. Offense was unstoppable. Anderson hadn't missed all year. He missed the clincher."],
+    ['dal', "The Hail Mary", "Cowboys 17, Vikings 14", "Dec 28, 1975", "Roger Staubach to Drew Pearson. Drew pushed off. No call. Ref got hit with a whiskey bottle."],
     ['kc', "Super Bowl IV", "Chiefs 23, Vikings 7", "Jan 11, 1970", "Heavily favored. Got bullied by Hank Stram's Chiefs."]
   ],
   det_nfl: [
@@ -251,6 +279,7 @@ const RAW_HISTORY = {
   ],
   dal: [
     ['sea', "The Romo Bobble", "Seahawks 21, Cowboys 20", "Jan 6, 2007", "A chip shot to win. Romo dropped the snap. He cried in the locker room."],
+    ['gb', "Dez Caught It", "Packers 26, Cowboys 21", "Jan 11, 2015", "It looked like a catch. The rules said no. Playoff hopes dashed again."],
     ['gb', "Dak runs out of time", "49ers 23, Cowboys 17", "Jan 16, 2022", "Dak ran a QB draw with no timeouts. The clock hit zero before they could snap it."],
     ['gb', "Love destroys Dallas", "Packers 48, Cowboys 32", "Jan 14, 2024", "The #2 seed Cowboys got absolutely smoked at home by the #7 seed Packers."]
   ],
@@ -276,17 +305,13 @@ const RAW_HISTORY = {
   ],
   cle: [
     ['den', "The Drive", "Broncos 23, Browns 20", "Jan 11, 1987", "Elway went 98 yards in 5 minutes. Cleveland hearts broken."],
-    ['den', "The Fumble", "Broncos 38, Browns 33", "Jan 17, 1988", "Earnest Byner was crossing the goal line to tie the game. He stripped."]
+    ['den', "The Fumble", "Broncos 38, Browns 33", "Jan 17, 1988", "Earnest Byner was crossing the goal line to tie the game. He stripped."],
+    ['bal', "The Move", "Franchise Left", "1995", "Art Modell took the team to Baltimore and won a Super Bowl. Pain."]
   ],
   generic: [
     ['opponent', "They choked", "Big Loss", "Recently", "Honestly, they just aren't a serious franchise. You know it, I know it."]
   ]
 };
-
-// Hydrate History
-const HISTORIC_LOSSES = Object.fromEntries(
-  Object.entries(RAW_HISTORY).map(([k, v]) => [k, v.map(h => ({winnerId: h[0], headline: h[1], score: h[2], date: h[3], desc: h[4]}))])
-);
 
 // --- 3. ONBOARDING ---
 const Onboarding = ({ onComplete }) => {
@@ -340,6 +365,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [noGamesMsg, setNoGamesMsg] = useState(null);
   const [shareOptions, setShareOptions] = useState([]);
+  const [copiedIndex, setCopiedIndex] = useState(null);
 
   const styles = THEMES[activeTheme];
 
@@ -369,7 +395,10 @@ export default function App() {
       const results = uniq.map(event => {
         const h = event.competitions[0].competitors.find(c=>c.homeAway==='home'), a = event.competitions[0].competitors.find(c=>c.homeAway==='away');
         if(!h||!a) return null;
-        // Fuzzy Match Logic
+        
+        // Helper to find config
+        const findConf = (abbr) => ALL_TEAMS.find(t => (t.id === abbr || t.id.startsWith(abbr + '_')) && t.league === event._league);
+
         const isHated = (id) => hatedTeams.some(ht => ht === id || ht.startsWith(id + '_'));
         const hatedHome = isHated(h.team.abbreviation.toLowerCase());
         const hatedAway = isHated(a.team.abbreviation.toLowerCase());
@@ -377,16 +406,26 @@ export default function App() {
 
         const hated = hatedHome ? h : a;
         const opp = hatedHome ? a : h;
-        const teamConf = ALL_TEAMS.find(t => t.id === hated.team.abbreviation.toLowerCase() || t.id.startsWith(hated.team.abbreviation.toLowerCase()+'_'));
-        if (!teamConf || teamConf.league !== event._league) return null;
+        
+        // Find configurations for BOTH teams
+        const hatedConf = findConf(hated.team.abbreviation.toLowerCase());
+        
+        // Fallback for opponent if not in DB
+        let oppConf = findConf(opp.team.abbreviation.toLowerCase());
+        if (!oppConf) {
+            oppConf = { id: opp.team.abbreviation.toLowerCase(), name: opp.team.displayName, color: '#94a3b8', league: event._league };
+        }
+
+        if (!hatedConf) return null;
 
         const scoreH = parseInt(h.score||0), scoreA = parseInt(a.score||0);
         const isFinal = event.status.type.completed;
         const lost = isFinal && ((hatedHome && scoreH < scoreA) || (!hatedHome && scoreA < scoreH));
         
         return {
-          team: {...teamConf, score: parseInt(hated.score||0)},
-          opponent: opp.team.displayName, opponentScore: parseInt(opp.score||0),
+          team: {...hatedConf, score: parseInt(hated.score||0)},
+          // Pass full opponent object
+          opponentTeam: {...oppConf, score: parseInt(opp.score||0)},
           status: lost ? 'LOST' : (isFinal ? 'WON' : 'PLAYING'),
           gameId: event.id, isYesterday: new Date(event.date) < new Date(new Date().setHours(0,0,0,0))
         };
@@ -419,16 +458,35 @@ export default function App() {
       Receipts: ["FINAL: [TEAM] [SCORE], [OPP] [OPP_SCORE]. [LINK]"],
       Toxic: ["IMAGINE LOSING [SCORE]-[OPP_SCORE]. [TEAM] DOWN BAD. 📉🤡 [LINK]"]
     };
-    setShareOptions(Object.entries(lib).map(([k,v]) => ({label:k, text: v[Math.floor(Math.random()*v.length)]})));
+    
+    // FORMAT HELPER (Updated for new structure)
+    const format = (t) => {
+       const url = `espn.com/${{'NBA':'nba','NFL':'nfl','CFB':'college-football','NCAA':'mens-college-basketball'}[g.team.league]}/game/_/gameId/${g.gameId}`;
+       return t.replace('[TEAM]',g.team.name).replace('[SCORE]',g.team.score).replace('[OPP_SCORE]',g.opponentTeam.score).replace('[OPP]',g.opponentTeam.name).replace('[LINK]',url);
+    };
+
+    setShareOptions(Object.entries(lib).map(([k,v]) => ({label:k, text: format(v[Math.floor(Math.random()*v.length)])})));
     setShareModal(g);
   };
 
-  const doShare = (txt, g) => {
-    const url = `espn.com/${{'NBA':'nba','NFL':'nfl','CFB':'college-football','NCAA':'mens-college-basketball'}[g.team.league]}/game/_/gameId/${g.gameId}`;
-    const final = txt.replace('[TEAM]',g.team.name).replace('[SCORE]',g.team.score).replace('[OPP_SCORE]',g.opponentScore).replace('[OPP]',g.opponent).replace('[LINK]',url);
-    if(navigator.share) navigator.share({title:'They Lost!', text:final}).catch(()=>{});
-    else { navigator.clipboard.writeText(final); alert("Copied!"); }
-    setShareModal(null);
+  const doShare = (txt, g, index) => {
+    // Fallback copy method for iframe environments
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = txt; // Already formatted
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      setCopiedIndex(index);
+      setTimeout(() => {
+        setCopiedIndex(null);
+        setShareModal(null);
+      }, 1000);
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+    }
   };
 
   // --- RENDER ---
@@ -445,8 +503,8 @@ export default function App() {
       <header className={`p-4 sticky top-0 z-30 shrink-0 flex justify-between items-center ${styles.header}`}>
         <div className="flex items-center gap-2"><span className="text-4xl">😄</span><h1 className="font-black text-xl italic">THEY LOST!</h1></div>
         <div className="flex gap-2">
-          <button onClick={checkLiveScores} disabled={loading} className="p-2 hover:bg-white/10 rounded-lg"><RefreshCw size={20} className={loading?"animate-spin":""}/></button>
-          <button onClick={() => setView('scoreboard')} className={`p-2 rounded-lg ${view==='scoreboard'?'bg-black/20':''}`}><PartyPopper size={20}/></button>
+          <button onClick={() => { setView('scoreboard'); checkLiveScores(); }} disabled={loading} className="p-2 hover:bg-white/10 rounded-lg"><RefreshCw size={20} className={loading?"animate-spin":""}/></button>
+          <button onClick={() => { setView('scoreboard'); checkLiveScores(); }} className={`p-2 rounded-lg ${view==='scoreboard'?'bg-black/20':''}`}><PartyPopper size={20}/></button>
           <button onClick={() => setView('manage')} className={`p-2 rounded-lg ${view==='manage'?'bg-black/20':''}`}><Target size={20}/></button>
           <button onClick={() => setView('settings')} className={`p-2 rounded-lg ${view==='settings'?'bg-black/20':''}`}><Settings size={20}/></button>
         </div>
@@ -456,21 +514,25 @@ export default function App() {
       {celebration && (
         <div className={`p-4 text-center animate-enter-banner shadow-lg relative z-20 shrink-0 ${styles.lossBanner}`}>
           <div className="fixed inset-0 pointer-events-none z-50">{[...Array(30)].map((_,i)=><div key={i} className="absolute animate-fall" style={{left:`${Math.random()*100}vw`,top:'-20px',width:'10px',height:'10px',background:['#f00','#0f0','#00f'][Math.floor(Math.random()*3)],animationDuration:`${2+Math.random()*3}s`}}/>)}</div>
-          <img src={celebration.gif} className="mx-auto max-h-48 rounded-lg border-2 border-white/50 mb-3" alt="Celebrate"/>
+          <img src={celebration.gif} className="mx-auto max-h-48 rounded-lg border-2 border-white/50 mb-3" alt="Celebrate" referrerPolicy="no-referrer" onError={(e) => e.target.style.display = 'none'} />
           <h2 className="text-xl font-black uppercase">IT HAPPENED!</h2><p className="text-xs font-bold uppercase">{celebration.message}</p>
         </div>
       )}
 
       {/* SHARE MODAL */}
       {shareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
           <div className="bg-white w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl">
             <div className="bg-slate-100 p-4 border-b flex justify-between font-bold text-slate-700"><span className="flex gap-2"><Share2/> Share</span><button onClick={()=>setShareModal(null)}><X/></button></div>
             <div className="p-4 space-y-2">
               {shareOptions.map((opt,i) => (
-                <button key={i} onClick={()=>doShare(opt.text, shareModal)} className="w-full text-left p-3 rounded-xl border hover:bg-green-50 hover:border-green-500 transition group">
-                  <div className="flex justify-between text-xs font-bold text-slate-400 uppercase mb-1"><span>{opt.label}</span><Copy size={12}/></div>
+                <button key={i} onClick={()=>doShare(opt.text, shareModal, i)} className="w-full text-left p-3 rounded-xl border hover:bg-green-50 hover:border-green-500 transition group relative">
+                  <div className="flex justify-between text-xs font-bold text-slate-400 uppercase mb-1">
+                    <span>{opt.label}</span>
+                    {copiedIndex === i ? <Check size={12} className="text-green-600"/> : <Copy size={12}/>}
+                  </div>
                   <p className="text-sm font-medium text-slate-800">{opt.text}</p>
+                  {copiedIndex === i && <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center font-black text-green-700 uppercase tracking-widest text-xs">Copied!</div>}
                 </button>
               ))}
             </div>
@@ -500,7 +562,16 @@ export default function App() {
                     <div className="p-5 flex justify-between items-center">
                       <div className="flex flex-col items-center w-1/3"><div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-sm mb-2 shadow-md border-2 border-white" style={{background:g.team.color}}>{g.team.id.substring(0,3).toUpperCase()}</div><span className="font-bold text-sm text-center">{g.team.name}</span><span className="text-3xl font-black mt-1 text-red-500">{g.team.score}</span></div>
                       <div className="opacity-50 font-black italic">VS</div>
-                      <div className="flex flex-col items-center w-1/3 opacity-80"><div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs mb-2">OPP</div><span className="font-bold text-xs text-center">{g.opponent}</span><span className="text-3xl font-bold mt-1 text-slate-500">{g.opponentScore}</span></div>
+                      
+                      {/* Updated Opponent Section */}
+                      <div className="flex flex-col items-center w-1/3 opacity-80">
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-xs mb-2 text-white shadow-sm border-2 border-white" style={{background: g.opponentTeam.color}}>
+                            {g.opponentTeam.id.substring(0,3).toUpperCase()}
+                        </div>
+                        <span className="font-bold text-xs text-center">{g.opponentTeam.name}</span>
+                        <span className="text-3xl font-bold mt-1 text-slate-500">{g.opponentTeam.score}</span>
+                      </div>
+
                     </div>
                     <div className="p-3 border-t bg-slate-50 flex gap-2"><button onClick={()=>openShare(g)} className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 ${styles.buttonPrimary}`}>Rub It In</button></div>
                   </div>
