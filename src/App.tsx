@@ -2,6 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper, History, Search, Globe, Bell, ExternalLink, Palette, Settings, ToggleLeft, ToggleRight, Target, Activity, LogOut, Clock, Check } from 'lucide-react';
 
 // --- 1. UTILITIES & CONFIG ---
+
+// *** APP ICON CONFIGURATION ***
+const APP_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAFWGlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNS41LjAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iCiAgICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgICB4bWxuczpleGlmPSJodHRwOi8vbnMuYWRvYmUuY29tL2V4aWYvMS4wLyIKICAgIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIKICAgIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIKICAgIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIgogICAgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIKICAgdGlmZjpJbWFnZUxlbmd0aD0iMTI4IgogICB0aWZmOkltYWdlV2lkdGg9IjEyOCIKICAgdGlmZjpSZXNvbHV0aW9uVW5pdD0iMiIKICAgdGlmZjpYUmVzb2x1dGlvbj0iNzIvMSIKICAgdGlmZjpZUmVzb2x1dGlvbj0iNzIvMSIKICAgZXhpZjpQaXhlbFhEaW1lbnNpb249IjEyOCIKICAgZXhpZjpQaXhlbFlEaW1lbnNpb249IjEyOCIKICAgZXhpZjpDb2xvclNwYWNlPSIxIgogICBwaG90b3Nob3A6Q29sb3JNb2RlPSIzIgogICBwaG90b3Nob3A6SUNDUHJv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"; 
+
 const CELEBRATION_GIFS = [
   "https://i.giphy.com/media/HmdsITkYtq5i/giphy.gif", // MJ Laughing
   "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
@@ -319,8 +323,11 @@ const Onboarding = ({ onComplete }) => {
   return (
     step === 0 ? (
       <div className="fixed inset-0 z-[100] bg-gradient-to-br from-blue-600 to-blue-800 text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
-        <div className="bg-white/20 p-6 rounded-full mb-6 text-6xl">😄</div>
-        <h1 className="text-3xl font-black italic mb-4">Fill your hater's heart with joy</h1>
+        <div className="w-48 h-48 mb-6 rounded-2xl shadow-xl overflow-hidden bg-white/20">
+            {/* USE IMG TAG WITH BASE64 SOURCE */}
+            <img src={APP_ICON} alt="App Icon" className="w-full h-full object-cover" />
+        </div>
+        <h1 className="text-3xl font-black italic mb-4">Their misery. Your joy.</h1>
         <p className="text-lg font-medium opacity-90 mb-8 max-w-xs">Love the jolt of joy when a team you hate loses? This app alerts you ONLY when they lose.</p>
         <button onClick={() => setStep(1)} className="bg-white text-blue-600 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full max-w-xs hover:scale-105 transition-transform">Let your hate flow</button>
       </div>
@@ -336,7 +343,7 @@ const Onboarding = ({ onComplete }) => {
     ) : (
       <div className="fixed inset-0 z-[100] bg-gradient-to-br from-sky-500 to-blue-600 text-white flex flex-col p-6 animate-in slide-in-from-right duration-300">
         <div className="flex-1 flex flex-col items-center justify-center text-center">
-            <div className="mb-6 bg-white/20 p-6 rounded-full"><Bell size={48} className="text-yellow-300 animate-bounce" /></div>
+            <div className="mb-6 bg-white/20 p-6 rounded-full relative"><Bell size={48} className="text-yellow-300 animate-bounce" /><div className="absolute -bottom-2 -right-2 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded-full">STEP 2</div></div>
             <h2 className="text-2xl font-black mb-2">Don't Miss the Moment</h2>
             <p className="text-blue-50 mb-8 max-w-xs">We'll send a notification any time a team you hate blows it.</p>
         </div>
@@ -355,7 +362,7 @@ export default function App() {
   const [activeLeague, setActiveLeague] = useState('NCAA');
   const [activeTheme, setActiveTheme] = useState('professional');
   const [showOnboarding, setShowOnboarding] = useState(() => localStorage.getItem('tl_onboarded') !== 'true');
-  const [enabledLeagues, setEnabledLeagues] = useState({ NCAA: true, CFB: false, NBA: true, NFL: true, MLB: false });
+  const [enabledLeagues, setEnabledLeagues] = useState({ NCAA: true, CFB: true, NBA: true, NFL: true, MLB: false });
   const [hatedTeams, setHatedTeams] = useState(() => JSON.parse(localStorage.getItem('tl_hated_teams') || '[]'));
   const [gameResults, setGameResults] = useState([]);
   const [celebration, setCelebration] = useState(null);
@@ -501,7 +508,12 @@ export default function App() {
       
       {/* HEADER */}
       <header className={`p-4 sticky top-0 z-30 shrink-0 flex justify-between items-center ${styles.header}`}>
-        <div className="flex items-center gap-2"><span className="text-4xl">😄</span><h1 className="font-black text-xl italic">THEY LOST!</h1></div>
+        <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-md overflow-hidden bg-white/20">
+                <img src={APP_ICON} alt="App Icon" className="w-full h-full object-cover" />
+            </div>
+            <h1 className="font-black text-xl italic">THEY LOST!</h1>
+        </div>
         <div className="flex gap-2">
           <button onClick={() => { setView('scoreboard'); checkLiveScores(); }} disabled={loading} className="p-2 hover:bg-white/10 rounded-lg"><RefreshCw size={20} className={loading?"animate-spin":""}/></button>
           <button onClick={() => { setView('scoreboard'); checkLiveScores(); }} className={`p-2 rounded-lg ${view==='scoreboard'?'bg-black/20':''}`}><PartyPopper size={20}/></button>
@@ -562,16 +574,7 @@ export default function App() {
                     <div className="p-5 flex justify-between items-center">
                       <div className="flex flex-col items-center w-1/3"><div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-sm mb-2 shadow-md border-2 border-white" style={{background:g.team.color}}>{g.team.id.substring(0,3).toUpperCase()}</div><span className="font-bold text-sm text-center">{g.team.name}</span><span className="text-3xl font-black mt-1 text-red-500">{g.team.score}</span></div>
                       <div className="opacity-50 font-black italic">VS</div>
-                      
-                      {/* Updated Opponent Section */}
-                      <div className="flex flex-col items-center w-1/3 opacity-80">
-                        <div className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-xs mb-2 text-white shadow-sm border-2 border-white" style={{background: g.opponentTeam.color}}>
-                            {g.opponentTeam.id.substring(0,3).toUpperCase()}
-                        </div>
-                        <span className="font-bold text-xs text-center">{g.opponentTeam.name}</span>
-                        <span className="text-3xl font-bold mt-1 text-slate-500">{g.opponentTeam.score}</span>
-                      </div>
-
+                      <div className="flex flex-col items-center w-1/3 opacity-80"><div className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-xs mb-2 text-white shadow-sm border-2 border-white" style={{background: g.opponentTeam.color}}>{g.opponentTeam.id.substring(0,3).toUpperCase()}</div><span className="font-bold text-xs text-center">{g.opponentTeam.name}</span><span className="text-3xl font-bold mt-1 text-slate-500">{g.opponentTeam.score}</span></div>
                     </div>
                     <div className="p-3 border-t bg-slate-50 flex gap-2"><button onClick={()=>openShare(g)} className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 ${styles.buttonPrimary}`}>Rub It In</button></div>
                   </div>
