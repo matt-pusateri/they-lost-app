@@ -322,34 +322,34 @@ const Onboarding = ({ onComplete }) => {
   const [step, setStep] = useState(0);
   return (
     step === 0 ? (
-      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-blue-600 to-blue-800 text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
-        <div className="w-48 h-48 mb-6 rounded-2xl shadow-xl overflow-hidden bg-white/20">
+      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-[#1e90ff] to-[#99badd] text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+        <div className="w-48 h-48 mb-6 rounded-2xl shadow-xl overflow-hidden bg-white/20 backdrop-blur-sm p-4">
             {/* USE IMG TAG WITH BASE64 SOURCE */}
-            <img src={APP_ICON} alt="App Icon" className="w-full h-full object-cover" />
+            <img src={APP_ICON} alt="App Icon" className="w-full h-full object-cover rounded-xl" />
         </div>
-        <h1 className="text-3xl font-black italic mb-4">Their misery. Your joy.</h1>
-        <p className="text-lg font-medium opacity-90 mb-8 max-w-xs">Love the jolt of joy when a team you hate loses? This app alerts you ONLY when they lose.</p>
-        <button onClick={() => setStep(1)} className="bg-white text-blue-600 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full max-w-xs hover:scale-105 transition-transform">Let your hate flow</button>
+        <h1 className="text-3xl font-black italic mb-4 drop-shadow-md">Their misery. Your joy.</h1>
+        <p className="text-lg font-medium opacity-90 mb-8 max-w-xs drop-shadow">Love the jolt of joy when a team you hate loses? This app alerts you ONLY when they lose.</p>
+        <button onClick={() => setStep(1)} className="bg-[#1e90ff] text-white text-lg font-black py-4 px-8 rounded-2xl shadow-2xl w-full max-w-xs hover:scale-105 transition-transform ring-4 ring-white/50">Let your hate flow</button>
       </div>
     ) : step === 1 ? (
-      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-indigo-700 to-blue-900 text-white flex flex-col p-6 animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-0 z-[100] bg-green-900 bg-[url('https://www.transparenttextures.com/patterns/grass.png')] bg-blend-overlay text-white flex flex-col p-6 animate-in slide-in-from-right duration-300">
         <div className="flex-1 flex flex-col items-center justify-center text-center">
-            <div className="mb-6 relative"><Target size={64} className="text-red-500" /><div className="absolute -bottom-2 -right-2 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded-full">STEP 1</div></div>
-            <h2 className="text-2xl font-black mb-2">Pick Your Targets</h2>
-            <p className="text-slate-200 mb-8 max-w-xs">Search for teams across NCAA, NFL, and NBA. Add them to your "Enemies List."</p>
+            <div className="mb-6 relative"><div className="p-4 bg-white/20 backdrop-blur-md rounded-full shadow-xl"><Target size={64} className="text-white drop-shadow-lg relative z-10" /> <div className="absolute inset-0 bg-white/30 rounded-full animate-ping z-0"></div></div><div className="absolute -bottom-2 -right-2 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm z-20">STEP 1</div></div>
+            <h2 className="text-2xl font-black mb-2 drop-shadow-md">Pick Your Targets</h2>
+            <p className="text-white/90 mb-8 max-w-xs drop-shadow font-medium">Search for teams across NCAA, NFL, and NBA. Add them to your "Enemies List."</p>
         </div>
-        <button onClick={() => setStep(2)} className="bg-white text-indigo-700 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full">Got it, next</button>
+        <button onClick={() => setStep(2)} className="bg-white text-emerald-700 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full hover:bg-emerald-50 transition-colors">Got it, next</button>
       </div>
     ) : (
-      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-sky-500 to-blue-600 text-white flex flex-col p-6 animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-0 z-[100] bg-orange-500 bg-[url('https://www.transparenttextures.com/patterns/basketball.png')] bg-blend-overlay text-white flex flex-col p-6 animate-in slide-in-from-right duration-300">
         <div className="flex-1 flex flex-col items-center justify-center text-center">
-            <div className="mb-6 bg-white/20 p-6 rounded-full relative"><Bell size={48} className="text-yellow-300 animate-bounce" /><div className="absolute -bottom-2 -right-2 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded-full">STEP 2</div></div>
-            <h2 className="text-2xl font-black mb-2">Don't Miss the Moment</h2>
-            <p className="text-blue-50 mb-8 max-w-xs">We'll send a notification any time a team you hate blows it.</p>
+            <div className="mb-6 bg-white/20 backdrop-blur-md p-6 rounded-full shadow-xl relative"><Bell size={48} className="text-yellow-300 animate-bounce drop-shadow-lg" /><div className="absolute -bottom-2 -right-2 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">STEP 2</div></div>
+            <h2 className="text-2xl font-black mb-2 drop-shadow-md">Don't Miss the Moment</h2>
+            <p className="text-white/90 mb-8 max-w-xs drop-shadow font-medium">We'll send a notification any time a team you hate blows it.</p>
         </div>
         <div className="space-y-3 w-full">
-            <button onClick={() => onComplete()} className="bg-white text-blue-600 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full">Enable Notifications</button>
-            <button onClick={() => onComplete()} className="text-blue-100 text-sm font-bold py-2 w-full hover:text-white">Maybe Later</button>
+            <button onClick={() => onComplete()} className="bg-white text-orange-600 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full hover:bg-orange-50 transition-colors">Enable Notifications</button>
+            <button onClick={() => onComplete()} className="text-white/80 text-sm font-bold py-2 w-full hover:text-white transition-colors">Maybe Later</button>
         </div>
       </div>
     )
