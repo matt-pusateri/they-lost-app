@@ -3,13 +3,12 @@ import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper,
 
 // --- 1. UTILITIES & CONFIG ---
 
-const APP_VERSION = "1.3"; // Designated Version
+const APP_VERSION = "1.3";
 
-// *** APP ICON CONFIGURATION ***
 const APP_ICON = "https://ik.imagekit.io/ipi1yjzh9/theylost%20icon%20512.png";
 
 const CELEBRATION_GIFS = [
-  "https://i.giphy.com/media/HmdsITkYtq5i/giphy.gif", // MJ Laughing
+  "https://i.giphy.com/media/HmdsITkYtq5i/giphy.gif",
   "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
@@ -186,53 +185,23 @@ const RAW_HISTORY = {
   duke: [
     ['unc', "The Final Four Nightmare", "UNC 81, Duke 77", "April 2, 2022", "The first ever tournament meeting. Coach K's final season. Caleb Love's dagger three sent K into retirement with an L."],
     ['unc', "K's Final Home Game", "UNC 94, Duke 81", "March 5, 2022", "The 'uninvited guests' ruined the retirement party. 96 former players watched Duke get blown out at Cameron."],
-    ['unc', "The Cormac Ryan Game", "UNC 84, Duke 79", "March 9, 2024", "UNC swept the season series. Cormac Ryan dropped 31 points and waved goodbye to the Crazies."],
-    ['unc', "The Austin Rivers Shot", "Duke 85, UNC 84", "Feb 8, 2012", "Wait, this is a Duke win... oh wait, you mean when UNC blew them out later? No, remember 2021? UNC 91, Duke 73. Roy's final win at Cameron."],
-    ['unc', "Jerami Grant's Dunk", "UNC 74, Duke 66", "Feb 20, 2014", "UNC rallied from 11 down in the second half. Duke fans stormed the court... oh wait, they lost."],
     ['mercer', "Mercer danced on them", "Mercer 78, Duke 71", "March 21, 2014", "A #3 seed Duke team with Jabari Parker lost to a bunch of seniors from the Atlantic Sun."],
     ['lehigh', "CJ McCollum happened", "Lehigh 75, Duke 70", "March 16, 2012", "A #2 seed lost to a #15 seed. One of the biggest upsets in tournament history."],
     ['conn', "1999 Championship", "UConn 77, Duke 74", "March 29, 1999", "This Duke team was considered one of the best ever. Rip Hamilton and Khalid El-Amin had other plans."],
     ['unlv', "103-73", "UNLV 103, Duke 73", "April 2, 1990", "The biggest blowout in National Championship history. Men against boys."],
-    ['sc', "South Carolina upset", "S. Carolina 88, Duke 81", "March 19, 2017", "Playing in South Carolina, the #2 seed Duke got bullied out of the tournament in the Round of 32."],
-    ['unc', "The Loudest Noise Ever", "UNC 75, Duke 73", "March 6, 2005", "Duke led late. Marvin Williams grabbed the offensive board, hit the shot, and the free throw. The Dean Dome nearly collapsed from the noise."],
-    ['unc', "Senior Night Ruined", "UNC 83, Duke 76", "March 4, 2006", "It was supposed to be Redick and Shelden Williams' perfect send-off. Instead, unranked UNC and Tyler Hansbrough crashed the party."],
-    ['unc', "88-70 at Cameron", "UNC 88, Duke 70", "March 3, 2012", "Everyone remembers the Rivers shot. They forget that 3 weeks later, UNC walked into Cameron and absolutely demolished Duke by 18 points."],
-    ['unc', "Swept by an 8-seed", "UNC 91, Duke 73", "March 6, 2021", "A mediocre UNC team absolutely steamrolled Duke in Chapel Hill. Duke missed the NCAA tournament entirely this year."],
-    ['unc', "Hansbrough goes 4-0", "UNC 76, Duke 68", "March 8, 2008", "Tyler Hansbrough never lost a game at Cameron Indoor Stadium. Four straight years. He owned that building."],
-    ['vcu', "The Dagger", "VCU 79, Duke 77", "March 15, 2007", "First Round. Eric Maynor hit the jumper over Scheyer with 1.8 seconds left. Duke lost in the first round for the first time in a decade."],
-    ['lsu', "Big Baby Davis", "LSU 62, Duke 54", "March 23, 2006", "The #1 overall seed Duke. JJ Redick shot 3-for-18 in his final college game. Glen 'Big Baby' Davis ate them alive in the paint."],
-    ['iu', "Blowing a 17-Point Lead", "Indiana 74, Duke 73", "March 21, 2002", "Sweet 16. Duke led by 17. They collapsed. Jay Williams missed the game-tying free throw. The defending champs went home."],
-    ['ncst', "DJ Burns Happened", "NC State 76, Duke 64", "March 31, 2024", "Elite Eight. A trip to the Final Four on the line. They got physically bullied by DJ Burns and a Cinderella Wolfpack team."],
-    ['msu', "Zion Goes Home", "Mich St 68, Duke 67", "March 31, 2019", "Elite Eight. A team with Zion, RJ Barrett, and Cam Reddish lost to Cassius Winston. The greatest prospect ever didn't even make a Final Four."],
-    ['wvu', "Joe Alexander", "WVU 73, Duke 67", "March 22, 2008", "Round of 32. Duke was a #2 seed. They got run out of the gym by Joe Alexander and Da'Sean Butler."],
-    ['mia', "The Miami Blowout", "Miami 90, Duke 63", "Jan 23, 2013", "#1 Duke vs #25 Miami. It was a massacre. Duke lost by 27 points. One of the worst regular season losses in the Coach K era."],
-    ['tenn', "Physicality", "Tennessee 65, Duke 52", "March 18, 2023", "NCAA Round of 32. Duke was pushed around, bullied, and physically beaten for 40 minutes. They looked soft."]
+    ['lsu', "Big Baby Davis", "LSU 62, Duke 54", "March 23, 2006", "The #1 overall seed Duke. JJ Redick shot 3-for-18 in his final college game. Glen 'Big Baby' Davis ate them alive in the paint."]
   ],
   ncst: [
     ['pur', "Final Four Heartbreak", "Purdue 63, NC State 50", "April 6, 2024", "The magic ran out. Edey was too big, and the shots stopped falling. A sad end to a miracle run."],
-    ['vt', "24 Points Total", "Va Tech 47, NC State 24", "Feb 2, 2019", "State scored 24 points in an entire 40-minute basketball game. 24. They shot 16% from the floor."],
-    ['unc', "The 51-Point Loss", "UNC 107, NC State 56", "Jan 8, 2017", "The game was postponed for snow. It should have been canceled. A historic beatdown in Chapel Hill."],
-    ['unc', "Roy Williams 5-0", "UNC 5-0 vs Gottfried", "2012-2017 Era", "Roy Williams absolutely owned PNC Arena for years. It became the 'Dean Dome East'."],
-    ['stl', "The meltdown vs St Louis", "St. Louis 83, NC State 80", "March 20, 2014", "State led by 16 with 5 minutes left. They forgot how to play basketball and lost in OT."]
+    ['vt', "24 Points Total", "Va Tech 47, NC State 24", "Feb 2, 2019", "State scored 24 points in an entire 40-minute basketball game. 24. They shot 16% from the floor."]
   ],
   bos: [
     ['lal', "Game 7, 2010", "Lakers 83, Celtics 79", "June 17, 2010", "Up 3-2 in the series. Rasheed Wallace played his heart out, but Kobe and Artest took the ring. The sweetest Lakers win ever."],
-    ['lal', "Baby Skyhook", "Lakers 107, Celtics 106", "June 9, 1987", "Magic Johnson's junior skyhook across the lane stunned the Garden. 'Tragic Johnson' no more."],
-    ['lal', "Memorial Day Massacre", "Lakers 148, Celtics 114", "May 27, 1985", "The Lakers absolutely destroyed them. The 'Ghost of the Garden' died that day."],
-    ['lal', "Ended the Streak", "Lakers 108, Celtics 102", "2008 Finals Gm 5", "Okay they won the series, but the Lakers stealing a road game to keep the series alive was classic resistance."],
-    ['lal', "Showtime Arrives", "Lakers 4-2 Series", "June 1985", "The first time the Lakers beat the Celtics in the Finals. Kareem was MVP at age 38."],
     ['mia', "Game 7 at Home", "Heat 103, Celtics 84", "May 29, 2023", "Fought back from 0-3 just to get blown out on their own floor in Game 7. Tatum rolled his ankle immediately."],
-    ['gsw', "Curry's Night Night", "Warriors 4-2 Series", "June 2022", "Up 2-1 in the Finals. Then Steph Curry destroyed their soul in Boston. TD Garden went silent."],
-    ['mia', "LeBron's Stare", "Heat 98, Celtics 79", "June 7, 2012", "Game 6. LeBron had 45 points and 15 rebounds. The look in his eyes ended the Pierce/KG era."],
-    ['orl', "Dwight's Block Party", "Magic 4-3 Series", "May 2009", "The defending champs lost Game 7 at home to Dwight Howard and Hedo Turkoglu."],
-    ['cle', "LeBron again", "Cavs 87, Celtics 79", "May 27, 2018", "Game 7 at home. Scary Terry couldn't hit a shot. LeBron dragged a terrible Cavs team past them."]
+    ['gsw', "Curry's Night Night", "Warriors 4-2 Series", "June 2022", "Up 2-1 in the Finals. Then Steph Curry destroyed their soul in Boston. TD Garden went silent."]
   ],
   det: [
     ['sas', "Horry left open", "Spurs 4-3 Series", "June 2005", "Sheed left Robert Horry open in the corner in Game 5. Then they lost Game 7. A dynasty denied."],
-    ['cle', "LeBron's 25 straight", "Cavs 109, Pistons 107", "May 31, 2007", "LeBron scored the Cavs' last 25 points. He single-handedly dismantled the 'Goin to Work' Pistons."],
-    ['bos', "Bird stole the ball", "Celtics 108, Pistons 107", "May 26, 1987", "Isiah Thomas threw it away. Bird to DJ. Layup. Heartbreak."],
-    ['lal', "The Phantom Foul", "Lakers 103, Pistons 102", "June 19, 1988", "Laimbeer didn't touch Kareem. A questionable foul call arguably cost them the title."],
-    ['mia', "Shaq's Revenge", "Heat 4-2 Series", "May 2006", "The Heat finally got past them. The end of the Ben Wallace era in Detroit."],
     ['all', "28 Straight Losses", "The Streak", "Dec 2023", "They set the single-season record for consecutive losses. 28 games without a win. Pure misery."]
   ],
   mia: [
@@ -253,35 +222,16 @@ const RAW_HISTORY = {
     ['sea', "The NFC Championship Collapse", "Seahawks 28, Packers 22", "Jan 18, 2015", "Up 19-7 with 3 mins left. Brandon Bostick dropped the onside kick. Ha Ha Clinton-Dix stood still on the 2pt conversion."],
     ['tb', "Kick the Field Goal?", "Bucs 31, Packers 26", "Jan 24, 2021", "NFC Championship at home. 4th and Goal. Rodgers wanted to go for it. LaFleur kicked a FG. Brady knelt out the clock."],
     ['sf', "Blocked Punt", "49ers 13, Packers 10", "Jan 22, 2022", "Top seed in the NFC. Home field. Offense scored 10 points. Special teams allowed a blocked punt TD."],
-    ['nyg', "15-1 Season Ruined", "Giants 37, Packers 20", "Jan 15, 2012", "Rodgers was MVP. The team was 15-1. Eli Manning came into Lambeau and humiliated them."],
-    ['phi', "4th and 26", "Eagles 20, Packers 17", "Jan 11, 2004", "Donovan McNabb converted a 4th and 26. Favre threw a duck in OT. Heartbreak."],
-    ['den', "Super Bowl XXXII", "Broncos 31, Packers 24", "Jan 25, 1998", "Favre vs Elway. The Packers were heavy favorites. Terrell Davis had a migraine and still ran over them."],
-    ['nyg', "Favre's Last Pass", "Giants 23, Packers 20", "Jan 20, 2008", "Overtime in the frozen tundra. Favre threw an INT on his final pass as a Packer."],
-    ['atl', "Falcons Blowout", "Falcons 44, Packers 21", "Jan 22, 2017", "NFC Championship. The Packers were down 31-0. It wasn't even competitive."],
-    ['chi', "Thanksgiving Nightmare", "Bears 17, Packers 13", "Nov 26, 2015", "It was Brett Favre's jersey retirement ceremony at Lambeau on Thanksgiving. The Bears ruined the party. Jay Cutler outplayed Aaron Rodgers in the rain."],
-    ['chi', "The Block for Walter", "Bears 14, Packers 13", "Nov 7, 1999", "Played one week after Walter Payton died. Bryan Robinson blocked a 28-yard field goal as time expired to shock the Packers at Lambeau."],
-    ['chi', "26-Zero", "Bears 26, Packers 0", "Sept 10, 2006", "The season opener at Lambeau. The Bears defense absolutely strangled Brett Favre. It was the first time Favre had ever been shut out in his career."],
-    ['chi', "The Mike Brown Scoop", "Bears 21, Packers 10", "Sept 19, 2004", "Lovie Smith promised his #1 goal was to beat Green Bay. In his first try at Lambeau, Mike Brown returned a fumble 95 yards for a TD to seal it."],
-    ['chi', "The Fridge Scores", "Bears 23, Packers 7", "Oct 21, 1985", "Monday Night Football. Ditka put William 'The Refrigerator' Perry in at fullback. He plowed over the Packers' defense for a TD. Ultimate disrespect."],
-    ['chi', "Devin Hester House Call", "Bears 20, Packers 17", "Sept 27, 2010", "Monday Night Football. Devin Hester took a punt 62 yards to the house. The Bears forced 18 penalties on the undisciplined Packers."],
-    ['chi', "Division Champs", "Bears 24, Packers 17", "Dec 16, 2018", "The Bears finally snapped the streak, clinched the NFC North title, and eliminated the Packers from playoff contention all in one afternoon."]
+    ['nyg', "15-1 Season Ruined", "Giants 37, Packers 20", "Jan 15, 2012", "Rodgers was MVP. The team was 15-1. Eli Manning came into Lambeau and humiliated them."]
   ],
   min: [
     ['phi', "38-7", "Eagles 38, Vikings 7", "Jan 21, 2018", "After the Minneapolis Miracle, they laid an absolute egg. Nick Foles looked like Montana."],
     ['sea', "Blair Walsh Wide Left", "Seahawks 10, Vikings 9", "Jan 10, 2016", "27 yards. Chip shot. Sub-zero temps. He missed it. The laces were in!"],
-    ['no', "Bountygate Game", "Saints 31, Vikings 28", "Jan 24, 2010", "Favre threw across his body in field goal range. Tracy Porter picked it off. 12 men in the huddle penalty."],
-    ['nyg', "41-Donut", "Giants 41, Vikings 0", "Jan 14, 2001", "NFC Championship. Kerry Collins torched them. It was 14-0 before the fans sat down."],
-    ['atl', "Gary Anderson's Miss", "Falcons 30, Vikings 27", "Jan 17, 1999", "15-1 season. Offense was unstoppable. Anderson hadn't missed all year. He missed the clincher."],
-    ['dal', "The Hail Mary", "Cowboys 17, Vikings 14", "Dec 28, 1975", "Roger Staubach to Drew Pearson. Drew pushed off. No call. Ref got hit with a whiskey bottle."],
-    ['kc', "Super Bowl IV", "Chiefs 23, Vikings 7", "Jan 11, 1970", "Heavily favored. Got bullied by Hank Stram's Chiefs."]
+    ['no', "Bountygate Game", "Saints 31, Vikings 28", "Jan 24, 2010", "Favre threw across his body in field goal range. Tracy Porter picked it off. 12 men in the huddle penalty."]
   ],
   det_nfl: [
     ['sf', "24-7 Halftime Lead", "49ers 34, Lions 31", "Jan 28, 2024", "One half away from the Super Bowl. Dropped passes, a fumble, and analytics decisions led to a historic collapse."],
-    ['gb', "The 0-16 Season", "0 Wins, 16 Losses", "2008 Season", "The first team to go 0-16. Dan Orlovsky running out of the back of the end zone sums it up."],
-    ['bal', "Record Breaker", "Ravens 19, Lions 17", "Sept 26, 2021", "Justin Tucker hit a NFL record 66-yard field goal off the crossbar as time expired."],
-    ['gb', "The Hail Mary", "Packers 27, Lions 23", "Dec 3, 2015", "A phantom facemask penalty gave Rodgers one more play. He threw it to the moon."],
-    ['sea', "The Bat", "Seahawks 13, Lions 10", "Oct 5, 2015", "Calvin Johnson fumbled at the 1. KJ Wright batted it out of the endzone. Illegal play, but refs missed it."],
-    ['dal', "Flag Picked Up", "Cowboys 24, Lions 20", "Jan 4, 2015", "Playoff game. Pass interference called. Then the refs picked up the flag without explanation."]
+    ['gb', "The 0-16 Season", "0 Wins, 16 Losses", "2008 Season", "The first team to go 0-16. Dan Orlovsky running out of the back of the end zone sums it up."]
   ],
   dal: [
     ['sea', "The Romo Bobble", "Seahawks 21, Cowboys 20", "Jan 6, 2007", "A chip shot to win. Romo dropped the snap. He cried in the locker room."],
@@ -322,6 +272,27 @@ const RAW_HISTORY = {
 // --- 3. ONBOARDING ---
 const Onboarding = ({ onComplete }) => {
   const [step, setStep] = useState(0);
+
+  // --- REAL PWA NOTIFICATION REQUEST ---
+  const handleEnableNotifications = async () => {
+    if (!('Notification' in window)) {
+        alert("This browser does not support desktop notification");
+        onComplete();
+        return;
+    }
+    
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            console.log("Notification permission granted!");
+            // In a real app with backend, you would now grab the push token
+        }
+    } catch (error) {
+        console.error("Error requesting permission", error);
+    }
+    onComplete();
+  }
+
   return (
     step === 0 ? (
       <div className="fixed inset-0 z-[100] bg-gradient-to-br from-[#1e90ff] to-[#99badd] text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
@@ -350,7 +321,7 @@ const Onboarding = ({ onComplete }) => {
             <p className="text-white/90 mb-8 max-w-xs drop-shadow font-medium">We'll send a notification any time a team you hate blows it.</p>
         </div>
         <div className="space-y-3 w-full">
-            <button onClick={() => onComplete()} className="bg-white text-orange-600 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full hover:bg-orange-50 transition-colors">Enable Notifications</button>
+            <button onClick={handleEnableNotifications} className="bg-white text-orange-600 text-lg font-bold py-4 px-8 rounded-xl shadow-lg w-full hover:bg-orange-50 transition-colors">Enable Notifications</button>
             <button onClick={() => onComplete()} className="text-white/80 text-sm font-bold py-2 w-full hover:text-white transition-colors">Maybe Later</button>
         </div>
       </div>
@@ -539,7 +510,7 @@ export default function App() {
             className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity"
             title="Tap to Refresh"
         >
-            <div className="w-12 h-12 rounded-md overflow-hidden bg-white shadow-sm">
+            <div className="w-12 h-12 rounded-md overflow-hidden bg-gradient-to-br from-[#1e90ff] to-[#99badd] shadow-sm flex items-center justify-center">
                 <img src={APP_ICON} alt="App Icon" className="w-full h-full object-cover" />
             </div>
             <h1 className="font-black text-xl italic">THEY LOST!</h1>
