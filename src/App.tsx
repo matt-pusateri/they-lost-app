@@ -3,7 +3,7 @@ import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper,
 
 // --- 1. UTILITIES & CONFIG ---
 
-const APP_VERSION = "1.3";
+const APP_VERSION = "1.3.1"; // Updated Version
 
 const APP_ICON = "https://ik.imagekit.io/ipi1yjzh9/theylost%20icon%20512.png";
 
@@ -26,27 +26,7 @@ const CELEBRATION_GIFS = [
   "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eHgzYzl2bHJvZmRkaG85eGhuYmkwaWIwa3dpdWtzNnJseWEyc3htbCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uxLVaMUiycgpO/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/T87BZ7cyOH7TwDBgwy/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/61MN4zqj333nTdtLEH/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/fPRwBcYd71Lox1v7p2/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eDR3dnJkZWYzd2Q4N242enBocnRzZDZycXN6bGp3bWlzOXA0dHp5ZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VABbCpX94WCfS/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/unAjVtjhUeYFMJ8jFc/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1PMVNNKVIL8Ig/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/yCjr0U8WCOQM0/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o7abldj0b3rxrZUxW/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/10Jpr9KSaXLchW/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3ohzdIuqJoo8QdKlnW/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DffShiJ47fPqM/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3WCNY2RhcmnwGbKbCi/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/rdma0nDFZMR32/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/12PIT4DOj6Tgek/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWV5NGd5NWV3Y24yN3p0ZXV2ZnlkMXoxNXZkazE4ZDB4b2d6Y3ZjeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4GuFtlz4IhKSt89E7q/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KB7Moe2Oj0BXeDjvDp/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DYH297XiCS2Ck/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/SA613Nxg1h6zO1nRsg/giphy.gif"
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif"
 ];
 
 const TRASH_TALK = [
@@ -273,7 +253,6 @@ const RAW_HISTORY = {
 const Onboarding = ({ onComplete }) => {
   const [step, setStep] = useState(0);
 
-  // --- REAL PWA NOTIFICATION REQUEST ---
   const handleEnableNotifications = async () => {
     if (!('Notification' in window)) {
         alert("This browser does not support desktop notification");
@@ -285,7 +264,7 @@ const Onboarding = ({ onComplete }) => {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
             console.log("Notification permission granted!");
-            // In a real app with backend, you would now grab the push token
+            new Notification("They Lost", { body: "Notifications are set up! We'll tell you when they choke." });
         }
     } catch (error) {
         console.error("Error requesting permission", error);
@@ -297,7 +276,6 @@ const Onboarding = ({ onComplete }) => {
     step === 0 ? (
       <div className="fixed inset-0 z-[100] bg-gradient-to-br from-[#1e90ff] to-[#99badd] text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
         <div className="w-48 h-48 mb-6 rounded-2xl shadow-xl overflow-hidden bg-white/20 backdrop-blur-sm p-4">
-            {/* USE IMG TAG WITH BASE64 SOURCE */}
             <img src={APP_ICON} alt="App Icon" className="w-full h-full object-cover rounded-xl" />
         </div>
         <h1 className="text-3xl font-black italic mb-4 drop-shadow-md">Their misery. Your joy.</h1>
@@ -348,17 +326,51 @@ export default function App() {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [pullStartPoint, setPullStartPoint] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // NEW: Track notified games to prevent spamming
+  const [notifiedGames, setNotifiedGames] = useState(new Set());
   const scrollRef = useRef(null);
 
   const styles = THEMES[activeTheme];
 
   useEffect(() => { if (!enabledLeagues[activeLeague]) setActiveLeague(Object.keys(enabledLeagues).find(k => enabledLeagues[k]) || 'NCAA'); }, [enabledLeagues]);
-  useEffect(() => { checkLiveScores(); }, []); 
   useEffect(() => { localStorage.setItem('tl_hated_teams', JSON.stringify(hatedTeams)); }, [hatedTeams]);
+
+  // --- POLLING & VISIBILITY LOGIC (Fixing the "Sleeping App" issue) ---
+  useEffect(() => { 
+    checkLiveScores(); 
+
+    // 1. Poll every 60 seconds while open
+    const interval = setInterval(() => {
+        checkLiveScores();
+    }, 60000);
+
+    // 2. Check immediately when user switches back to app tab/window
+    const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+            checkLiveScores();
+        }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+        clearInterval(interval);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [hatedTeams, enabledLeagues]); // Re-run if preferences change
 
   // --- LOGIC ---
   const checkLiveScores = async () => {
-    setLoading(true); setConsolationFact(null); setCelebration(null); setNoGamesMsg(null); setGameResults([]);
+    if (loading) return; // Don't stack requests
+    
+    // Don't set global loading state for background polls (it flickers UI)
+    // Only set it if it's a manual refresh or first load
+    const isManual = refreshing || gameResults.length === 0;
+    if (isManual) setLoading(true);
+    
+    setConsolationFact(null); 
+    setNoGamesMsg(null); 
+    
     try {
       const getYYYYMMDD = (d) => d.toISOString().split('T')[0].replace(/-/g, '');
       const dates = [new Date(), new Date(Date.now()-864e5), new Date(Date.now()-1728e5)].map(getYYYYMMDD);
@@ -379,7 +391,6 @@ export default function App() {
         const h = event.competitions[0].competitors.find(c=>c.homeAway==='home'), a = event.competitions[0].competitors.find(c=>c.homeAway==='away');
         if(!h||!a) return null;
         
-        // Helper to find config
         const findConf = (abbr) => ALL_TEAMS.find(t => (t.id === abbr || t.id.startsWith(abbr + '_')) && t.league === event._league);
 
         const isHated = (id) => hatedTeams.some(ht => ht === id || ht.startsWith(id + '_'));
@@ -389,11 +400,8 @@ export default function App() {
 
         const hated = hatedHome ? h : a;
         const opp = hatedHome ? a : h;
-        
-        // Find configurations for BOTH teams
         const hatedConf = findConf(hated.team.abbreviation.toLowerCase());
         
-        // Fallback for opponent if not in DB
         let oppConf = findConf(opp.team.abbreviation.toLowerCase());
         if (!oppConf) {
             oppConf = { id: opp.team.abbreviation.toLowerCase(), name: opp.team.displayName, color: '#94a3b8', league: event._league };
@@ -407,7 +415,6 @@ export default function App() {
         
         return {
           team: {...hatedConf, score: parseInt(hated.score||0)},
-          // Pass full opponent object
           opponentTeam: {...oppConf, score: parseInt(opp.score||0)},
           status: lost ? 'LOST' : (isFinal ? 'WON' : 'PLAYING'),
           gameId: event.id, isYesterday: new Date(event.date) < new Date(new Date().setHours(0,0,0,0))
@@ -415,11 +422,44 @@ export default function App() {
       }).filter(Boolean);
 
       setGameResults(results);
-      if (results.some(r => r.status === 'LOST')) triggerCelebration();
-      else if (results.length > 0) pickHistoricLoss();
-      else setNoGamesMsg("No active games found for your enemies.");
+      
+      const losers = results.filter(r => r.status === 'LOST');
+      
+      if (losers.length > 0) {
+          // Check if we already notified about these specific games
+          const newLosers = losers.filter(l => !notifiedGames.has(l.gameId));
+          
+          if (newLosers.length > 0) {
+              triggerCelebration();
+              
+              // --- TRIGGER REAL NOTIFICATION ---
+              if ('Notification' in window && Notification.permission === 'granted') {
+                  const game = newLosers[0]; // Just show one if multiple happen at once
+                  new Notification("THEY LOST!", {
+                      body: `${game.team.name} lost ${game.team.score}-${game.opponentTeam.score} to ${game.opponentTeam.name}.`,
+                      icon: APP_ICON
+                  });
+              }
 
-    } catch (e) { setNoGamesMsg("Error fetching data."); } finally { setLoading(false); setRefreshing(false); }
+              // Update tracked notifications
+              setNotifiedGames(prev => {
+                  const next = new Set(prev);
+                  newLosers.forEach(l => next.add(l.gameId));
+                  return next;
+              });
+          }
+      } else if (results.length > 0 && isManual) {
+          pickHistoricLoss();
+      } else if (results.length === 0 && isManual) {
+          setNoGamesMsg("No active games found for your enemies.");
+      }
+
+    } catch (e) { 
+        if (isManual) setNoGamesMsg("Error fetching data."); 
+    } finally { 
+        setLoading(false); 
+        setRefreshing(false); 
+    }
   };
 
   const pickHistoricLoss = () => {
@@ -442,7 +482,6 @@ export default function App() {
       Toxic: ["IMAGINE LOSING [SCORE]-[OPP_SCORE]. [TEAM] DOWN BAD. 📉🤡 [LINK]"]
     };
     
-    // FORMAT HELPER (Updated for new structure)
     const format = (t) => {
        const url = `espn.com/${{'NBA':'nba','NFL':'nfl','CFB':'college-football','NCAA':'mens-college-basketball'}[g.team.league]}/game/_/gameId/${g.gameId}`;
        return t.replace('[TEAM]',g.team.name).replace('[SCORE]',g.team.score).replace('[OPP_SCORE]',g.opponentTeam.score).replace('[OPP]',g.opponentTeam.name).replace('[LINK]',url);
@@ -453,23 +492,16 @@ export default function App() {
   };
 
   const doShare = (txt, g, index) => {
-    // Fallback copy method for iframe environments
     try {
       const textArea = document.createElement("textarea");
-      textArea.value = txt; // Already formatted
+      textArea.value = txt; 
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      
       setCopiedIndex(index);
-      setTimeout(() => {
-        setCopiedIndex(null);
-        setShareModal(null);
-      }, 1000);
-    } catch (err) {
-      console.error('Fallback: Oops, unable to copy', err);
-    }
+      setTimeout(() => { setCopiedIndex(null); setShareModal(null); }, 1000);
+    } catch (err) { console.error('Fallback error', err); }
   };
 
   const handleRefresh = () => {
@@ -479,21 +511,16 @@ export default function App() {
 
   const handleTouchStart = (e) => {
     const scrollTop = scrollRef.current ? scrollRef.current.scrollTop : 0;
-    if (scrollTop === 0) {
-      setPullStartPoint(e.touches[0].clientY);
-    }
+    if (scrollTop === 0) setPullStartPoint(e.touches[0].clientY);
   };
 
   const handleTouchEnd = (e) => {
     if (pullStartPoint === 0) return;
     const pullDistance = e.changedTouches[0].clientY - pullStartPoint;
-    if (pullDistance > 150) { // Threshold for refresh
-        handleRefresh();
-    }
+    if (pullDistance > 150) handleRefresh();
     setPullStartPoint(0);
   };
 
-  // --- RENDER ---
   const displayResults = gameResults.filter(g => g.status === 'LOST');
   const manageList = ALL_TEAMS.filter(t => t.league === activeLeague && (searchTerm==='' || t.name.toLowerCase().includes(searchTerm.toLowerCase()))).sort((a,b)=>a.name.localeCompare(b.name));
 
@@ -503,13 +530,8 @@ export default function App() {
       
       {showOnboarding && <Onboarding onComplete={() => { localStorage.setItem('tl_onboarded','true'); setShowOnboarding(false); }} />}
       
-      {/* HEADER */}
       <header className={`p-4 sticky top-0 z-30 shrink-0 flex justify-between items-center ${styles.header}`}>
-        <div 
-            onClick={handleRefresh}
-            className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity"
-            title="Tap to Refresh"
-        >
+        <div onClick={handleRefresh} className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity">
             <div className="w-12 h-12 rounded-md overflow-hidden bg-gradient-to-br from-[#1e90ff] to-[#99badd] shadow-sm flex items-center justify-center">
                 <img src={APP_ICON} alt="App Icon" className="w-full h-full object-cover" />
             </div>
@@ -523,7 +545,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* BANNER */}
       {celebration && (
         <div className={`p-4 text-center animate-enter-banner shadow-lg relative z-20 shrink-0 ${styles.lossBanner}`}>
           <div className="fixed inset-0 pointer-events-none z-50">{[...Array(30)].map((_,i)=><div key={i} className="absolute animate-fall" style={{left:`${Math.random()*100}vw`,top:'-20px',width:'10px',height:'10px',background:['#f00','#0f0','#00f'][Math.floor(Math.random()*3)],animationDuration:`${2+Math.random()*3}s`}}/>)}</div>
@@ -532,43 +553,18 @@ export default function App() {
         </div>
       )}
 
-      {/* REFRESH INDICATOR (Overlay) */}
-      {refreshing && !celebration && (
-          <div className="absolute top-20 left-0 right-0 z-20 flex justify-center pointer-events-none animate-in fade-in slide-in-from-top-4">
-              <div className="bg-slate-900 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-bold">
-                  <RefreshCw size={16} className="animate-spin" /> Checking Scores...
-              </div>
-          </div>
-      )}
+      {refreshing && !celebration && <div className="absolute top-20 left-0 right-0 z-20 flex justify-center pointer-events-none animate-in fade-in slide-in-from-top-4"><div className="bg-slate-900 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-bold"><RefreshCw size={16} className="animate-spin" /> Checking Scores...</div></div>}
 
-      {/* SHARE MODAL */}
       {shareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
           <div className="bg-white w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl">
             <div className="bg-slate-100 p-4 border-b flex justify-between font-bold text-slate-700"><span className="flex gap-2"><Share2/> Share</span><button onClick={()=>setShareModal(null)}><X/></button></div>
-            <div className="p-4 space-y-2">
-              {shareOptions.map((opt,i) => (
-                <button key={i} onClick={()=>doShare(opt.text, shareModal, i)} className="w-full text-left p-3 rounded-xl border hover:bg-green-50 hover:border-green-500 transition group relative">
-                  <div className="flex justify-between text-xs font-bold text-slate-400 uppercase mb-1">
-                    <span>{opt.label}</span>
-                    {copiedIndex === i ? <Check size={12} className="text-green-600"/> : <Copy size={12}/>}
-                  </div>
-                  <p className="text-sm font-medium text-slate-800">{opt.text}</p>
-                  {copiedIndex === i && <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center font-black text-green-700 uppercase tracking-widest text-xs">Copied!</div>}
-                </button>
-              ))}
-            </div>
+            <div className="p-4 space-y-2">{shareOptions.map((opt,i) => (<button key={i} onClick={()=>doShare(opt.text, shareModal, i)} className="w-full text-left p-3 rounded-xl border hover:bg-green-50 hover:border-green-500 transition group relative"><div className="flex justify-between text-xs font-bold text-slate-400 uppercase mb-1"><span>{opt.label}</span>{copiedIndex === i ? <Check size={12} className="text-green-600"/> : <Copy size={12}/>}</div><p className="text-sm font-medium text-slate-800">{opt.text}</p>{copiedIndex === i && <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center font-black text-green-700 uppercase tracking-widest text-xs">Copied!</div>}</button>))}</div>
           </div>
         </div>
       )}
 
-      {/* MAIN CONTENT */}
-      <main 
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 pb-6"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+      <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 pb-6" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {view === 'scoreboard' && (
           <div className="space-y-6">
             <div className="text-center opacity-40 text-xs font-bold uppercase tracking-widest">Tracking {hatedTeams.length} Enemies</div>
