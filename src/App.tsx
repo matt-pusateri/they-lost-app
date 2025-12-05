@@ -539,7 +539,7 @@ export default function App() {
             className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity"
             title="Tap to Refresh"
         >
-            <div className="w-12 h-12 rounded-md overflow-hidden bg-white/20">
+            <div className="w-12 h-12 rounded-md overflow-hidden bg-white shadow-sm">
                 <img src={APP_ICON} alt="App Icon" className="w-full h-full object-cover" />
             </div>
             <h1 className="font-black text-xl italic">THEY LOST!</h1>
