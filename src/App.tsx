@@ -3,9 +3,10 @@ import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper,
 
 // --- 1. UTILITIES & CONFIG ---
 
-const APP_VERSION = "1.3.1"; // Updated Version
+const APP_VERSION = "1.4";
 
 const APP_ICON = "https://ik.imagekit.io/ipi1yjzh9/theylost%20icon%20512.png";
+const APP_ICON_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%231e90ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%234b9cd3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='100' fill='url(%23grad)'/%3E%3Cpath fill='white' d='M256 320c-66.27 0-120-40.29-120-90 0-5.52 4.48-10 10-10h220c5.52 0 10 4.48 10 10 0 49.71-53.73 90-120 90zM150 160c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30zm212 0c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30z'/%3E%3Cpath fill='white' opacity='0.3' d='M146 160l-30-30m280 30l30-30' stroke='white' stroke-width='25' stroke-linecap='round' /%3E%3C/svg%3E";
 
 const CELEBRATION_GIFS = [
   "https://i.giphy.com/media/HmdsITkYtq5i/giphy.gif",
@@ -26,133 +27,44 @@ const CELEBRATION_GIFS = [
   "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eHgzYzl2bHJvZmRkaG85eGhuYmkwaWIwa3dpdWtzNnJseWEyc3htbCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uxLVaMUiycgpO/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/T87BZ7cyOH7TwDBgwy/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/61MN4zqj333nTdtLEH/giphy.gif",
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif"
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/fPRwBcYd71Lox1v7p2/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3eDR3dnJkZWYzd2Q4N242enBocnRzZDZycXN6bGp3bWlzOXA0dHp5ZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VABbCpX94WCfS/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNG5xMW05NXE5N2JqeWV4d3lvcnJkejZmN3RmMWh1Nzc5b2gwdGVvaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/unAjVtjhUeYFMJ8jFc/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1PMVNNKVIL8Ig/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/yCjr0U8WCOQM0/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnNvOGVjdHlyMXEwcmUyMXNtd2J1OTgzc2E1YXI3OTB1NmNzZmdrNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o7abldj0b3rxrZUxW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/10Jpr9KSaXLchW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3ohzdIuqJoo8QdKlnW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DffShiJ47fPqM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamtmb25ocjF1OTFqM2llc3dpMnowenM1bjk1N3FsczViaXdtMmxpaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3WCNY2RhcmnwGbKbCi/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/rdma0nDFZMR32/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmN0aDVoY25hanVscDVzdWhjMXc2MW1oeXNsOHRzeDFmN3g3c3lrZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/12PIT4DOj6Tgek/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MWV5NGd5NWV3Y24yN3p0ZXV2ZnlkMXoxNXZkazE4ZDB4b2d6Y3ZjeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4GuFtlz4IhKSt89E7q/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzQxanZqZDl2anpwNmNnamZ6eGhzYnRoNGlsOG9sNnJ3ZXE3ZWM3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BWplyaNrHRjRvweNjS/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cjhicTJucGhmOXFzbzd3aHIwd2xjOHVld3hqdjd1cDN3N3dsNHF2eSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KB7Moe2Oj0BXeDjvDp/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/DYH297XiCS2Ck/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/SA613Nxg1h6zO1nRsg/giphy.gif"
 ];
 
-const TRASH_TALK = [
-  "Thoughts and prayers. 🙏", "Someone check on their fans. 😂", "Inject this into my veins. 💉",
-  "Down bad. 📉", "Holding that L. 🥡", "Chef's kiss. 🤌", "Pure cinema. 🍿", "Exposed.",
-  "They are who we thought they were.", "Hang the banner: 'Participated'.", "Sucks to suck.",
-  "Have a safe flight home! 👋", "Call the waaaambulance. 🚑", "Keep crying.", "Delicious tears. 💧",
-  "Oof. Big oof.", "Warm up the bus!", "This sparks joy. ✨", "Emotional damage. 💥"
-];
+const TRASH_TALK = ["Thoughts and prayers. 🙏","Someone check on their fans. 😂","Inject this into my veins. 💉","Down bad. 📉","Holding that L. 🥡","Chef's kiss. 🤌","Pure cinema. 🍿","Exposed.","They are who we thought they were.","Hang the banner: 'Participated'.","Sucks to suck.","Have a safe flight home! 👋","Call the waaaambulance. 🚑","Keep crying.","Delicious tears. 💧","Oof. Big oof.","Warm up the bus!","This sparks joy. ✨","Emotional damage. 💥"];
 
 const THEMES = {
-  professional: { name: "Professional", bg: "bg-slate-100", text: "text-slate-900", header: "bg-blue-600 text-white shadow-md", card: "bg-white border-slate-200 shadow-sm rounded-2xl", accent: "text-blue-600", accentBg: "bg-blue-50", buttonPrimary: "bg-blue-900 text-white", lossBanner: "bg-green-600 text-white" },
-  midnight: { name: "Midnight", bg: "bg-slate-950", text: "text-slate-100", header: "bg-slate-900 text-white border-b border-slate-800", card: "bg-slate-900 border-slate-800 shadow-lg rounded-xl", accent: "text-indigo-400", accentBg: "bg-slate-800", buttonPrimary: "bg-indigo-600 text-white", lossBanner: "bg-indigo-600 text-white" },
-  playbook: { name: "Playbook", bg: "bg-emerald-50", text: "text-emerald-950", header: "bg-emerald-800 text-white border-b-4 border-emerald-600", card: "bg-white border-emerald-200 shadow-sm rounded-lg", accent: "text-emerald-700", accentBg: "bg-emerald-100", buttonPrimary: "bg-emerald-800 text-white", lossBanner: "bg-emerald-700 text-white" }
+  professional: { name: "Professional", bg: "bg-slate-100", text: "text-slate-900", header: "bg-blue-600 text-white shadow-md", card: "bg-white border-slate-200 shadow-sm rounded-2xl", accent: "text-blue-600", accentBg: "bg-blue-50", buttonPrimary: "bg-blue-900 text-white", buttonSecondary: "bg-slate-200 text-slate-700 hover:bg-slate-300", lossBanner: "bg-green-600 text-white" },
+  midnight: { name: "Midnight", bg: "bg-slate-950", text: "text-slate-100", header: "bg-slate-900 text-white border-b border-slate-800", card: "bg-slate-900 border-slate-800 shadow-lg rounded-xl", accent: "text-indigo-400", accentBg: "bg-slate-800", buttonPrimary: "bg-indigo-600 text-white", buttonSecondary: "bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700", lossBanner: "bg-indigo-600 text-white" },
+  playbook: { name: "Playbook", bg: "bg-emerald-50", text: "text-emerald-950", header: "bg-emerald-800 text-white border-b-4 border-emerald-600", card: "bg-white border-emerald-200 shadow-sm rounded-lg", accent: "text-emerald-700", accentBg: "bg-emerald-100", buttonPrimary: "bg-emerald-800 text-white", buttonSecondary: "bg-white text-emerald-800 border border-emerald-300 hover:bg-emerald-50", lossBanner: "bg-emerald-700 text-white" }
 };
 
-// --- 2. DATA COMPRESSION ---
-// Format: [id, name, mascot, color, conference]
+// --- 2. DATA ---
 const RAW_TEAMS = {
-  MLB: [
-    ['bal_mlb','Baltimore','Orioles','#DF4601','AL East'],['bos_mlb','Boston','Red Sox','#BD3039','AL East'],
-    ['nyy_mlb','NY Yankees','Yankees','#003087','AL East'],['tb_mlb','Tampa Bay','Rays','#092C5C','AL East'],
-    ['tor_mlb','Toronto','Blue Jays','#134A8E','AL East'],['cws_mlb','Chi White Sox','White Sox','#27251F','AL Central'],
-    ['cle_mlb','Cleveland','Guardians','#00385D','AL Central'],['det_mlb','Detroit','Tigers','#0C2340','AL Central'],
-    ['kc_mlb','Kansas City','Royals','#004687','AL Central'],['min_mlb','Minnesota','Twins','#002B5C','AL Central'],
-    ['hou_mlb','Houston','Astros','#002D62','AL West'],['laa_mlb','LA Angels','Angels','#BA0021','AL West'],
-    ['oak_mlb','Oakland','Athletics','#003831','AL West'],['sea_mlb','Seattle','Mariners','#0C2C56','AL West'],
-    ['tex_mlb','Texas','Rangers','#003278','AL West'],['atl_mlb','Atlanta','Braves','#13274F','NL East'],
-    ['mia_mlb','Miami','Marlins','#00A3E0','NL East'],['nym_mlb','NY Mets','Mets','#002D72','NL East'],
-    ['phi_mlb','Philadelphia','Phillies','#E81828','NL East'],['wsh_mlb','Washington','Nationals','#AB0003','NL East'],
-    ['chc_mlb','Chi Cubs','Cubs','#0E3386','NL Central'],['cin_mlb','Cincinnati','Reds','#C6011F','NL Central'],
-    ['mil_mlb','Milwaukee','Brewers','#12284B','NL Central'],['pit_mlb','Pittsburgh','Pirates','#FDB827','NL Central'],
-    ['stl_mlb','St. Louis','Cardinals','#C41E3A','NL Central'],['ari_mlb','Arizona','Diamondbacks','#A71930','NL West'],
-    ['col_mlb','Colorado','Rockies','#333366','NL West'],['lad_mlb','LA Dodgers','Dodgers','#005A9C','NL West'],
-    ['sd_mlb','San Diego','Padres','#2F241D','NL West'],['sf_mlb','San Francisco','Giants','#FD5A1E','NL West']
-  ],
-  NCAA: [
-    ['duke','Duke','Blue Devils','#003087','ACC'],['unc','North Carolina','Tar Heels','#99badd','ACC'],
-    ['uva','Virginia','Cavaliers','#232D4B','ACC'],['mia','Miami','Hurricanes','#F47321','ACC'],
-    ['ncst','NC State','Wolfpack','#CC0000','ACC'],['msu','Michigan St','Spartans','#18453B','Big Ten'],
-    ['mich','Michigan','Wolverines','#00274C','Big Ten'],['osu','Ohio State','Buckeyes','#BB0000','Big Ten'],
-    ['iu','Indiana','Hoosiers','#990000','Big Ten'],['pur','Purdue','Boilermakers','#CEB888','Big Ten'],
-    ['ill','Illinois','Illini','#E84A27','Big Ten'],['ucla','UCLA','Bruins','#2D68C4','Big Ten'],
-    ['usc','USC','Trojans','#990000','Big Ten'],['md','Maryland','Terrapins','#E03A3E','Big Ten'],
-    ['uky','Kentucky','Wildcats','#0033A0','SEC'],['ala','Alabama','Crimson Tide','#9E1B32','SEC'],
-    ['aub','Auburn','Tigers','#0C2340','SEC'],['tenn','Tennessee','Volunteers','#FF8200','SEC'],
-    ['fla','Florida','Gators','#0021A5','SEC'],['ark','Arkansas','Razorbacks','#9D2235','SEC'],
-    ['tex','Texas','Longhorns','#BF5700','SEC'],['ku','Kansas','Jayhawks','#0051BA','Big 12'],
-    ['bay','Baylor','Bears','#154734','Big 12'],['hou','Houston','Cougars','#C8102E','Big 12'],
-    ['isu','Iowa State','Cyclones','#C8102E','Big 12'],['ari','Arizona','Wildcats','#CC0033','Big 12'],
-    ['conn','UConn','Huskies','#000E2F','Big East'],['nova','Villanova','Wildcats','#00205B','Big East'],
-    ['marq','Marquette','Golden Eagles','#003366','Big East'],['stj',"St. John's",'Red Storm','#BA0C2F','Big East'],
-    ['gonz','Gonzaga','Bulldogs','#041E42','WCC'],['gtown','Georgetown','Hoyas','#041E42','Big East']
-  ],
-  CFB: [
-    ['ala_fb','Alabama','Crimson Tide','#9E1B32','SEC'],['uga','Georgia','Bulldogs','#BA0C2F','SEC'],
-    ['tex_fb','Texas','Longhorns','#BF5700','SEC'],['lsu','LSU','Tigers','#461D7C','SEC'],
-    ['tenn_fb','Tennessee','Volunteers','#FF8200','SEC'],['ole','Ole Miss','Rebels','#CE1126','SEC'],
-    ['miz','Missouri','Tigers','#F1B82D','SEC'],['okl','Oklahoma','Sooners','#841617','SEC'],
-    ['fla_fb','Florida','Gators','#0021A5','SEC'],['aub_fb','Auburn','Tigers','#0C2340','SEC'],
-    ['tam','Texas A&M','Aggies','#500000','SEC'],['ark_fb','Arkansas','Razorbacks','#9D2235','SEC'],
-    ['uky_fb','Kentucky','Wildcats','#0033A0','SEC'],['sc','South Carolina','Gamecocks','#73000A','SEC'],
-    ['van','Vanderbilt','Commodores','#000000','SEC'],['msst','Miss State','Bulldogs','#660000','SEC'],
-    ['mich_fb','Michigan','Wolverines','#00274C','Big Ten'],['osu_fb','Ohio State','Buckeyes','#BB0000','Big Ten'],
-    ['psu','Penn State','Nittany Lions','#041E42','Big Ten'],['ore','Oregon','Ducks','#154733','Big Ten'],
-    ['wash','Washington','Huskies','#4B2E83','Big Ten'],['usc_fb','USC','Trojans','#990000','Big Ten'],
-    ['ucla_fb','UCLA','Bruins','#2D68C4','Big Ten'],['wis_fb','Wisconsin','Badgers','#C5050C','Big Ten'],
-    ['iowa','Iowa','Hawkeyes','#FFCD00','Big Ten'],['neb','Nebraska','Cornhuskers','#E41C38','Big Ten'],
-    ['msu_fb','Michigan St','Spartans','#18453B','Big Ten'],['minn_fb','Minnesota','Gophers','#7A0019','Big Ten'],
-    ['ill_fb','Illinois','Illini','#E84A27','Big Ten'],['pur_fb','Purdue','Boilermakers','#CEB888','Big Ten'],
-    ['umd_fb','Maryland','Terrapins','#E03A3E','Big Ten'],['rut','Rutgers','Scarlet Knights','#CC0033','Big Ten'],
-    ['ind_fb','Indiana','Hoosiers','#990000','Big Ten'],['nw','Northwestern','Wildcats','#4E2A84','Big Ten'],
-    ['fsu_fb','Florida St','Seminoles','#782F40','ACC'],['clem_fb','Clemson','Tigers','#F56600','ACC'],
-    ['mia_fb','Miami','Hurricanes','#F47321','ACC'],['unc_fb','North Carolina','Tar Heels','#99badd','ACC'],
-    ['ncst_fb','NC State','Wolfpack','#CC0000','ACC'],['duke_fb','Duke','Blue Devils','#003087','ACC'],
-    ['vt','Virginia Tech','Hokies','#630031','ACC'],['uva_fb','Virginia','Cavaliers','#232D4B','ACC'],
-    ['lou_fb','Louisville','Cardinals','#C90031','ACC'],['pitt','Pittsburgh','Panthers','#003594','ACC'],
-    ['syr_fb','Syracuse','Orange','#F76900','ACC'],['gt','Georgia Tech','Yellow Jackets','#B3A369','ACC'],
-    ['bc','Boston College','Eagles','#98002E','ACC'],['wake_fb','Wake Forest','Demon Deacons','#9E7E38','ACC'],
-    ['cal','Cal','Golden Bears','#003262','ACC'],['stan','Stanford','Cardinal','#8C1515','ACC'],
-    ['smu','SMU','Mustangs','#0033A0','ACC'],['okst','Oklahoma St','Cowboys','#FF7300','Big 12'],
-    ['ksu','Kansas St','Wildcats','#512888','Big 12'],['ku_fb','Kansas','Jayhawks','#0051BA','Big 12'],
-    ['isu_fb','Iowa State','Cyclones','#C8102E','Big 12'],['utah','Utah','Utes','#CC0000','Big 12'],
-    ['ari_fb','Arizona','Wildcats','#CC0033','Big 12'],['asu','Arizona St','Sun Devils','#8C1D40','Big 12'],
-    ['colo','Colorado','Buffaloes','#CFB87C','Big 12'],['byu','BYU','Cougars','#002E5D','Big 12'],
-    ['tcu','TCU','Horned Frogs','#4D1979','Big 12'],['bay_fb','Baylor','Bears','#154734','Big 12'],
-    ['tt','Texas Tech','Red Raiders','#CC0000','Big 12'],['wvu','West Virginia','Mountaineers','#002855','Big 12'],
-    ['ucf','UCF','Knights','#BA9B37','Big 12'],['cin_fb','Cincinnati','Bearcats','#E00122','Big 12'],
-    ['hou_fb','Houston','Cougars','#C8102E','Big 12'],['nd','Notre Dame','Fighting Irish','#0C2340','Ind'],
-    ['orst','Oregon St','Beavers','#DC4405','Pac-12'],['wsu','Wash State','Cougars','#981E32','Pac-12']
-  ],
-  NFL: [
-    ['dal','Dallas','Cowboys','#003594','NFC East'],['phi','Philadelphia','Eagles','#004C54','NFC East'],
-    ['wsh','Washington','Commanders','#5A1414','NFC East'],['nyg','NY Giants','Giants','#0B2265','NFC East'],
-    ['chi','Chicago','Bears','#0B162A','NFC North'],['gb','Green Bay','Packers','#203731','NFC North'],
-    ['min','Minnesota','Vikings','#4F2683','NFC North'],['det','Detroit','Lions','#0076B6','NFC North'],
-    ['atl','Atlanta','Falcons','#a71930','NFC South'],['no','New Orleans','Saints','#D3BC8D','NFC South'],
-    ['tb','Tampa Bay','Buccaneers','#D50A0A','NFC South'],['car','Carolina','Panthers','#0085CA','NFC South'],
-    ['sf','San Fran','49ers','#AA0000','NFC West'],['sea','Seattle','Seahawks','#002244','NFC West'],
-    ['lar','LA Rams','Rams','#003594','NFC West'],['ari','Arizona','Cardinals','#97233F','NFC West'],
-    ['ne','New England','Patriots','#002244','AFC East'],['buf','Buffalo','Bills','#00338D','AFC East'],
-    ['mia','Miami','Dolphins','#008E97','AFC East'],['nyj','NY Jets','Jets','#125740','AFC East'],
-    ['pit','Pittsburgh','Steelers','#FFB612','AFC North'],['bal','Baltimore','Ravens','#241773','AFC North'],
-    ['cin','Cincinnati','Bengals','#FB4F14','AFC North'],['cle','Cleveland','Browns','#311D00','AFC North'],
-    ['ind','Indianapolis','Colts','#002C5F','AFC South'],['ten','Tennessee','Titans','#0C2340','AFC South'],
-    ['jax','Jacksonville','Jaguars','#006778','AFC South'],['hou','Houston','Texans','#03202F','AFC South'],
-    ['kc','Kansas City','Chiefs','#E31837','AFC West'],['lv','Las Vegas','Raiders','#000000','AFC West'],
-    ['den','Denver','Broncos','#FB4F14','AFC West'],['lac','LA Chargers','Chargers','#0080C6','AFC West']
-  ],
-  NBA: [
-    ['bos','Boston','Celtics','#007A33','East'],['bkn','Brooklyn','Nets','#000000','East'],
-    ['ny','New York','Knicks','#F58426','East'],['phi','Philly','76ers','#006BB6','East'],
-    ['tor','Toronto','Raptors','#CE1141','East'],['chi','Chicago','Bulls','#CE1141','East'],
-    ['cle','Cleveland','Cavaliers','#860038','East'],['det','Detroit','Pistons','#C8102E','East'],
-    ['ind','Indiana','Pacers','#FDBB30','East'],['mil','Milwaukee','Bucks','#00471B','East'],
-    ['atl','Atlanta','Hawks','#E03A3E','East'],['cha','Charlotte','Hornets','#1D1160','East'],
-    ['mia','Miami','Heat','#98002E','East'],['orl','Orlando','Magic','#0077C0','East'],
-    ['wsh','Washington','Wizards','#002B5C','East'],['den','Denver','Nuggets','#0E2240','East'],
-    ['min','Minnesota','Timberwolves','#0C2340','West'],['okc','OKC','Thunder','#007AC1','West'],
-    ['por','Portland','Trail Blazers','#E03A3E','West'],['uta','Utah','Jazz','#002B5C','West'],
-    ['gs','Golden State','Warriors','#1D428A','West'],['lac','LA Clippers','Clippers','#C8102E','West'],
-    ['lal','L.A.','Lakers','#552583','West'],['phx','Phoenix','Suns','#1D1160','West'],
-    ['sac','Sacramento','Kings','#5A2D81','West'],['dal','Dallas','Mavericks','#00538C','West'],
-    ['hou','Houston','Rockets','#CE1141','West'],['mem','Memphis','Grizzlies','#5D76A9','West'],
-    ['no','New Orleans','Pelicans','#0C2340','West'],['sas','San Antonio','Spurs','#C4CED4','West']
-  ]
+  MLB:[['bal_mlb','Baltimore','Orioles','#DF4601','AL East'],['bos_mlb','Boston','Red Sox','#BD3039','AL East'],['nyy_mlb','NY Yankees','Yankees','#003087','AL East'],['tb_mlb','Tampa Bay','Rays','#092C5C','AL East'],['tor_mlb','Toronto','Blue Jays','#134A8E','AL East'],['cws_mlb','Chi White Sox','White Sox','#27251F','AL Central'],['cle_mlb','Cleveland','Guardians','#00385D','AL Central'],['det_mlb','Detroit','Tigers','#0C2340','AL Central'],['kc_mlb','Kansas City','Royals','#004687','AL Central'],['min_mlb','Minnesota','Twins','#002B5C','AL Central'],['hou_mlb','Houston','Astros','#002D62','AL West'],['laa_mlb','LA Angels','Angels','#BA0021','AL West'],['oak_mlb','Oakland','Athletics','#003831','AL West'],['sea_mlb','Seattle','Mariners','#0C2C56','AL West'],['tex_mlb','Texas','Rangers','#003278','AL West'],['atl_mlb','Atlanta','Braves','#13274F','NL East'],['mia_mlb','Miami','Marlins','#00A3E0','NL East'],['nym_mlb','NY Mets','Mets','#002D72','NL East'],['phi_mlb','Philadelphia','Phillies','#E81828','NL East'],['wsh_mlb','Washington','Nationals','#AB0003','NL East'],['chc_mlb','Chi Cubs','Cubs','#0E3386','NL Central'],['cin_mlb','Cincinnati','Reds','#C6011F','NL Central'],['mil_mlb','Milwaukee','Brewers','#12284B','NL Central'],['pit_mlb','Pittsburgh','Pirates','#FDB827','NL Central'],['stl_mlb','St. Louis','Cardinals','#C41E3A','NL Central'],['ari_mlb','Arizona','Diamondbacks','#A71930','NL West'],['col_mlb','Colorado','Rockies','#333366','NL West'],['lad_mlb','LA Dodgers','Dodgers','#005A9C','NL West'],['sd_mlb','San Diego','Padres','#2F241D','NL West'],['sf_mlb','San Francisco','Giants','#FD5A1E','NL West']],
+  NCAA:[['duke','Duke','Blue Devils','#003087','ACC'],['unc','North Carolina','Tar Heels','#99badd','ACC'],['uva','Virginia','Cavaliers','#232D4B','ACC'],['mia','Miami','Hurricanes','#F47321','ACC'],['ncst','NC State','Wolfpack','#CC0000','ACC'],['msu','Michigan St','Spartans','#18453B','Big Ten'],['mich','Michigan','Wolverines','#00274C','Big Ten'],['osu','Ohio State','Buckeyes','#BB0000','Big Ten'],['iu','Indiana','Hoosiers','#990000','Big Ten'],['pur','Purdue','Boilermakers','#CEB888','Big Ten'],['ill','Illinois','Illini','#E84A27','Big Ten'],['ucla','UCLA','Bruins','#2D68C4','Big Ten'],['usc','USC','Trojans','#990000','Big Ten'],['md','Maryland','Terrapins','#E03A3E','Big Ten'],['uky','Kentucky','Wildcats','#0033A0','SEC'],['ala','Alabama','Crimson Tide','#9E1B32','SEC'],['aub','Auburn','Tigers','#0C2340','SEC'],['tenn','Tennessee','Volunteers','#FF8200','SEC'],['fla','Florida','Gators','#0021A5','SEC'],['ark','Arkansas','Razorbacks','#9D2235','SEC'],['tex','Texas','Longhorns','#BF5700','SEC'],['ku','Kansas','Jayhawks','#0051BA','Big 12'],['bay','Baylor','Bears','#154734','Big 12'],['hou','Houston','Cougars','#C8102E','Big 12'],['isu','Iowa State','Cyclones','#C8102E','Big 12'],['ari','Arizona','Wildcats','#CC0033','Big 12'],['conn','UConn','Huskies','#000E2F','Big East'],['nova','Villanova','Wildcats','#00205B','Big East'],['marq','Marquette','Golden Eagles','#003366','Big East'],['stj',"St. John's",'Red Storm','#BA0C2F','Big East'],['gonz','Gonzaga','Bulldogs','#041E42','WCC'],['gtown','Georgetown','Hoyas','#041E42','Big East']],
+  CFB:[['ala_fb','Alabama','Crimson Tide','#9E1B32','SEC'],['uga','Georgia','Bulldogs','#BA0C2F','SEC'],['tex_fb','Texas','Longhorns','#BF5700','SEC'],['lsu','LSU','Tigers','#461D7C','SEC'],['tenn_fb','Tennessee','Volunteers','#FF8200','SEC'],['ole','Ole Miss','Rebels','#CE1126','SEC'],['miz','Missouri','Tigers','#F1B82D','SEC'],['okl','Oklahoma','Sooners','#841617','SEC'],['fla_fb','Florida','Gators','#0021A5','SEC'],['aub_fb','Auburn','Tigers','#0C2340','SEC'],['tam','Texas A&M','Aggies','#500000','SEC'],['ark_fb','Arkansas','Razorbacks','#9D2235','SEC'],['uky_fb','Kentucky','Wildcats','#0033A0','SEC'],['sc','South Carolina','Gamecocks','#73000A','SEC'],['van','Vanderbilt','Commodores','#000000','SEC'],['msst','Miss State','Bulldogs','#660000','SEC'],['mich_fb','Michigan','Wolverines','#00274C','Big Ten'],['osu_fb','Ohio State','Buckeyes','#BB0000','Big Ten'],['psu','Penn State','Nittany Lions','#041E42','Big Ten'],['ore','Oregon','Ducks','#154733','Big Ten'],['wash','Washington','Huskies','#4B2E83','Big Ten'],['usc_fb','USC','Trojans','#990000','Big Ten'],['ucla_fb','UCLA','Bruins','#2D68C4','Big Ten'],['wis_fb','Wisconsin','Badgers','#C5050C','Big Ten'],['iowa','Iowa','Hawkeyes','#FFCD00','Big Ten'],['neb','Nebraska','Cornhuskers','#E41C38','Big Ten'],['msu_fb','Michigan St','Spartans','#18453B','Big Ten'],['minn_fb','Minnesota','Gophers','#7A0019','Big Ten'],['ill_fb','Illinois','Illini','#E84A27','Big Ten'],['pur_fb','Purdue','Boilermakers','#CEB888','Big Ten'],['umd_fb','Maryland','Terrapins','#E03A3E','Big Ten'],['rut','Rutgers','Scarlet Knights','#CC0033','Big Ten'],['ind_fb','Indiana','Hoosiers','#990000','Big Ten'],['nw','Northwestern','Wildcats','#4E2A84','Big Ten'],['fsu_fb','Florida St','Seminoles','#782F40','ACC'],['clem_fb','Clemson','Tigers','#F56600','ACC'],['mia_fb','Miami','Hurricanes','#F47321','ACC'],['unc_fb','North Carolina','Tar Heels','#99badd','ACC'],['ncst_fb','NC State','Wolfpack','#CC0000','ACC'],['duke_fb','Duke','Blue Devils','#003087','ACC'],['vt','Virginia Tech','Hokies','#630031','ACC'],['uva_fb','Virginia','Cavaliers','#232D4B','ACC'],['lou_fb','Louisville','Cardinals','#C90031','ACC'],['pitt','Pittsburgh','Panthers','#003594','ACC'],['syr_fb','Syracuse','Orange','#F76900','ACC'],['gt','Georgia Tech','Yellow Jackets','#B3A369','ACC'],['bc','Boston College','Eagles','#98002E','ACC'],['wake_fb','Wake Forest','Demon Deacons','#9E7E38','ACC'],['cal','Cal','Golden Bears','#003262','ACC'],['stan','Stanford','Cardinal','#8C1515','ACC'],['smu','SMU','Mustangs','#0033A0','ACC'],['okst','Oklahoma St','Cowboys','#FF7300','Big 12'],['ksu','Kansas St','Wildcats','#512888','Big 12'],['ku_fb','Kansas','Jayhawks','#0051BA','Big 12'],['isu_fb','Iowa State','Cyclones','#C8102E','Big 12'],['utah','Utah','Utes','#CC0000','Big 12'],['ari_fb','Arizona','Wildcats','#CC0033','Big 12'],['asu','Arizona St','Sun Devils','#8C1D40','Big 12'],['colo','Colorado','Buffaloes','#CFB87C','Big 12'],['byu','BYU','Cougars','#002E5D','Big 12'],['tcu','TCU','Horned Frogs','#4D1979','Big 12'],['bay_fb','Baylor','Bears','#154734','Big 12'],['tt','Texas Tech','Red Raiders','#CC0000','Big 12'],['wvu','West Virginia','Mountaineers','#002855','Big 12'],['ucf','UCF','Knights','#BA9B37','Big 12'],['cin_fb','Cincinnati','Bearcats','#E00122','Big 12'],['hou_fb','Houston','Cougars','#C8102E','Big 12'],['nd','Notre Dame','Fighting Irish','#0C2340','Ind'],['orst','Oregon St','Beavers','#DC4405','Pac-12'],['wsu','Wash State','Cougars','#981E32','Pac-12']],
+  NFL:[['dal','Dallas','Cowboys','#003594','NFC East'],['phi','Philadelphia','Eagles','#004C54','NFC East'],['wsh','Washington','Commanders','#5A1414','NFC East'],['nyg','NY Giants','Giants','#0B2265','NFC East'],['chi','Chicago','Bears','#0B162A','NFC North'],['gb','Green Bay','Packers','#203731','NFC North'],['min','Minnesota','Vikings','#4F2683','NFC North'],['det','Detroit','Lions','#0076B6','NFC North'],['atl','Atlanta','Falcons','#a71930','NFC South'],['no','New Orleans','Saints','#D3BC8D','NFC South'],['tb','Tampa Bay','Buccaneers','#D50A0A','NFC South'],['car','Carolina','Panthers','#0085CA','NFC South'],['sf','San Fran','49ers','#AA0000','NFC West'],['sea','Seattle','Seahawks','#002244','NFC West'],['lar','LA Rams','Rams','#003594','NFC West'],['ari','Arizona','Cardinals','#97233F','NFC West'],['ne','New England','Patriots','#002244','AFC East'],['buf','Buffalo','Bills','#00338D','AFC East'],['mia','Miami','Dolphins','#008E97','AFC East'],['nyj','NY Jets','Jets','#125740','AFC East'],['pit','Pittsburgh','Steelers','#FFB612','AFC North'],['bal','Baltimore','Ravens','#241773','AFC North'],['cin','Cincinnati','Bengals','#FB4F14','AFC North'],['cle','Cleveland','Browns','#311D00','AFC North'],['ind','Indianapolis','Colts','#002C5F','AFC South'],['ten','Tennessee','Titans','#0C2340','AFC South'],['jax','Jacksonville','Jaguars','#006778','AFC South'],['hou','Houston','Texans','#03202F','AFC South'],['kc','Kansas City','Chiefs','#E31837','AFC West'],['lv','Las Vegas','Raiders','#000000','AFC West'],['den','Denver','Broncos','#FB4F14','AFC West'],['lac','LA Chargers','Chargers','#0080C6','AFC West']],
+  NBA:[['bos','Boston','Celtics','#007A33','East'],['bkn','Brooklyn','Nets','#000000','East'],['ny','New York','Knicks','#F58426','East'],['phi','Philly','76ers','#006BB6','East'],['tor','Toronto','Raptors','#CE1141','East'],['chi','Chicago','Bulls','#CE1141','East'],['cle','Cleveland','Cavaliers','#860038','East'],['det','Detroit','Pistons','#C8102E','East'],['ind','Indiana','Pacers','#FDBB30','East'],['mil','Milwaukee','Bucks','#00471B','East'],['atl','Atlanta','Hawks','#E03A3E','East'],['cha','Charlotte','Hornets','#1D1160','East'],['mia','Miami','Heat','#98002E','East'],['orl','Orlando','Magic','#0077C0','East'],['wsh','Washington','Wizards','#002B5C','East'],['den','Denver','Nuggets','#0E2240','East'],['min','Minnesota','Timberwolves','#0C2340','West'],['okc','OKC','Thunder','#007AC1','West'],['por','Portland','Trail Blazers','#E03A3E','West'],['uta','Utah','Jazz','#002B5C','West'],['gs','Golden State','Warriors','#1D428A','West'],['lac','LA Clippers','Clippers','#C8102E','West'],['lal','LA Lakers','Lakers','#552583','West'],['phx','Phoenix','Suns','#1D1160','West'],['sac','Sacramento','Kings','#5A2D81','West'],['dal','Dallas','Mavericks','#00538C','West'],['hou','Houston','Rockets','#CE1141','West'],['mem','Memphis','Grizzlies','#5D76A9','West'],['no','New Orleans','Pelicans','#0C2340','West'],['sas','San Antonio','Spurs','#C4CED4','West']]
 };
 
 // Hydrate teams helper
@@ -165,10 +77,20 @@ const RAW_HISTORY = {
   duke: [
     ['unc', "The Final Four Nightmare", "UNC 81, Duke 77", "April 2, 2022", "The first ever tournament meeting. Coach K's final season. Caleb Love's dagger three sent K into retirement with an L."],
     ['unc', "K's Final Home Game", "UNC 94, Duke 81", "March 5, 2022", "The 'uninvited guests' ruined the retirement party. 96 former players watched Duke get blown out at Cameron."],
+    ['unc', "The Cormac Ryan Game", "UNC 84, Duke 79", "March 9, 2024", "UNC swept the season series. Cormac Ryan dropped 31 points and waved goodbye to the Crazies."],
+    ['unc', "The Austin Rivers Shot", "Duke 85, UNC 84", "Feb 8, 2012", "Wait, this is a Duke win... oh wait, you mean when UNC blew them out later? No, remember 2021? UNC 91, Duke 73. Roy's final win at Cameron."],
+    ['unc', "Jerami Grant's Dunk", "UNC 74, Duke 66", "Feb 20, 2014", "UNC rallied from 11 down in the second half. Duke fans stormed the court... oh wait, they lost."],
     ['mercer', "Mercer danced on them", "Mercer 78, Duke 71", "March 21, 2014", "A #3 seed Duke team with Jabari Parker lost to a bunch of seniors from the Atlantic Sun."],
     ['lehigh', "CJ McCollum happened", "Lehigh 75, Duke 70", "March 16, 2012", "A #2 seed lost to a #15 seed. One of the biggest upsets in tournament history."],
     ['conn', "1999 Championship", "UConn 77, Duke 74", "March 29, 1999", "This Duke team was considered one of the best ever. Rip Hamilton and Khalid El-Amin had other plans."],
     ['unlv', "103-73", "UNLV 103, Duke 73", "April 2, 1990", "The biggest blowout in National Championship history. Men against boys."],
+    ['sc', "South Carolina upset", "S. Carolina 88, Duke 81", "March 19, 2017", "Playing in South Carolina, the #2 seed Duke got bullied out of the tournament in the Round of 32."],
+    ['unc', "The Loudest Noise Ever", "UNC 75, Duke 73", "March 6, 2005", "Duke led late. Marvin Williams grabbed the offensive board, hit the shot, and the free throw. The Dean Dome nearly collapsed from the noise."],
+    ['unc', "Senior Night Ruined", "UNC 83, Duke 76", "March 4, 2006", "It was supposed to be Redick and Shelden Williams' perfect send-off. Instead, unranked UNC and Tyler Hansbrough crashed the party."],
+    ['unc', "88-70 at Cameron", "UNC 88, Duke 70", "March 3, 2012", "Everyone remembers the Rivers shot. They forget that 3 weeks later, UNC walked into Cameron and absolutely demolished Duke by 18 points."],
+    ['unc', "Swept by an 8-seed", "UNC 91, Duke 73", "March 6, 2021", "A mediocre UNC team absolutely steamrolled Duke in Chapel Hill. Duke missed the NCAA tournament entirely this year."],
+    ['unc', "Hansbrough goes 4-0", "UNC 76, Duke 68", "March 8, 2008", "Tyler Hansbrough never lost a game at Cameron Indoor Stadium. Four straight years. He owned that building."],
+    ['vcu', "The Dagger", "VCU 79, Duke 77", "March 15, 2007", "First Round. Eric Maynor hit the jumper over Scheyer with 1.8 seconds left. Duke lost in the first round for the first time in a decade."],
     ['lsu', "Big Baby Davis", "LSU 62, Duke 54", "March 23, 2006", "The #1 overall seed Duke. JJ Redick shot 3-for-18 in his final college game. Glen 'Big Baby' Davis ate them alive in the paint."]
   ],
   ncst: [
@@ -253,6 +175,7 @@ const RAW_HISTORY = {
 const Onboarding = ({ onComplete }) => {
   const [step, setStep] = useState(0);
 
+  // --- REAL PWA NOTIFICATION REQUEST ---
   const handleEnableNotifications = async () => {
     if (!('Notification' in window)) {
         alert("This browser does not support desktop notification");
@@ -264,7 +187,7 @@ const Onboarding = ({ onComplete }) => {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
             console.log("Notification permission granted!");
-            new Notification("They Lost", { body: "Notifications are set up! We'll tell you when they choke." });
+            new Notification("They Lost!", { body: "You will now be notified when your enemies fail." });
         }
     } catch (error) {
         console.error("Error requesting permission", error);
@@ -276,7 +199,13 @@ const Onboarding = ({ onComplete }) => {
     step === 0 ? (
       <div className="fixed inset-0 z-[100] bg-gradient-to-br from-[#1e90ff] to-[#99badd] text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
         <div className="w-48 h-48 mb-6 rounded-2xl shadow-xl overflow-hidden bg-white/20 backdrop-blur-sm p-4">
-            <img src={APP_ICON} alt="App Icon" className="w-full h-full object-cover rounded-xl" />
+            {/* USE IMG TAG WITH BASE64 SOURCE */}
+            <img 
+              src={APP_ICON} 
+              onError={(e) => e.currentTarget.src = APP_ICON_FALLBACK}
+              alt="App Icon" 
+              className="w-full h-full object-cover rounded-xl" 
+            />
         </div>
         <h1 className="text-3xl font-black italic mb-4 drop-shadow-md">Their misery. Your joy.</h1>
         <p className="text-lg font-medium opacity-90 mb-8 max-w-xs drop-shadow">Love the jolt of joy when a team you hate loses? This app alerts you ONLY when they lose.</p>
@@ -315,6 +244,9 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(() => localStorage.getItem('tl_onboarded') !== 'true');
   const [enabledLeagues, setEnabledLeagues] = useState({ NCAA: true, CFB: true, NBA: true, NFL: true, MLB: false });
   const [hatedTeams, setHatedTeams] = useState(() => JSON.parse(localStorage.getItem('tl_hated_teams') || '[]'));
+  // NEW: State to track which games we have already notified about
+  const [notifiedGames, setNotifiedGames] = useState(() => JSON.parse(localStorage.getItem('tl_notified_games') || '[]'));
+  
   const [gameResults, setGameResults] = useState([]);
   const [celebration, setCelebration] = useState(null);
   const [shareModal, setShareModal] = useState(null);
@@ -326,53 +258,37 @@ export default function App() {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [pullStartPoint, setPullStartPoint] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  
-  // NEW: Track notified games to prevent spamming
-  const [notifiedGames, setNotifiedGames] = useState(new Set());
   const scrollRef = useRef(null);
 
   const styles = THEMES[activeTheme];
 
   useEffect(() => { if (!enabledLeagues[activeLeague]) setActiveLeague(Object.keys(enabledLeagues).find(k => enabledLeagues[k]) || 'NCAA'); }, [enabledLeagues]);
-  useEffect(() => { localStorage.setItem('tl_hated_teams', JSON.stringify(hatedTeams)); }, [hatedTeams]);
-
-  // --- POLLING & VISIBILITY LOGIC (Fixing the "Sleeping App" issue) ---
-  useEffect(() => { 
-    checkLiveScores(); 
-
-    // 1. Poll every 60 seconds while open
+  
+  // Initial check
+  useEffect(() => { checkLiveScores(); }, []); 
+  
+  // Polling Interval (Every 60 seconds)
+  useEffect(() => {
     const interval = setInterval(() => {
+        console.log("Auto-checking scores...");
         checkLiveScores();
     }, 60000);
+    return () => clearInterval(interval);
+  }, [hatedTeams, notifiedGames]); // Re-bind if these change
 
-    // 2. Check immediately when user switches back to app tab/window
-    const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible') {
-            checkLiveScores();
-        }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-        clearInterval(interval);
-        document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [hatedTeams, enabledLeagues]); // Re-run if preferences change
+  useEffect(() => { localStorage.setItem('tl_hated_teams', JSON.stringify(hatedTeams)); }, [hatedTeams]);
 
   // --- LOGIC ---
   const checkLiveScores = async () => {
-    if (loading) return; // Don't stack requests
-    
-    // Don't set global loading state for background polls (it flickers UI)
-    // Only set it if it's a manual refresh or first load
-    const isManual = refreshing || gameResults.length === 0;
-    if (isManual) setLoading(true);
-    
+    // Only set loading if manually triggered (to avoid UI flicker on auto-poll)
+    if (refreshing) setLoading(true); 
     setConsolationFact(null); 
     setNoGamesMsg(null); 
+    // Don't clear gameResults immediately to avoid flicker
     
     try {
       const getYYYYMMDD = (d) => d.toISOString().split('T')[0].replace(/-/g, '');
+      // Check today, yesterday, and the day before
       const dates = [new Date(), new Date(Date.now()-864e5), new Date(Date.now()-1728e5)].map(getYYYYMMDD);
       
       const fetchLeague = async (lg) => {
@@ -391,6 +307,7 @@ export default function App() {
         const h = event.competitions[0].competitors.find(c=>c.homeAway==='home'), a = event.competitions[0].competitors.find(c=>c.homeAway==='away');
         if(!h||!a) return null;
         
+        // Helper to find config
         const findConf = (abbr) => ALL_TEAMS.find(t => (t.id === abbr || t.id.startsWith(abbr + '_')) && t.league === event._league);
 
         const isHated = (id) => hatedTeams.some(ht => ht === id || ht.startsWith(id + '_'));
@@ -400,6 +317,7 @@ export default function App() {
 
         const hated = hatedHome ? h : a;
         const opp = hatedHome ? a : h;
+        
         const hatedConf = findConf(hated.team.abbreviation.toLowerCase());
         
         let oppConf = findConf(opp.team.abbreviation.toLowerCase());
@@ -422,44 +340,40 @@ export default function App() {
       }).filter(Boolean);
 
       setGameResults(results);
-      
-      const losers = results.filter(r => r.status === 'LOST');
-      
-      if (losers.length > 0) {
-          // Check if we already notified about these specific games
-          const newLosers = losers.filter(l => !notifiedGames.has(l.gameId));
-          
-          if (newLosers.length > 0) {
-              triggerCelebration();
-              
-              // --- TRIGGER REAL NOTIFICATION ---
-              if ('Notification' in window && Notification.permission === 'granted') {
-                  const game = newLosers[0]; // Just show one if multiple happen at once
-                  new Notification("THEY LOST!", {
-                      body: `${game.team.name} lost ${game.team.score}-${game.opponentTeam.score} to ${game.opponentTeam.name}.`,
-                      icon: APP_ICON
-                  });
-              }
 
-              // Update tracked notifications
-              setNotifiedGames(prev => {
-                  const next = new Set(prev);
-                  newLosers.forEach(l => next.add(l.gameId));
-                  return next;
-              });
+      // --- DUPLICATE NOTIFICATION FIX ---
+      // 1. Find losses in the current results
+      const losses = results.filter(r => r.status === 'LOST');
+      
+      // 2. Identify which of these are NEW (not in local storage history)
+      const newLosses = losses.filter(r => !notifiedGames.includes(r.gameId));
+
+      // 3. If we have new losses, trigger celebration AND notification
+      if (newLosses.length > 0) {
+          triggerCelebration();
+          
+          // Send actual system notification
+          if ('Notification' in window && Notification.permission === 'granted') {
+             newLosses.forEach(game => {
+                 new Notification("THEY LOST!", {
+                     body: `${game.team.name} lost ${game.team.score}-${game.opponentTeam.score} to ${game.opponentTeam.name}.`,
+                     icon: APP_ICON
+                 });
+             });
           }
-      } else if (results.length > 0 && isManual) {
+
+          // 4. Update the history so we don't notify again
+          const newIds = newLosses.map(r => r.gameId);
+          const updatedHistory = [...notifiedGames, ...newIds];
+          setNotifiedGames(updatedHistory);
+          localStorage.setItem('tl_notified_games', JSON.stringify(updatedHistory));
+      } else if (results.length > 0 && losses.length === 0) {
           pickHistoricLoss();
-      } else if (results.length === 0 && isManual) {
+      } else if (results.length === 0) {
           setNoGamesMsg("No active games found for your enemies.");
       }
 
-    } catch (e) { 
-        if (isManual) setNoGamesMsg("Error fetching data."); 
-    } finally { 
-        setLoading(false); 
-        setRefreshing(false); 
-    }
+    } catch (e) { setNoGamesMsg("Error fetching data."); } finally { setLoading(false); setRefreshing(false); }
   };
 
   const pickHistoricLoss = () => {
@@ -482,6 +396,7 @@ export default function App() {
       Toxic: ["IMAGINE LOSING [SCORE]-[OPP_SCORE]. [TEAM] DOWN BAD. 📉🤡 [LINK]"]
     };
     
+    // FORMAT HELPER (Updated for new structure)
     const format = (t) => {
        const url = `espn.com/${{'NBA':'nba','NFL':'nfl','CFB':'college-football','NCAA':'mens-college-basketball'}[g.team.league]}/game/_/gameId/${g.gameId}`;
        return t.replace('[TEAM]',g.team.name).replace('[SCORE]',g.team.score).replace('[OPP_SCORE]',g.opponentTeam.score).replace('[OPP]',g.opponentTeam.name).replace('[LINK]',url);
@@ -492,16 +407,23 @@ export default function App() {
   };
 
   const doShare = (txt, g, index) => {
+    // Fallback copy method for iframe environments
     try {
       const textArea = document.createElement("textarea");
-      textArea.value = txt; 
+      textArea.value = txt; // Already formatted
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
+      
       setCopiedIndex(index);
-      setTimeout(() => { setCopiedIndex(null); setShareModal(null); }, 1000);
-    } catch (err) { console.error('Fallback error', err); }
+      setTimeout(() => {
+        setCopiedIndex(null);
+        setShareModal(null);
+      }, 1000);
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+    }
   };
 
   const handleRefresh = () => {
@@ -511,16 +433,21 @@ export default function App() {
 
   const handleTouchStart = (e) => {
     const scrollTop = scrollRef.current ? scrollRef.current.scrollTop : 0;
-    if (scrollTop === 0) setPullStartPoint(e.touches[0].clientY);
+    if (scrollTop === 0) {
+      setPullStartPoint(e.touches[0].clientY);
+    }
   };
 
   const handleTouchEnd = (e) => {
     if (pullStartPoint === 0) return;
     const pullDistance = e.changedTouches[0].clientY - pullStartPoint;
-    if (pullDistance > 150) handleRefresh();
+    if (pullDistance > 150) { // Threshold for refresh
+        handleRefresh();
+    }
     setPullStartPoint(0);
   };
 
+  // --- RENDER ---
   const displayResults = gameResults.filter(g => g.status === 'LOST');
   const manageList = ALL_TEAMS.filter(t => t.league === activeLeague && (searchTerm==='' || t.name.toLowerCase().includes(searchTerm.toLowerCase()))).sort((a,b)=>a.name.localeCompare(b.name));
 
@@ -530,10 +457,20 @@ export default function App() {
       
       {showOnboarding && <Onboarding onComplete={() => { localStorage.setItem('tl_onboarded','true'); setShowOnboarding(false); }} />}
       
+      {/* HEADER */}
       <header className={`p-4 sticky top-0 z-30 shrink-0 flex justify-between items-center ${styles.header}`}>
-        <div onClick={handleRefresh} className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity">
-            <div className="w-12 h-12 rounded-md overflow-hidden bg-gradient-to-br from-[#1e90ff] to-[#99badd] shadow-sm flex items-center justify-center">
-                <img src={APP_ICON} alt="App Icon" className="w-full h-full object-cover" />
+        <div 
+            onClick={handleRefresh}
+            className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity"
+            title="Tap to Refresh"
+        >
+            <div className="w-12 h-12 rounded-md overflow-hidden bg-white p-0.5 shadow-sm flex items-center justify-center">
+                <img 
+                  src={APP_ICON} 
+                  onError={(e) => e.currentTarget.src = APP_ICON_FALLBACK}
+                  alt="App Icon" 
+                  className="w-full h-full object-cover rounded-md" 
+                />
             </div>
             <h1 className="font-black text-xl italic">THEY LOST!</h1>
         </div>
@@ -545,6 +482,7 @@ export default function App() {
         </div>
       </header>
 
+      {/* BANNER */}
       {celebration && (
         <div className={`p-4 text-center animate-enter-banner shadow-lg relative z-20 shrink-0 ${styles.lossBanner}`}>
           <div className="fixed inset-0 pointer-events-none z-50">{[...Array(30)].map((_,i)=><div key={i} className="absolute animate-fall" style={{left:`${Math.random()*100}vw`,top:'-20px',width:'10px',height:'10px',background:['#f00','#0f0','#00f'][Math.floor(Math.random()*3)],animationDuration:`${2+Math.random()*3}s`}}/>)}</div>
@@ -553,18 +491,43 @@ export default function App() {
         </div>
       )}
 
-      {refreshing && !celebration && <div className="absolute top-20 left-0 right-0 z-20 flex justify-center pointer-events-none animate-in fade-in slide-in-from-top-4"><div className="bg-slate-900 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-bold"><RefreshCw size={16} className="animate-spin" /> Checking Scores...</div></div>}
+      {/* REFRESH INDICATOR (Overlay) */}
+      {refreshing && !celebration && (
+          <div className="absolute top-20 left-0 right-0 z-20 flex justify-center pointer-events-none animate-in fade-in slide-in-from-top-4">
+              <div className="bg-slate-900 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-bold">
+                  <RefreshCw size={16} className="animate-spin" /> Checking Scores...
+              </div>
+          </div>
+      )}
 
+      {/* SHARE MODAL */}
       {shareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
           <div className="bg-white w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl">
             <div className="bg-slate-100 p-4 border-b flex justify-between font-bold text-slate-700"><span className="flex gap-2"><Share2/> Share</span><button onClick={()=>setShareModal(null)}><X/></button></div>
-            <div className="p-4 space-y-2">{shareOptions.map((opt,i) => (<button key={i} onClick={()=>doShare(opt.text, shareModal, i)} className="w-full text-left p-3 rounded-xl border hover:bg-green-50 hover:border-green-500 transition group relative"><div className="flex justify-between text-xs font-bold text-slate-400 uppercase mb-1"><span>{opt.label}</span>{copiedIndex === i ? <Check size={12} className="text-green-600"/> : <Copy size={12}/>}</div><p className="text-sm font-medium text-slate-800">{opt.text}</p>{copiedIndex === i && <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center font-black text-green-700 uppercase tracking-widest text-xs">Copied!</div>}</button>))}</div>
+            <div className="p-4 space-y-2">
+              {shareOptions.map((opt,i) => (
+                <button key={i} onClick={()=>doShare(opt.text, shareModal, i)} className="w-full text-left p-3 rounded-xl border hover:bg-green-50 hover:border-green-500 transition group relative">
+                  <div className="flex justify-between text-xs font-bold text-slate-400 uppercase mb-1">
+                    <span>{opt.label}</span>
+                    {copiedIndex === i ? <Check size={12} className="text-green-600"/> : <Copy size={12}/>}
+                  </div>
+                  <p className="text-sm font-medium text-slate-800">{opt.text}</p>
+                  {copiedIndex === i && <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center font-black text-green-700 uppercase tracking-widest text-xs">Copied!</div>}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 pb-6" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      {/* MAIN CONTENT */}
+      <main 
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto p-4 pb-6"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {view === 'scoreboard' && (
           <div className="space-y-6">
             <div className="text-center opacity-40 text-xs font-bold uppercase tracking-widest">Tracking {hatedTeams.length} Enemies</div>
@@ -587,7 +550,23 @@ export default function App() {
                       <div className="opacity-50 font-black italic">VS</div>
                       <div className="flex flex-col items-center w-1/3 opacity-80"><div className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-xs mb-2 text-white shadow-sm border-2 border-white" style={{background: g.opponentTeam.color}}>{g.opponentTeam.id.substring(0,3).toUpperCase()}</div><span className="font-bold text-sm text-center">{g.opponentTeam.name}</span><span className="text-3xl font-bold mt-1 text-slate-500">{g.opponentTeam.score}</span></div>
                     </div>
-                    <div className="p-3 border-t bg-slate-50 flex gap-2"><button onClick={()=>openShare(g)} className={`flex-1 py-2 rounded-lg text-base font-bold flex items-center justify-center gap-2 ${styles.buttonPrimary}`}>Rub It In</button></div>
+                    <div className="p-3 border-t bg-slate-50 flex gap-2">
+                        <button onClick={()=>openShare(g)} className={`flex-1 py-2 rounded-lg text-base font-bold flex items-center justify-center gap-2 ${styles.buttonPrimary}`}>Rub It In</button>
+                        <a 
+                          href={
+                            g.team.league === 'NBA' ? `https://www.espn.com/nba/game/_/gameId/${g.gameId}` :
+                            g.team.league === 'NFL' ? `https://www.espn.com/nfl/game/_/gameId/${g.gameId}` :
+                            g.team.league === 'CFB' ? `https://www.espn.com/college-football/game/_/gameId/${g.gameId}` :
+                            `https://www.espn.com/mens-college-basketball/game/_/gameId/${g.gameId}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`flex-1 text-base font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition shadow-sm ${styles.buttonSecondary}`}
+                        >
+                          <ExternalLink size={16} />
+                          View Story
+                        </a>
+                    </div>
                   </div>
                 ))}
               </>
