@@ -232,7 +232,7 @@ const Onboarding = ({ onComplete }) => {
 
   return (
     step === 0 ? (
-      <div key="step-0" className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-800 to-slate-950 bg-[url('https://www.transparenttextures.com/patterns/noisy-net.png')] bg-blend-overlay text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+      <div key="step-0" className="fixed inset-0 z-[100] bg-gradient-to-br from-blue-900 to-indigo-950 bg-[url('https://www.transparenttextures.com/patterns/noisy-net.png')] bg-blend-overlay text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
         <div className="w-48 h-48 mb-6 rounded-2xl shadow-xl overflow-hidden bg-white/20 backdrop-blur-sm p-4">
             <img 
               src={APP_ICON} 
