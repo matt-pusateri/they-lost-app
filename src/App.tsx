@@ -3,7 +3,7 @@ import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper,
 
 // --- 1. UTILITIES & CONFIG ---
 
-const APP_VERSION = "1.4";
+const APP_VERSION = "1.04";
 
 const APP_ICON = "https://ik.imagekit.io/ipi1yjzh9/theylost%20icon%20512.png";
 const APP_ICON_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%231e90ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%234b9cd3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='100' fill='url(%23grad)'/%3E%3Cpath fill='white' d='M256 320c-66.27 0-120-40.29-120-90 0-5.52 4.48-10 10-10h220c5.52 0 10 4.48 10 10 0 49.71-53.73 90-120 90zM150 160c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30zm212 0c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30z'/%3E%3Cpath fill='white' opacity='0.3' d='M146 160l-30-30m280 30l30-30' stroke='white' stroke-width='25' stroke-linecap='round' /%3E%3C/svg%3E";
@@ -197,7 +197,7 @@ const Onboarding = ({ onComplete }) => {
 
   return (
     step === 0 ? (
-      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-[#1e90ff] to-[#99badd] text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-800 to-slate-950 bg-[url('https://www.transparenttextures.com/patterns/noisy-net.png')] bg-blend-overlay text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
         <div className="w-48 h-48 mb-6 rounded-2xl shadow-xl overflow-hidden bg-white/20 backdrop-blur-sm p-4">
             {/* USE IMG TAG WITH BASE64 SOURCE */}
             <img 
