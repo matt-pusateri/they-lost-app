@@ -3,13 +3,17 @@ import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper,
 
 // --- 1. UTILITIES & CONFIG ---
 
-const APP_VERSION = "1.9";
+const APP_VERSION = "1.9.1";
 
 const APP_ICON = "https://ik.imagekit.io/ipi1yjzh9/theylost%20icon%20512.png";
 const APP_ICON_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%231e90ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%234b9cd3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='100' fill='url(%23grad)'/%3E%3Cpath fill='white' d='M256 320c-66.27 0-120-40.29-120-90 0-5.52 4.48-10 10-10h220c5.52 0 10 4.48 10 10 0 49.71-53.73 90-120 90zM150 160c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30zm212 0c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30z'/%3E%3Cpath fill='white' opacity='0.3' d='M146 160l-30-30m280 30l30-30' stroke='white' stroke-width='25' stroke-linecap='round' /%3E%3C/svg%3E";
 
+// A "Success/Cheer" sound effect (Hosted MP3)
+const VICTORY_SOUND_URL = "https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c7443c.mp3?filename=success-1-6297.mp3"; 
+
 const CELEBRATION_GIFS = [
-  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
+  "https://i.giphy.com/media/HmdsITkYtq5i/giphy.gif",
+  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/9Y6n9TR7U07ew/giphy.gif",
@@ -49,13 +53,7 @@ const CELEBRATION_GIFS = [
   "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3c2JtMGlweHZtazZldHVrNnZybng3YWlvcW9keTBjdHpweDNkbm1wZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/SA613Nxg1h6zO1nRsg/giphy.gif"
 ];
 
-const TRASH_TALK = [
-  "Thoughts and prayers. 🙏", "Someone check on their fans. 😂", "Inject this into my veins. 💉",
-  "Down bad. 📉", "Holding that L. 🥡", "Chef's kiss. 🤌", "Pure cinema. 🍿", "Exposed.",
-  "They are who we thought they were.", "Hang the banner: 'Participated'.", "Sucks to suck.",
-  "Have a safe flight home! 👋", "Call the waaaambulance. 🚑", "Keep crying.", "Delicious tears. 💧",
-  "Oof. Big oof.", "Warm up the bus!", "This sparks joy. ✨", "Emotional damage. 💥"
-];
+const TRASH_TALK = ["Thoughts and prayers. 🙏","Someone check on their fans. 😂","Inject this into my veins. 💉","Down bad. 📉","Holding that L. 🥡","Chef's kiss. 🤌","Pure cinema. 🍿","Exposed.","They are who we thought they were.","Hang the banner: 'Participated'.","Sucks to suck.","Have a safe flight home! 👋","Call the waaaambulance. 🚑","Keep crying.","Delicious tears. 💧","Oof. Big oof.","Warm up the bus!","This sparks joy. ✨","Emotional damage. 💥"];
 
 const THEMES = {
   professional: { 
@@ -69,8 +67,6 @@ const THEMES = {
   }
 };
 
-// --- 2. DATA COMPRESSION ---
-// Format: [id, name, mascot, color, conference]
 const RAW_TEAMS = {
   MLB: [
     ['bal_mlb','Baltimore','Orioles','#DF4601','AL East'],['bos_mlb','Boston','Red Sox','#BD3039','AL East'],['nyy_mlb','NY Yankees','Yankees','#003087','AL East'],['tb_mlb','Tampa Bay','Rays','#092C5C','AL East'],['tor_mlb','Toronto','Blue Jays','#134A8E','AL East'],['cws_mlb','Chi White Sox','White Sox','#27251F','AL Central'],['cle_mlb','Cleveland','Guardians','#00385D','AL Central'],['det_mlb','Detroit','Tigers','#0C2340','AL Central'],['kc_mlb','Kansas City','Royals','#004687','AL Central'],['min_mlb','Minnesota','Twins','#002B5C','AL Central'],['hou_mlb','Houston','Astros','#002D62','AL West'],['laa_mlb','LA Angels','Angels','#BA0021','AL West'],['oak_mlb','Oakland','Athletics','#003831','AL West'],['sea_mlb','Seattle','Mariners','#0C2C56','AL West'],['tex_mlb','Texas','Rangers','#003278','AL West'],['atl_mlb','Atlanta','Braves','#13274F','NL East'],['mia_mlb','Miami','Marlins','#00A3E0','NL East'],['nym_mlb','NY Mets','Mets','#002D72','NL East'],['phi_mlb','Philadelphia','Phillies','#E81828','NL East'],['wsh_mlb','Washington','Nationals','#AB0003','NL East'],['chc_mlb','Chi Cubs','Cubs','#0E3386','NL Central'],['cin_mlb','Cincinnati','Reds','#C6011F','NL Central'],['mil_mlb','Milwaukee','Brewers','#12284B','NL Central'],['pit_mlb','Pittsburgh','Pirates','#FDB827','NL Central'],['stl_mlb','St. Louis','Cardinals','#C41E3A','NL Central'],['ari_mlb','Arizona','Diamondbacks','#A71930','NL West'],['col_mlb','Colorado','Rockies','#333366','NL West'],['lad_mlb','LA Dodgers','Dodgers','#005A9C','NL West'],['sd_mlb','San Diego','Padres','#2F241D','NL West'],['sf_mlb','San Francisco','Giants','#FD5A1E','NL West']
@@ -210,6 +206,12 @@ export default function App() {
   }, [hatedTeams, notifiedGames]); 
   useEffect(() => { localStorage.setItem('tl_hated_teams', JSON.stringify(hatedTeams)); }, [hatedTeams]);
 
+  // --- SOUND LOGIC ---
+  const playVictorySound = () => {
+      const audio = new Audio(VICTORY_SOUND_URL);
+      audio.play().catch(e => console.log("Audio autoplay blocked", e));
+  };
+
   // --- LOGIC ---
   const checkLiveScores = async (showLoader = true) => {
     // Artificial delay for UX if manual refresh
@@ -279,6 +281,9 @@ export default function App() {
 
       if (newLosses.length > 0) {
           triggerCelebration();
+          // PLAY SOUND HERE
+          playVictorySound();
+          
           if ('Notification' in window && Notification.permission === 'granted') {
              newLosses.forEach(game => {
                  new Notification("THEY LOST!", {
@@ -349,6 +354,9 @@ export default function App() {
   };
   
   const sendTestNotification = async () => {
+    // Play sound immediately on user interaction to unlock audio
+    playVictorySound();
+    
     if (!('Notification' in window)) {
         alert("Notifications not supported in this browser.");
         return;
