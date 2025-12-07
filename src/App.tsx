@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper, History, Search, Globe, Bell, ExternalLink, Palette, Settings, ToggleLeft, ToggleRight, Target, Activity, LogOut, Clock, Check } from 'lucide-react';
+import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper, History, Search, Globe, Bell, ExternalLink, Palette, Settings, ToggleLeft, ToggleRight, Target, Activity, LogOut, Clock, Check, Smartphone } from 'lucide-react';
 
 // --- 1. UTILITIES & CONFIG ---
 
-const APP_VERSION = "1.5";
+const APP_VERSION = "1.7";
 
 const APP_ICON = "https://ik.imagekit.io/ipi1yjzh9/theylost%20icon%20512.png";
 const APP_ICON_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%231e90ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%234b9cd3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='100' fill='url(%23grad)'/%3E%3Cpath fill='white' d='M256 320c-66.27 0-120-40.29-120-90 0-5.52 4.48-10 10-10h220c5.52 0 10 4.48 10 10 0 49.71-53.73 90-120 90zM150 160c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30zm212 0c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30z'/%3E%3Cpath fill='white' opacity='0.3' d='M146 160l-30-30m280 30l30-30' stroke='white' stroke-width='25' stroke-linecap='round' /%3E%3C/svg%3E";
@@ -74,93 +74,19 @@ const THEMES = {
 // Format: [id, name, mascot, color, conference]
 const RAW_TEAMS = {
   MLB: [
-    ['bal_mlb','Baltimore','Orioles','#DF4601','AL East'],['bos_mlb','Boston','Red Sox','#BD3039','AL East'],
-    ['nyy_mlb','NY Yankees','Yankees','#003087','AL East'],['tb_mlb','Tampa Bay','Rays','#092C5C','AL East'],
-    ['tor_mlb','Toronto','Blue Jays','#134A8E','AL East'],['cws_mlb','Chi White Sox','White Sox','#27251F','AL Central'],
-    ['cle_mlb','Cleveland','Guardians','#00385D','AL Central'],['det_mlb','Detroit','Tigers','#0C2340','AL Central'],
-    ['kc_mlb','Kansas City','Royals','#004687','AL Central'],['min_mlb','Minnesota','Twins','#002B5C','AL Central'],
-    ['hou_mlb','Houston','Astros','#002D62','AL West'],['laa_mlb','LA Angels','Angels','#BA0021','AL West'],
-    ['oak_mlb','Oakland','Athletics','#003831','AL West'],['sea_mlb','Seattle','Mariners','#0C2C56','AL West'],
-    ['tex_mlb','Texas','Rangers','#003278','AL West'],['atl_mlb','Atlanta','Braves','#13274F','NL East'],
-    ['mia_mlb','Miami','Marlins','#00A3E0','NL East'],['nym_mlb','NY Mets','Mets','#002D72','NL East'],
-    ['phi_mlb','Philadelphia','Phillies','#E81828','NL East'],['wsh_mlb','Washington','Nationals','#AB0003','NL East'],
-    ['chc_mlb','Chi Cubs','Cubs','#0E3386','NL Central'],['cin_mlb','Cincinnati','Reds','#C6011F','NL Central'],
-    ['mil_mlb','Milwaukee','Brewers','#12284B','NL Central'],['pit_mlb','Pittsburgh','Pirates','#FDB827','NL Central'],
-    ['stl_mlb','St. Louis','Cardinals','#C41E3A','NL Central'],['ari_mlb','Arizona','Diamondbacks','#A71930','NL West'],
-    ['col_mlb','Colorado','Rockies','#333366','NL West'],['lad_mlb','LA Dodgers','Dodgers','#005A9C','NL West'],
-    ['sd_mlb','San Diego','Padres','#2F241D','NL West'],['sf_mlb','San Francisco','Giants','#FD5A1E','NL West']
+    ['bal_mlb','Baltimore','Orioles','#DF4601','AL East'],['bos_mlb','Boston','Red Sox','#BD3039','AL East'],['nyy_mlb','NY Yankees','Yankees','#003087','AL East'],['tb_mlb','Tampa Bay','Rays','#092C5C','AL East'],['tor_mlb','Toronto','Blue Jays','#134A8E','AL East'],['cws_mlb','Chi White Sox','White Sox','#27251F','AL Central'],['cle_mlb','Cleveland','Guardians','#00385D','AL Central'],['det_mlb','Detroit','Tigers','#0C2340','AL Central'],['kc_mlb','Kansas City','Royals','#004687','AL Central'],['min_mlb','Minnesota','Twins','#002B5C','AL Central'],['hou_mlb','Houston','Astros','#002D62','AL West'],['laa_mlb','LA Angels','Angels','#BA0021','AL West'],['oak_mlb','Oakland','Athletics','#003831','AL West'],['sea_mlb','Seattle','Mariners','#0C2C56','AL West'],['tex_mlb','Texas','Rangers','#003278','AL West'],['atl_mlb','Atlanta','Braves','#13274F','NL East'],['mia_mlb','Miami','Marlins','#00A3E0','NL East'],['nym_mlb','NY Mets','Mets','#002D72','NL East'],['phi_mlb','Philadelphia','Phillies','#E81828','NL East'],['wsh_mlb','Washington','Nationals','#AB0003','NL East'],['chc_mlb','Chi Cubs','Cubs','#0E3386','NL Central'],['cin_mlb','Cincinnati','Reds','#C6011F','NL Central'],['mil_mlb','Milwaukee','Brewers','#12284B','NL Central'],['pit_mlb','Pittsburgh','Pirates','#FDB827','NL Central'],['stl_mlb','St. Louis','Cardinals','#C41E3A','NL Central'],['ari_mlb','Arizona','Diamondbacks','#A71930','NL West'],['col_mlb','Colorado','Rockies','#333366','NL West'],['lad_mlb','LA Dodgers','Dodgers','#005A9C','NL West'],['sd_mlb','San Diego','Padres','#2F241D','NL West'],['sf_mlb','San Francisco','Giants','#FD5A1E','NL West']
   ],
   NCAA: [
-    ['duke','Duke','Blue Devils','#003087','ACC'],['unc','North Carolina','Tar Heels','#99badd','ACC'],
-    ['uva','Virginia','Cavaliers','#232D4B','ACC'],['mia','Miami','Hurricanes','#F47321','ACC'],
-    ['ncst','NC State','Wolfpack','#CC0000','ACC'],['msu','Michigan St','Spartans','#18453B','Big Ten'],
-    ['mich','Michigan','Wolverines','#00274C','Big Ten'],['osu','Ohio State','Buckeyes','#BB0000','Big Ten'],
-    ['iu','Indiana','Hoosiers','#990000','Big Ten'],['pur','Purdue','Boilermakers','#CEB888','Big Ten'],
-    ['ill','Illinois','Illini','#E84A27','Big Ten'],['ucla','UCLA','Bruins','#2D68C4','Big Ten'],
-    ['usc','USC','Trojans','#990000','Big Ten'],['md','Maryland','Terrapins','#E03A3E','Big Ten'],
-    ['uky','Kentucky','Wildcats','#0033A0','SEC'],['ala','Alabama','Crimson Tide','#9E1B32','SEC'],
-    ['aub','Auburn','Tigers','#0C2340','SEC'],['tenn','Tennessee','Volunteers','#FF8200','SEC'],
-    ['fla','Florida','Gators','#0021A5','SEC'],['ark','Arkansas','Razorbacks','#9D2235','SEC'],
-    ['tex','Texas','Longhorns','#BF5700','SEC'],['ku','Kansas','Jayhawks','#0051BA','Big 12'],
-    ['bay','Baylor','Bears','#154734','Big 12'],['hou','Houston','Cougars','#C8102E','Big 12'],
-    ['isu','Iowa State','Cyclones','#C8102E','Big 12'],['ari','Arizona','Wildcats','#CC0033','Big 12'],
-    ['conn','UConn','Huskies','#000E2F','Big East'],['nova','Villanova','Wildcats','#00205B','Big East'],
-    ['marq','Marquette','Golden Eagles','#003366','Big East'],['stj',"St. John's",'Red Storm','#BA0C2F','Big East'],
-    ['gonz','Gonzaga','Bulldogs','#041E42','WCC'],['gtown','Georgetown','Hoyas','#041E42','Big East']
+    ['duke','Duke','Blue Devils','#003087','ACC'],['unc','North Carolina','Tar Heels','#99badd','ACC'],['uva','Virginia','Cavaliers','#232D4B','ACC'],['mia','Miami','Hurricanes','#F47321','ACC'],['ncst','NC State','Wolfpack','#CC0000','ACC'],['msu','Michigan St','Spartans','#18453B','Big Ten'],['mich','Michigan','Wolverines','#00274C','Big Ten'],['osu','Ohio State','Buckeyes','#BB0000','Big Ten'],['iu','Indiana','Hoosiers','#990000','Big Ten'],['pur','Purdue','Boilermakers','#CEB888','Big Ten'],['ill','Illinois','Illini','#E84A27','Big Ten'],['ucla','UCLA','Bruins','#2D68C4','Big Ten'],['usc','USC','Trojans','#990000','Big Ten'],['md','Maryland','Terrapins','#E03A3E','Big Ten'],['uky','Kentucky','Wildcats','#0033A0','SEC'],['ala','Alabama','Crimson Tide','#9E1B32','SEC'],['aub','Auburn','Tigers','#0C2340','SEC'],['tenn','Tennessee','Volunteers','#FF8200','SEC'],['fla','Florida','Gators','#0021A5','SEC'],['ark','Arkansas','Razorbacks','#9D2235','SEC'],['tex','Texas','Longhorns','#BF5700','SEC'],['ku','Kansas','Jayhawks','#0051BA','Big 12'],['bay','Baylor','Bears','#154734','Big 12'],['hou','Houston','Cougars','#C8102E','Big 12'],['isu','Iowa State','Cyclones','#C8102E','Big 12'],['ari','Arizona','Wildcats','#CC0033','Big 12'],['conn','UConn','Huskies','#000E2F','Big East'],['nova','Villanova','Wildcats','#00205B','Big East'],['marq','Marquette','Golden Eagles','#003366','Big East'],['stj',"St. John's",'Red Storm','#BA0C2F','Big East'],['gonz','Gonzaga','Bulldogs','#041E42','WCC'],['gtown','Georgetown','Hoyas','#041E42','Big East']
   ],
   CFB: [
-    ['ala_fb','Alabama','Crimson Tide','#9E1B32','SEC'],['uga','Georgia','Bulldogs','#BA0C2F','SEC'],
-    ['tex_fb','Texas','Longhorns','#BF5700','SEC'],['lsu','LSU','Tigers','#461D7C','SEC'],
-    ['tenn_fb','Tennessee','Volunteers','#FF8200','SEC'],['ole','Ole Miss','Rebels','#CE1126','SEC'],
-    ['miz','Missouri','Tigers','#F1B82D','SEC'],['okl','Oklahoma','Sooners','#841617','SEC'],
-    ['fla_fb','Florida','Gators','#0021A5','SEC'],['aub_fb','Auburn','Tigers','#0C2340','SEC'],
-    ['tam','Texas A&M','Aggies','#500000','SEC'],['ark_fb','Arkansas','Razorbacks','#9D2235','SEC'],
-    ['uky_fb','Kentucky','Wildcats','#0033A0','SEC'],['sc','South Carolina','Gamecocks','#73000A','SEC'],
-    ['van','Vanderbilt','Commodores','#000000','SEC'],['msst','Miss State','Bulldogs','#660000','SEC'],
-    ['mich_fb','Michigan','Wolverines','#00274C','Big Ten'],['osu_fb','Ohio State','Buckeyes','#BB0000','Big Ten'],
-    ['psu','Penn State','Nittany Lions','#041E42','Big Ten'],['ore','Oregon','Ducks','#154733','Big Ten'],
-    ['wash','Washington','Huskies','#4B2E83','Big Ten'],['usc_fb','USC','Trojans','#990000','Big Ten'],
-    ['ucla_fb','UCLA','Bruins','#2D68C4','Big Ten'],['wis_fb','Wisconsin','Badgers','#C5050C','Big Ten'],
-    ['iowa','Iowa','Hawkeyes','#FFCD00','Big Ten'],['neb','Nebraska','Cornhuskers','#E41C38','Big Ten'],
-    ['msu_fb','Michigan St','Spartans','#18453B','Big Ten'],['minn_fb','Minnesota','Gophers','#7A0019','Big Ten'],
-    ['ill_fb','Illinois','Illini','#E84A27','Big Ten'],['pur_fb','Purdue','Boilermakers','#CEB888','Big Ten'],
-    ['umd_fb','Maryland','Terrapins','#E03A3E','Big Ten'],['rut','Rutgers','Scarlet Knights','#CC0033','Big Ten'],
-    ['ind_fb','Indiana','Hoosiers','#990000','Big Ten'],['nw','Northwestern','Wildcats','#4E2A84','Big Ten'],
-    ['fsu_fb','Florida St','Seminoles','#782F40','ACC'],['clem_fb','Clemson','Tigers','#F56600','ACC'],
-    ['mia_fb','Miami','Hurricanes','#F47321','ACC'],['unc_fb','North Carolina','Tar Heels','#99badd','ACC'],
-    ['ncst_fb','NC State','Wolfpack','#CC0000','ACC'],['duke_fb','Duke','Blue Devils','#003087','ACC'],
-    ['vt','Virginia Tech','Hokies','#630031','ACC'],['uva_fb','Virginia','Cavaliers','#232D4B','ACC'],
-    ['lou_fb','Louisville','Cardinals','#C90031','ACC'],['pitt','Pittsburgh','Panthers','#003594','ACC'],
-    ['syr_fb','Syracuse','Orange','#F76900','ACC'],['gt','Georgia Tech','Yellow Jackets','#B3A369','ACC'],
-    ['bc','Boston College','Eagles','#98002E','ACC'],['wake_fb','Wake Forest','Demon Deacons','#9E7E38','ACC'],
-    ['cal','Cal','Golden Bears','#003262','ACC'],['stan','Stanford','Cardinal','#8C1515','ACC'],
-    ['smu','SMU','Mustangs','#0033A0','ACC'],['okst','Oklahoma St','Cowboys','#FF7300','Big 12'],
-    ['ksu','Kansas St','Wildcats','#512888','Big 12'],['ku_fb','Kansas','Jayhawks','#0051BA','Big 12'],
-    ['isu_fb','Iowa State','Cyclones','#C8102E','Big 12'],['utah','Utah','Utes','#CC0000','Big 12'],
-    ['ari_fb','Arizona','Wildcats','#CC0033','Big 12'],['asu','Arizona St','Sun Devils','#8C1D40','Big 12'],
-    ['colo','Colorado','Buffaloes','#CFB87C','Big 12'],['byu','BYU','Cougars','#002E5D','Big 12'],
-    ['tcu','TCU','Horned Frogs','#4D1979','Big 12'],['bay_fb','Baylor','Bears','#154734','Big 12'],
-    ['tt','Texas Tech','Red Raiders','#CC0000','Big 12'],['wvu','West Virginia','Mountaineers','#002855','Big 12'],
-    ['ucf','UCF','Knights','#BA9B37','Big 12'],['cin_fb','Cincinnati','Bearcats','#E00122','Big 12'],
-    ['hou_fb','Houston','Cougars','#C8102E','Big 12'],['nd','Notre Dame','Fighting Irish','#0C2340','Ind'],
-    ['orst','Oregon St','Beavers','#DC4405','Pac-12'],['wsu','Wash State','Cougars','#981E32','Pac-12']
+    ['ala_fb','Alabama','Crimson Tide','#9E1B32','SEC'],['uga','Georgia','Bulldogs','#BA0C2F','SEC'],['tex_fb','Texas','Longhorns','#BF5700','SEC'],['lsu','LSU','Tigers','#461D7C','SEC'],['tenn_fb','Tennessee','Volunteers','#FF8200','SEC'],['ole','Ole Miss','Rebels','#CE1126','SEC'],['miz','Missouri','Tigers','#F1B82D','SEC'],['okl','Oklahoma','Sooners','#841617','SEC'],['fla_fb','Florida','Gators','#0021A5','SEC'],['aub_fb','Auburn','Tigers','#0C2340','SEC'],['tam','Texas A&M','Aggies','#500000','SEC'],['ark_fb','Arkansas','Razorbacks','#9D2235','SEC'],['uky_fb','Kentucky','Wildcats','#0033A0','SEC'],['sc','South Carolina','Gamecocks','#73000A','SEC'],['van','Vanderbilt','Commodores','#000000','SEC'],['msst','Miss State','Bulldogs','#660000','SEC'],['mich_fb','Michigan','Wolverines','#00274C','Big Ten'],['osu_fb','Ohio State','Buckeyes','#BB0000','Big Ten'],['psu','Penn State','Nittany Lions','#041E42','Big Ten'],['ore','Oregon','Ducks','#154733','Big Ten'],['wash','Washington','Huskies','#4B2E83','Big Ten'],['usc_fb','USC','Trojans','#990000','Big Ten'],['ucla_fb','UCLA','Bruins','#2D68C4','Big Ten'],['wis_fb','Wisconsin','Badgers','#C5050C','Big Ten'],['iowa','Iowa','Hawkeyes','#FFCD00','Big Ten'],['neb','Nebraska','Cornhuskers','#E41C38','Big Ten'],['msu_fb','Michigan St','Spartans','#18453B','Big Ten'],['minn_fb','Minnesota','Gophers','#7A0019','Big Ten'],['ill_fb','Illinois','Illini','#E84A27','Big Ten'],['pur_fb','Purdue','Boilermakers','#CEB888','Big Ten'],['umd_fb','Maryland','Terrapins','#E03A3E','Big Ten'],['rut','Rutgers','Scarlet Knights','#CC0033','Big Ten'],['ind_fb','Indiana','Hoosiers','#990000','Big Ten'],['nw','Northwestern','Wildcats','#4E2A84','Big Ten'],['fsu_fb','Florida St','Seminoles','#782F40','ACC'],['clem_fb','Clemson','Tigers','#F56600','ACC'],['mia_fb','Miami','Hurricanes','#F47321','ACC'],['unc_fb','North Carolina','Tar Heels','#99badd','ACC'],['ncst_fb','NC State','Wolfpack','#CC0000','ACC'],['duke_fb','Duke','Blue Devils','#003087','ACC'],['vt','Virginia Tech','Hokies','#630031','ACC'],['uva_fb','Virginia','Cavaliers','#232D4B','ACC'],['lou_fb','Louisville','Cardinals','#C90031','ACC'],['pitt','Pittsburgh','Panthers','#003594','ACC'],['syr_fb','Syracuse','Orange','#F76900','ACC'],['gt','Georgia Tech','Yellow Jackets','#B3A369','ACC'],['bc','Boston College','Eagles','#98002E','ACC'],['wake_fb','Wake Forest','Demon Deacons','#9E7E38','ACC'],['cal','Cal','Golden Bears','#003262','ACC'],['stan','Stanford','Cardinal','#8C1515','ACC'],['smu','SMU','Mustangs','#0033A0','ACC'],['okst','Oklahoma St','Cowboys','#FF7300','Big 12'],['ksu','Kansas St','Wildcats','#512888','Big 12'],['ku_fb','Kansas','Jayhawks','#0051BA','Big 12'],['isu_fb','Iowa State','Cyclones','#C8102E','Big 12'],['utah','Utah','Utes','#CC0000','Big 12'],['ari_fb','Arizona','Wildcats','#CC0033','Big 12'],['asu','Arizona St','Sun Devils','#8C1D40','Big 12'],['colo','Colorado','Buffaloes','#CFB87C','Big 12'],['byu','BYU','Cougars','#002E5D','Big 12'],['tcu','TCU','Horned Frogs','#4D1979','Big 12'],['bay_fb','Baylor','Bears','#154734','Big 12'],['tt','Texas Tech','Red Raiders','#CC0000','Big 12'],['wvu','West Virginia','Mountaineers','#002855','Big 12'],['ucf','UCF','Knights','#BA9B37','Big 12'],['cin_fb','Cincinnati','Bearcats','#E00122','Big 12'],['hou_fb','Houston','Cougars','#C8102E','Big 12'],['nd','Notre Dame','Fighting Irish','#0C2340','Ind'],['orst','Oregon St','Beavers','#DC4405','Pac-12'],['wsu','Wash State','Cougars','#981E32','Pac-12']
+  ],
+  NFL: [
+    ['dal','Dallas','Cowboys','#003594','NFC East'],['phi','Philadelphia','Eagles','#004C54','NFC East'],['wsh','Washington','Commanders','#5A1414','NFC East'],['nyg','NY Giants','Giants','#0B2265','NFC East'],['chi','Chicago','Bears','#0B162A','NFC North'],['gb','Green Bay','Packers','#203731','NFC North'],['min','Minnesota','Vikings','#4F2683','NFC North'],['det','Detroit','Lions','#0076B6','NFC North'],['atl','Atlanta','Falcons','#a71930','NFC South'],['no','New Orleans','Saints','#D3BC8D','NFC South'],['tb','Tampa Bay','Buccaneers','#D50A0A','NFC South'],['car','Carolina','Panthers','#0085CA','NFC South'],['sf','San Fran','49ers','#AA0000','NFC West'],['sea','Seattle','Seahawks','#002244','NFC West'],['lar','LA Rams','Rams','#003594','NFC West'],['ari','Arizona','Cardinals','#97233F','NFC West'],['ne','New England','Patriots','#002244','AFC East'],['buf','Buffalo','Bills','#00338D','AFC East'],['mia','Miami','Dolphins','#008E97','AFC East'],['nyj','NY Jets','Jets','#125740','AFC East'],['pit','Pittsburgh','Steelers','#FFB612','AFC North'],['bal','Baltimore','Ravens','#241773','AFC North'],['cin','Cincinnati','Bengals','#FB4F14','AFC North'],['cle','Cleveland','Browns','#311D00','AFC North'],['ind','Indianapolis','Colts','#002C5F','AFC South'],['ten','Tennessee','Titans','#0C2340','AFC South'],['jax','Jacksonville','Jaguars','#006778','AFC South'],['hou','Houston','Texans','#03202F','AFC South'],['kc','Kansas City','Chiefs','#E31837','AFC West'],['lv','Las Vegas','Raiders','#000000','AFC West'],['den','Denver','Broncos','#FB4F14','AFC West'],['lac','LA Chargers','Chargers','#0080C6','AFC West']
   ],
   NBA: [
-    ['bos','Boston','Celtics','#007A33','East'],['bkn','Brooklyn','Nets','#000000','East'],
-    ['ny','New York','Knicks','#F58426','East'],['phi','Philly','76ers','#006BB6','East'],
-    ['tor','Toronto','Raptors','#CE1141','East'],['chi','Chicago','Bulls','#CE1141','East'],
-    ['cle','Cleveland','Cavaliers','#860038','East'],['det','Detroit','Pistons','#C8102E','East'],
-    ['ind','Indiana','Pacers','#FDBB30','East'],['mil','Milwaukee','Bucks','#00471B','East'],
-    ['atl','Atlanta','Hawks','#E03A3E','East'],['cha','Charlotte','Hornets','#1D1160','East'],
-    ['mia','Miami','Heat','#98002E','East'],['orl','Orlando','Magic','#0077C0','East'],
-    ['wsh','Washington','Wizards','#002B5C','East'],['den','Denver','Nuggets','#0E2240','East'],
-    ['min','Minnesota','Timberwolves','#0C2340','West'],['okc','OKC','Thunder','#007AC1','West'],
-    ['por','Portland','Trail Blazers','#E03A3E','West'],['uta','Utah','Jazz','#002B5C','West'],
-    ['gs','Golden State','Warriors','#1D428A','West'],['lac','LA Clippers','Clippers','#C8102E','West'],
-    ['lal','LA Lakers','Lakers','#552583','West'],['phx','Phoenix','Suns','#1D1160','West'],
-    ['sac','Sacramento','Kings','#5A2D81','West'],['dal','Dallas','Mavericks','#00538C','West'],
-    ['hou','Houston','Rockets','#CE1141','West'],['mem','Memphis','Grizzlies','#5D76A9','West'],
-    ['no','New Orleans','Pelicans','#0C2340','West'],['sas','San Antonio','Spurs','#C4CED4','West']
+    ['bos','Boston','Celtics','#007A33','East'],['bkn','Brooklyn','Nets','#000000','East'],['ny','New York','Knicks','#F58426','East'],['phi','Philly','76ers','#006BB6','East'],['tor','Toronto','Raptors','#CE1141','East'],['chi','Chicago','Bulls','#CE1141','East'],['cle','Cleveland','Cavaliers','#860038','East'],['det','Detroit','Pistons','#C8102E','East'],['ind','Indiana','Pacers','#FDBB30','East'],['mil','Milwaukee','Bucks','#00471B','East'],['atl','Atlanta','Hawks','#E03A3E','East'],['cha','Charlotte','Hornets','#1D1160','East'],['mia','Miami','Heat','#98002E','East'],['orl','Orlando','Magic','#0077C0','East'],['wsh','Washington','Wizards','#002B5C','East'],['den','Denver','Nuggets','#0E2240','East'],['min','Minnesota','Timberwolves','#0C2340','West'],['okc','OKC','Thunder','#007AC1','West'],['por','Portland','Trail Blazers','#E03A3E','West'],['uta','Utah','Jazz','#002B5C','West'],['gs','Golden State','Warriors','#1D428A','West'],['lac','LA Clippers','Clippers','#C8102E','West'],['lal','LA Lakers','Lakers','#552583','West'],['phx','Phoenix','Suns','#1D1160','West'],['sac','Sacramento','Kings','#5A2D81','West'],['dal','Dallas','Mavericks','#00538C','West'],['hou','Houston','Rockets','#CE1141','West'],['mem','Memphis','Grizzlies','#5D76A9','West'],['no','New Orleans','Pelicans','#0C2340','West'],['sas','San Antonio','Spurs','#C4CED4','West']
   ]
 };
 
@@ -215,7 +141,7 @@ const Onboarding = ({ onComplete }) => {
   return (
     step === 0 ? (
       <div key="step-0" className="fixed inset-0 z-[100] bg-gradient-to-br from-blue-900 to-indigo-950 bg-[url('https://www.transparenttextures.com/patterns/noisy-net.png')] bg-blend-overlay text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
-        <div className="w-48 h-48 mb-6 rounded-2xl shadow-xl overflow-hidden bg-white/20 backdrop-blur-sm p-4">
+        <div className="w-48 h-48 mb-6 rounded-2xl shadow-xl overflow-hidden bg-gradient-to-br from-[#1e90ff] to-[#99badd] p-0.5 backdrop-blur-sm">
             <img 
               src={APP_ICON} 
               onError={(e) => e.currentTarget.src = APP_ICON_FALLBACK}
@@ -280,19 +206,24 @@ export default function App() {
   useEffect(() => { if (!enabledLeagues[activeLeague]) setActiveLeague(Object.keys(enabledLeagues).find(k => enabledLeagues[k]) || 'NCAA'); }, [enabledLeagues]);
   useEffect(() => { checkLiveScores(); }, []); 
   useEffect(() => { 
-    const interval = setInterval(() => { console.log("Auto-checking..."); checkLiveScores(); }, 60000);
+    const interval = setInterval(() => { console.log("Auto-checking..."); checkLiveScores(false); }, 60000);
     return () => clearInterval(interval);
   }, [hatedTeams, notifiedGames]); 
   useEffect(() => { localStorage.setItem('tl_hated_teams', JSON.stringify(hatedTeams)); }, [hatedTeams]);
 
   // --- LOGIC ---
-  const checkLiveScores = async () => {
-    if (refreshing) setLoading(true); 
+  const checkLiveScores = async (showLoader = true) => {
+    if (showLoader) setLoading(true); 
     setConsolationFact(null); 
     setNoGamesMsg(null); 
     
     try {
-      const getYYYYMMDD = (d) => d.toISOString().split('T')[0].replace(/-/g, '');
+      const getYYYYMMDD = (d) => {
+        const offset = d.getTimezoneOffset() * 60000;
+        const local = new Date(d.getTime() - offset);
+        return local.toISOString().split('T')[0].replace(/-/g, '');
+      };
+      
       const dates = [new Date(), new Date(Date.now()-864e5), new Date(Date.now()-1728e5)].map(getYYYYMMDD);
       
       const fetchLeague = async (lg) => {
@@ -399,7 +330,7 @@ export default function App() {
     } catch (err) { console.error('Fallback: Oops, unable to copy', err); }
   };
 
-  const handleRefresh = () => { setRefreshing(true); checkLiveScores(); };
+  const handleRefresh = () => { setRefreshing(true); checkLiveScores(true); };
 
   const handleTouchStart = (e) => {
     const scrollTop = scrollRef.current ? scrollRef.current.scrollTop : 0;
@@ -411,6 +342,23 @@ export default function App() {
     const pullDistance = e.changedTouches[0].clientY - pullStartPoint;
     if (pullDistance > 150) handleRefresh();
     setPullStartPoint(0);
+  };
+  
+  const sendTestNotification = async () => {
+    if (!('Notification' in window)) {
+        alert("Notifications not supported in this browser.");
+        return;
+    }
+    if (Notification.permission === 'granted') {
+        new Notification("Test Alert", { body: "This is a test from They Lost!", icon: APP_ICON });
+    } else if (Notification.permission !== 'denied') {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            new Notification("Test Alert", { body: "This is a test from They Lost!", icon: APP_ICON });
+        }
+    } else {
+        alert("Notifications are currently blocked. Please enable them in your phone settings.");
+    }
   };
 
   const manageList = ALL_TEAMS.filter(t => t.league === activeLeague && (searchTerm==='' || t.name.toLowerCase().includes(searchTerm.toLowerCase()))).sort((a,b)=>a.name.localeCompare(b.name));
@@ -430,8 +378,8 @@ export default function App() {
             <h1 className="font-black text-xl italic">THEY LOST!</h1>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => { setView('scoreboard'); checkLiveScores(); }} disabled={loading} className="p-2 hover:bg-white/10 rounded-lg"><RefreshCw size={24} className={loading?"animate-spin":""}/></button>
-          <button onClick={() => { setView('scoreboard'); checkLiveScores(); }} className={`p-2 rounded-lg ${view==='scoreboard'?'bg-black/20':''}`}><PartyPopper size={24}/></button>
+          <button onClick={() => { setView('scoreboard'); checkLiveScores(true); }} disabled={loading} className="p-2 hover:bg-white/10 rounded-lg"><RefreshCw size={24} className={loading?"animate-spin":""}/></button>
+          <button onClick={() => { setView('scoreboard'); checkLiveScores(true); }} className={`p-2 rounded-lg ${view==='scoreboard'?'bg-black/20':''}`}><PartyPopper size={24}/></button>
           <button onClick={() => setView('manage')} className={`p-2 rounded-lg ${view==='manage'?'bg-black/20':''}`}><Target size={24}/></button>
           <button onClick={() => setView('settings')} className={`p-2 rounded-lg ${view==='settings'?'bg-black/20':''}`}><Settings size={24}/></button>
         </div>
@@ -529,6 +477,7 @@ export default function App() {
             <h2 className="font-bold flex items-center gap-2 text-xl"><Settings className={styles.accent}/> Settings</h2>
             <div><h3 className="text-sm font-bold uppercase opacity-50 mb-3">Sports</h3><div className="space-y-2">{Object.keys(enabledLeagues).map(l=><div key={l} className="flex justify-between p-3 border rounded-lg"><span className="font-bold text-base">{l}</span><button onClick={()=>setEnabledLeagues(p=>({...p,[l]:!p[l]}))} className={enabledLeagues[l]?'text-green-500':'text-slate-300'}>{enabledLeagues[l]?<ToggleRight size={32}/>:<ToggleLeft size={32}/>}</button></div>)}</div></div>
             <div><h3 className="text-sm font-bold uppercase opacity-50 mb-3">Theme</h3><div className="grid gap-2">{Object.keys(THEMES).map(k=><button key={k} onClick={()=>setActiveTheme(k)} className={`p-3 text-base font-bold border-2 rounded-lg flex justify-between ${activeTheme===k?'border-current':'border-transparent bg-slate-50'}`}><span>{THEMES[k].name}</span>{activeTheme===k&&<div className="w-3 h-3 rounded-full bg-green-500"/>}</button>)}</div></div>
+            <button onClick={sendTestNotification} className="w-full py-3 text-blue-600 bg-blue-50 border border-blue-200 rounded-xl text-sm font-bold flex justify-center items-center gap-2 mb-2"><Smartphone size={16}/> Send Test Alert</button>
             <button onClick={()=>{localStorage.clear();window.location.reload()}} className="w-full py-3 text-red-400 text-sm font-bold flex justify-center items-center gap-1"><LogOut size={16}/> Reset App</button>
             <p className="text-center text-xs opacity-30 mt-4">v{APP_VERSION}</p>
           </div>
