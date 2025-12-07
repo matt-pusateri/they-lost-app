@@ -3,7 +3,7 @@ import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper,
 
 // --- 1. UTILITIES & CONFIG ---
 
-const APP_VERSION = "1.6";
+const APP_VERSION = "1.5";
 
 const APP_ICON = "https://ik.imagekit.io/ipi1yjzh9/theylost%20icon%20512.png";
 const APP_ICON_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%231e90ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%234b9cd3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='100' fill='url(%23grad)'/%3E%3Cpath fill='white' d='M256 320c-66.27 0-120-40.29-120-90 0-5.52 4.48-10 10-10h220c5.52 0 10 4.48 10 10 0 49.71-53.73 90-120 90zM150 160c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30zm212 0c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30z'/%3E%3Cpath fill='white' opacity='0.3' d='M146 160l-30-30m280 30l30-30' stroke='white' stroke-width='25' stroke-linecap='round' /%3E%3C/svg%3E";
@@ -144,24 +144,6 @@ const RAW_TEAMS = {
     ['ucf','UCF','Knights','#BA9B37','Big 12'],['cin_fb','Cincinnati','Bearcats','#E00122','Big 12'],
     ['hou_fb','Houston','Cougars','#C8102E','Big 12'],['nd','Notre Dame','Fighting Irish','#0C2340','Ind'],
     ['orst','Oregon St','Beavers','#DC4405','Pac-12'],['wsu','Wash State','Cougars','#981E32','Pac-12']
-  ],
-  NFL: [
-    ['dal','Dallas','Cowboys','#003594','NFC East'],['phi','Philadelphia','Eagles','#004C54','NFC East'],
-    ['wsh','Washington','Commanders','#5A1414','NFC East'],['nyg','NY Giants','Giants','#0B2265','NFC East'],
-    ['chi','Chicago','Bears','#0B162A','NFC North'],['gb','Green Bay','Packers','#203731','NFC North'],
-    ['min','Minnesota','Vikings','#4F2683','NFC North'],['det','Detroit','Lions','#0076B6','NFC North'],
-    ['atl','Atlanta','Falcons','#a71930','NFC South'],['no','New Orleans','Saints','#D3BC8D','NFC South'],
-    ['tb','Tampa Bay','Buccaneers','#D50A0A','NFC South'],['car','Carolina','Panthers','#0085CA','NFC South'],
-    ['sf','San Fran','49ers','#AA0000','NFC West'],['sea','Seattle','Seahawks','#002244','NFC West'],
-    ['lar','LA Rams','Rams','#003594','NFC West'],['ari','Arizona','Cardinals','#97233F','NFC West'],
-    ['ne','New England','Patriots','#002244','AFC East'],['buf','Buffalo','Bills','#00338D','AFC East'],
-    ['mia','Miami','Dolphins','#008E97','AFC East'],['nyj','NY Jets','Jets','#125740','AFC East'],
-    ['pit','Pittsburgh','Steelers','#FFB612','AFC North'],['bal','Baltimore','Ravens','#241773','AFC North'],
-    ['cin','Cincinnati','Bengals','#FB4F14','AFC North'],['cle','Cleveland','Browns','#311D00','AFC North'],
-    ['ind','Indianapolis','Colts','#002C5F','AFC South'],['ten','Tennessee','Titans','#0C2340','AFC South'],
-    ['jax','Jacksonville','Jaguars','#006778','AFC South'],['hou','Houston','Texans','#03202F','AFC South'],
-    ['kc','Kansas City','Chiefs','#E31837','AFC West'],['lv','Las Vegas','Raiders','#000000','AFC West'],
-    ['den','Denver','Broncos','#FB4F14','AFC West'],['lac','LA Chargers','Chargers','#0080C6','AFC West']
   ],
   NBA: [
     ['bos','Boston','Celtics','#007A33','East'],['bkn','Brooklyn','Nets','#000000','East'],
