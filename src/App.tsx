@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper, History, Search, Globe, Bell, ExternalLink, Palette, Settings, ToggleLeft, ToggleRight, Target, Activity, LogOut, Clock, Check, Smartphone } from 'lucide-react';
+import { Trophy, AlertTriangle, RefreshCw, Share2, Trash2, X, Copy, PartyPopper, History, Search, Globe, Bell, ExternalLink, Palette, Settings, ToggleLeft, ToggleRight, Target, Activity, LogOut, Clock, Check } from 'lucide-react';
 
 // --- 1. UTILITIES & CONFIG ---
-// INLINE SVG LOGO COMPONENT (Guaranteed to render)
-// REMOVED: Logo component
+
+const APP_VERSION = "1.9";
 
 const APP_ICON = "https://ik.imagekit.io/ipi1yjzh9/theylost%20icon%20512.png";
 const APP_ICON_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%231e90ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%234b9cd3;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='100' fill='url(%23grad)'/%3E%3Cpath fill='white' d='M256 320c-66.27 0-120-40.29-120-90 0-5.52 4.48-10 10-10h220c5.52 0 10 4.48 10 10 0 49.71-53.73 90-120 90zM150 160c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30zm212 0c0-16.57 13.43-30 30-30s30 13.43 30 30-13.43 30-30 30-30-13.43-30-30z'/%3E%3Cpath fill='white' opacity='0.3' d='M146 160l-30-30m280 30l30-30' stroke='white' stroke-width='25' stroke-linecap='round' /%3E%3C/svg%3E";
 
 const CELEBRATION_GIFS = [
-  "https://i.giphy.com/media/HmdsITkYtq5i/giphy.gif",
-  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmt2M2o4dnZ6OWRud2NmNm85bzNndmR6ZDRmemRmaWhjdW5oZmN4NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUQ4rhUZJYiQsas6WD/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/axu6dFuca4HKM/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/giphy.gif",
   "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGhwZ3Q0dDE0NzF6MzY3bW1vdjMwcHo1ajdwM21zdjJ1cXMxdmdyNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/9Y6n9TR7U07ew/giphy.gif",
@@ -113,7 +112,7 @@ const RAW_HISTORY = {
 };
 
 const HISTORIC_LOSSES = RAW_HISTORY; // Mapping back for compatibility
-// ...
+
 // --- 4. ONBOARDING ---
 const Onboarding = ({ onComplete }) => {
   const [step, setStep] = useState(0);
@@ -141,7 +140,7 @@ const Onboarding = ({ onComplete }) => {
   return (
     step === 0 ? (
       <div key="step-0" className="fixed inset-0 z-[100] bg-gradient-to-br from-blue-900 to-indigo-900 bg-[url('https://www.transparenttextures.com/patterns/noisy-net.png')] bg-blend-overlay text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
-        <div className="w-48 h-48 mb-6 rounded-2xl shadow-xl overflow-hidden bg-white/20 backdrop-blur-sm p-4">
+        <div className="w-48 h-48 mb-6 rounded-2xl shadow-xl overflow-hidden bg-gradient-to-br from-[#1e90ff] to-[#99badd] p-0.5 backdrop-blur-sm">
             <img 
               src={APP_ICON} 
               onError={(e) => e.currentTarget.src = APP_ICON_FALLBACK}
@@ -483,8 +482,26 @@ export default function App() {
           <div className={`p-5 space-y-6 animate-in slide-in-from-bottom-4 ${styles.card} border-2`}>
             <h2 className="font-bold flex items-center gap-2 text-xl"><Settings className={styles.accent}/> Settings</h2>
             <div><h3 className="text-sm font-bold uppercase opacity-50 mb-3">Sports</h3><div className="space-y-2">{Object.keys(enabledLeagues).map(l=><div key={l} className="flex justify-between p-3 border rounded-lg"><span className="font-bold text-base">{l}</span><button onClick={()=>setEnabledLeagues(p=>({...p,[l]:!p[l]}))} className={enabledLeagues[l]?'text-green-500':'text-slate-300'}>{enabledLeagues[l]?<ToggleRight size={32}/>:<ToggleLeft size={32}/>}</button></div>)}</div></div>
-            <div><h3 className="text-sm font-bold uppercase opacity-50 mb-3">Theme</h3><div className="grid gap-2">{Object.keys(THEMES).map(k=><button key={k} onClick={()=>setActiveTheme(k)} className={`p-3 text-base font-bold border-2 rounded-lg flex justify-between ${activeTheme===k?'border-current':'border-transparent bg-slate-50'}`}><span>{THEMES[k].name}</span>{activeTheme===k&&<div className="w-3 h-3 rounded-full bg-green-500"/>}</button>)}</div></div>
-            <button onClick={sendTestNotification} className="w-full py-3 text-blue-600 bg-blue-50 border border-blue-200 rounded-xl text-sm font-bold flex justify-center items-center gap-2 mb-2"><Smartphone size={16}/> Send Test Alert</button>
+            <div>
+                <h3 className="text-sm font-bold uppercase opacity-50 mb-3">Theme</h3>
+                <div className="grid gap-2">
+                    {Object.keys(THEMES).map(k=>(
+                        <button 
+                            key={k} 
+                            onClick={()=>setActiveTheme(k)} 
+                            className={`p-3 text-base font-bold border-2 rounded-lg flex justify-between ${activeTheme===k?'border-current':'border-transparent bg-slate-50'}`}
+                            style={{
+                                backgroundColor: THEMES[k].bg.includes('slate-950') ? '#0f172a' : (THEMES[k].bg.includes('emerald') ? '#ecfdf5' : '#f1f5f9'),
+                                color: k === 'midnight' ? 'white' : 'black'
+                            }}
+                        >
+                            <span>{THEMES[k].name}</span>
+                            {activeTheme===k&&<div className="w-3 h-3 rounded-full bg-green-500"/>}
+                        </button>
+                    ))}
+                </div>
+            </div>
+            <button onClick={sendTestNotification} className="w-full py-3 text-blue-600 bg-blue-50 border border-blue-200 rounded-xl text-sm font-bold flex justify-center items-center gap-2 mb-2"><Bell size={16}/> Send Test Alert</button>
             <button onClick={()=>{localStorage.clear();window.location.reload()}} className="w-full py-3 text-red-400 text-sm font-bold flex justify-center items-center gap-1"><LogOut size={16}/> Reset App</button>
             <p className="text-center text-xs opacity-30 mt-4">v{APP_VERSION}</p>
           </div>
