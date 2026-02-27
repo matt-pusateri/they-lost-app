@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1089813412756",
+    "project_id": "they-lost",
+    "storage_bucket": "they-lost.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1089813412756:android:e567f1e3169ebc7ddb6d81",
+        "android_client_info": {
+          "package_name": "com.mattpusateri.theylost"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8tAgerqDlXrqbUqnM_pkAOUQ6dtXK4Xk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
