@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Trophy, RefreshCw, PartyPopper, Settings, Target, Zap, LogOut, Check, Search, Bell, X, ToggleLeft, ToggleRight, History, Share2 } from 'lucide-react';
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
-const APP_VERSION = "2.0.24"; 
+const APP_VERSION = "2.0.26"; 
 const API_BASE = 'https://us-central1-they-lost.cloudfunctions.net/registerToken';
 const APP_ICON = "https://ik.imagekit.io/ipi1yjzh9/theylost%20icon%20512.png";
 
@@ -25,7 +25,7 @@ const WAITING_GIFS = [
 ];
 
 const RAW_TEAMS = {
-  NBA: [['bos_nba','Boston','Celtics','#007A33','East'],['bkn_nba','Brooklyn','Nets','#000000','East'],['ny_nba','New York','Knicks','#F58426','East'],['phi_nba','Philly','76ers','#006BB6','East'],['tor_nba','Toronto','Raptors','#CE1141','East'],['chi_nba','Chicago','Bulls','#CE1141','East'],['cle_nba','Cleveland','Cavaliers','#860038','East'],['det_nba','Detroit','Pistons','#C8102E','East'],['ind_nba','Indiana','Pacers','#FDBB30','East'],['mil_nba','Milwaukee','Bucks','#00471B','East'],['atl_nba','Atlanta','Hawks','#E03A3E','East'],['cha_nba','Charlotte','Hornets','#1D1160','East'],['mia_nba','Miami','Heat','#98002E','East'],['orl_nba','Orlando','Magic','#0077C0','East'],['wsh_nba','Washington','Wizards','#002B5C','East'],['den_nba','Denver','Nuggets','#0E2240','East'],['min_nba','Minnesota','Timberwolves','#0C2340','West'],['okc_nba','OKC','Thunder','#007AC1','West'],['por_nba','Portland','Trail Blazers','#E03A3E','West'],['uta_nba','Utah','Jazz','#002B5C','West'],['gs_nba','Golden State','Warriors','#1D428A','West'],['lac_nba','LA Clippers','Clippers','#C8102E','West'],['lal_nba','LA Lakers','Lakers','#552583','West'],['phx_nba','Phoenix','Suns','#1D1160','West'],['sac_nba','Sacramento','Kings','#5A2D81','West'],['dal_nba','Dallas','Mavericks','#00538C','West'],['hou_nba','Houston','Rockets','#CE1141','West'],['mem_nba','Memphis','Grizzlies','#5D76A9','West'],['no_nba','New Orleans','Pelicans','#0C2340','West'],['sas_nba','San Antonio','Spurs','#C4CED4','West']],
+  NBA: [['bos_nba','Boston','Celtics','#007A33','East'],['bkn_nba','Brooklyn','Nets','#000000','East'],['ny_nba','New York','Knicks','#F58426','East'],['phi_nba','Philly','76ers','#006BB6','East'],['tor_nba','Toronto','Raptors','#CE1141','East'],['chi_nba','Chicago','Bulls','#CE1141','East'],['cle_nba','Cleveland','Cavaliers','#860038','East'],['det_nba','Detroit','Pistons','#C8102E','East'],['ind_nba','Indiana','Pacers','#FDBB30','East'],['mil_nba','Milwaukee','Bucks','#00471B','East'],['atl_nba','Atlanta','Hawks','#E03A3E','East'],['cha_nba','Charlotte','Hornets','#1D1160','East'],['mia_nba','Miami','Heat','#98002E','East'],['orl_nba','Orlando','Magic','#0077C0','East'],['wsh_nba','Washington','Wizards','#002B5C','East'],['den_nba','Denver','Nuggets','#0E2240','West'],['min_nba','Minnesota','Timberwolves','#0C2340','West'],['okc_nba','OKC','Thunder','#007AC1','West'],['por_nba','Portland','Trail Blazers','#E03A3E','West'],['uta_nba','Utah','Jazz','#002B5C','West'],['gs_nba','Golden State','Warriors','#1D428A','West'],['lac_nba','LA Clippers','Clippers','#C8102E','West'],['lal_nba','LA Lakers','Lakers','#552583','West'],['phx_nba','Phoenix','Suns','#1D1160','West'],['sac_nba','Sacramento','Kings','#5A2D81','West'],['dal_nba','Dallas','Mavericks','#00538C','West'],['hou_nba','Houston','Rockets','#CE1141','West'],['mem_nba','Memphis','Grizzlies','#5D76A9','West'],['no_nba','New Orleans','Pelicans','#0C2340','West'],['sas_nba','San Antonio','Spurs','#C4CED4','West']],
   MLB: [['bal_mlb','Baltimore','Orioles','#DF4601','AL East'],['bos_mlb','Boston','Red Sox','#BD3039','AL East'],['nyy_mlb','NY Yankees','Yankees','#003087','AL East'],['tb_mlb','Tampa Bay','Rays','#092C5C','AL East'],['tor_mlb','Toronto','Blue Jays','#134A8E','AL East'],['cws_mlb','Chi White Sox','White Sox','#27251F','AL Central'],['cle_mlb','Cleveland','Guardians','#00385D','AL Central'],['det_mlb','Detroit','Tigers','#0C2340','AL Central'],['kc_mlb','Kansas City','Royals','#004687','AL Central'],['min_mlb','Minnesota','Twins','#002B5C','AL Central'],['hou_mlb','Houston','Astros','#002D62','AL West'],['laa_mlb','LA Angels','Angels','#BA0021','AL West'],['oak_mlb','Oakland','Athletics','#003831','AL West'],['sea_mlb','Seattle','Mariners','#0C2C56','AL West'],['tex_mlb','Texas','Rangers','#003278','AL West'],['atl_mlb','Atlanta','Braves','#13274F','NL East'],['mia_mlb','Miami','Marlins','#00A3E0','NL East'],['nym_mlb','NY Mets','Mets','#002D72','NL East'],['phi_mlb','Philadelphia','Phillies','#E81828','NL East'],['wsh_mlb','Washington','Nationals','#AB0003','NL East'],['chc_mlb','Chi Cubs','Cubs','#0E3386','NL Central'],['cin_mlb','Cincinnati','Reds','#C6011F','NL Central'],['mil_mlb','Milwaukee','Brewers','#12284B','NL Central'],['pit_mlb','Pittsburgh','Pirates','#FDB827','NL Central'],['stl_mlb','St. Louis','Cardinals','#C41E3A','NL Central'],['ari_mlb','Arizona','Diamondbacks','#A71930','NL West'],['col_mlb','Colorado','Rockies','#333366','NL West'],['lad_mlb','LA Dodgers','Dodgers','#005A9C','NL West'],['sd_mlb','San Diego','Padres','#2F241D','NL West'],['sf_mlb','San Francisco','Giants','#FD5A1E','NL West']],
   NFL: [['ari_nfl','Arizona','Cardinals','#97233F','NFC West'],['atl_nfl','Atlanta','Falcons','#a71930','NFC South'],['bal_nfl','Baltimore','Ravens','#241773','AFC North'],['buf_nfl','Buffalo','Bills','#00338D','AFC East'],['car_nfl','Carolina','Panthers','#0085CA','NFC South'],['chi_nfl','Chicago','Bears','#0B162A','NFC North'],['cin_nfl','Cincinnati','Bengals','#fb4f14','AFC North'],['cle_nfl','Cleveland','Browns','#311D00','AFC North'],['dal_nfl','Dallas','Cowboys','#003594','NFC East'],['den_nfl','Denver','Broncos','#FB4F14','AFC West'],['det_nfl','Detroit','Lions','#0076b6','NFC North'],['gb_nfl','Green Bay','Packers','#203731','NFC North'],['hou_nfl','Houston','Texans','#03202f','AFC South'],['ind_nfl','Indianapolis','Colts','#002C5F','AFC South'],['jax_nfl','Jacksonville','Jaguars','#101820','AFC South'],['kc_nfl','Kansas City','Chiefs','#E31837','AFC West'],['lv_nfl','Las Vegas','Raiders','#000000','AFC West'],['lac_nfl','LA Chargers','Chargers','#0080C6','AFC West'],['lar_nfl','LA Rams','Rams','#003594','NFC West'],['mia_nfl','Miami','Dolphins','#008E97','AFC East'],['min_nfl','Minnesota','Vikings','#4F2683','NFC North'],['ne_nfl','New England','Patriots','#002244','AFC East'],['no_nfl','New Orleans','Saints','#D3BC8D','NFC South'],['nyg_nfl','NY Giants','Giants','#0B2265','NFC East'],['nyj_nfl','NY Jets','Jets','#125740','AFC East'],['phi_nfl','Philadelphia','Eagles','#004C54','NFC East'],['pit_nfl','Pittsburgh','Steelers','#FFB612','AFC North'],['sf_nfl','San Francisco','49ers','#AA0000','NFC West'],['sea_nfl','Seattle','Seahawks','#002244','NFC West'],['tb_nfl','Tampa Bay','Buccaneers','#D50A0A','NFC South'],['ten_nfl','Tennessee','Titans','#0C2340','AFC South'],['wsh_nfl','Washington','Commanders','#5a1414','NFC East']],
   NCAA: [['unc','North Carolina','Tar Heels','#4B9CD3','ACC'],['duke','Duke','Blue Devils','#003087','ACC'],['uva','Virginia','Cavaliers','#232D4B','ACC'],['vtech','Virginia Tech','Hokies','#630031','ACC'],['mia','Miami','Hurricanes','#F47321','ACC'],['ncst','NC State','Wolfpack','#CC0000','ACC'],['lou','Louisville','Cardinals','#C90031','ACC'],['nd','Notre Dame','Fighting Irish','#0C2340','ACC'],['fsu','Florida St','Seminoles','#782F40','ACC'],['syr','Syracuse','Orange','#F76900','ACC'],['bc','Boston College','Eagles','#98002E','ACC'],['msu','Michigan St','Spartans','#18453B','Big Ten'],['mich','Michigan','Wolverines','#00274C','Big Ten'],['osu','Ohio State','Buckeyes','#BB0000','Big Ten'],['ill','Illinois','Illini','#E84A27','Big Ten'],['pur','Purdue','Boilermakers','#CEB888','Big Ten'],['iu','Indiana','Hoosiers','#990000','Big Ten'],['wis','Wisconsin','Badgers','#C5050C','Big Ten'],['iowa','Iowa','Hawkeyes','#FFCD00','Big Ten'],['umd','Maryland','Terrapins','#E03A3E','Big Ten'],['rut','Rutgers','Scarlet Knights','#CC0033','Big Ten'],['nw','Northwestern','Wildcats','#4E2A84','Big Ten'],['nebr','Nebraska','Cornhuskers','#E41C38','Big Ten'],['uky','Kentucky','Wildcats','#0033A0','SEC'],['ala','Alabama','Crimson Tide','#9E1B32','SEC'],['aub','Auburn','Tigers','#0C2340','SEC'],['tenn','Tennessee','Volunteers','#FF8200','SEC'],['fla','Florida','Gators','#0021A5','SEC'],['ark','Arkansas','Razorbacks','#9D2235','SEC'],['lsu_bb','LSU','Tigers','#461D7C','SEC'],['miz_bb','Missouri','Tigers','#F1B82D','SEC'],['sc_bb','South Carolina','Gamecocks','#73000A','SEC'],['uga_bb','Georgia','Bulldogs','#BA0C2F','SEC'],['ole_bb','Ole Miss','Rebels','#CE1126','SEC'],['msst_bb','Miss State','Bulldogs','#660000','SEC'],['tam_bb','Texas A&M','Aggies','#500000','SEC'],['van_bb','Vanderbilt','Commodores','#000000','SEC'],['tex','Texas','Longhorns','#BF5700','SEC'],['okl_bb','Oklahoma','Sooners','#841617','SEC'],['ku','Kansas','Jayhawks','#0051BA','Big 12'],['bay','Baylor','Bears','#154734','Big 12'],['hou','Houston','Cougars','#C8102E','Big 12'],['isu','Iowa State','Cyclones','#C8102E','Big 12'],['textech','Texas Tech','Red Raiders','#CC0000','Big 12'],['conn','UConn','Huskies','#000E2F','Big East'],['nova','Villanova','Wildcats','#00205B','Big East'],['marq','Marquette','Golden Eagles','#003366','Big East'],['stj',"St. John's",'Red Storm','#BA0C2F','Big East'],['gonz','Gonzaga','Bulldogs','#041E42','WCC'],['ucla','UCLA','Bruins','#2D68C4','Pac-12'],['usc_bb','USC','Trojans','#990000','Pac-12'],['ari','Arizona','Wildcats','#CC0033','Pac-12'],['asu','Arizona St','Sun Devils','#8C1D40','Pac-12'],['sdsu','San Diego St','Aztecs','#A6192E','MWC'],['mem','Memphis','Tigers','#0033A0','AAC'],['gtown','Georgetown','Hoyas','#041E42','Big East'],['psu','Penn State','Nittany Lions','#041E42','Big Ten'],['minn','Minnesota','Golden Gophers','#7A0019','Big Ten'],['ore','Oregon','Ducks','#154733','Big Ten'],['wash','Washington','Huskies','#4B2E83','Big Ten'],['crei','Creighton','Bluejays','#0055A2','Big East'],['prov','Providence','Friars','#000000','Big East'],['hall','Seton Hall','Pirates','#004488','Big East'],['xav','Xavier','Musketeers','#0C2340','Big East'],['but','Butler','Bulldogs','#003162','Big East'],['dep','DePaul','Blue Demons','#0055A2','Big East'],['ksu','Kansas St','Wildcats','#512888','Big 12'],['okst','Oklahoma St','Cowboys','#FF7300','Big 12'],['tcu','TCU','Horned Frogs','#4D1979','Big 12'],['wvu','West Virginia','Mountaineers','#002855','Big 12'],['byu','BYU','Cougars','#002E5D','Big 12'],['cin','Cincinnati','Bearcats','#E00122','Big 12'],['ucf','UCF','Knights','#BA9B37','Big 12'],['colo','Colorado','Buffaloes','#CFB87C','Big 12'],['utah','Utah','Utes','#CC0000','Big 12'],['clem','Clemson','Tigers','#F56600','ACC'],['gt','Georgia Tech','Yellow Jackets','#B3A369','ACC'],['pitt','Pittsburgh','Panthers','#003594','ACC'],['wake','Wake Forest','Demon Deacons','#9E7E38','ACC'],['smu','SMU','Mustangs','#0033A0','ACC'],['cal','Cal','Golden Bears','#003262','ACC'],['stan','Stanford','Cardinal','#8C1515','ACC']],
@@ -127,6 +127,30 @@ const HISTORIC_LOSSES = {
     ['orl', "Dwight's Dominance", "Magic 101, Celtics 82", "May 18, 2009", "Orlando eliminated the Celtics in the Eastern Conference Semifinals."]
   ]
 };
+
+// ---- HELPER: safe clipboard copy ----
+const copyToClipboard = async (text) => {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch (e) {
+    // fallback below
+  }
+  // Fallback for older WebViews
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.position = "fixed";
+  textArea.style.left = "-9999px";
+  document.body.appendChild(textArea);
+  textArea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textArea);
+};
+
+// ---- HELPER: pick random item from array (stable outside render) ----
+const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 const Confetti = () => {
   return (
@@ -243,7 +267,8 @@ function App() {
     try { return localStorage.getItem('tl_onboarded') !== 'true'; } catch (e) { return true; }
   });
 
-  const [enabledLeagues, setEnabledLeagues] = useState({ NCAA: true, CFB: false, NBA: true, NFL: true, MLB: false });
+  // FIX: Default leagues — NBA, NCAA (hoops), MLB on; NFL & CFB off
+  const [enabledLeagues, setEnabledLeagues] = useState({ NCAA: true, CFB: false, NBA: true, NFL: false, MLB: true });
   const [hatedTeams, setHatedTeams] = useState(() => {
     try { return JSON.parse(localStorage.getItem('tl_hated_teams') || '[]'); } catch (e) { return []; }
   });
@@ -260,11 +285,31 @@ function App() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [debugMsg, setDebugMsg] = useState('Init...');
 
+  // FIX: Ref to track current enabledLeagues for use in callbacks/effects without stale closures
+  const enabledLeaguesRef = useRef(enabledLeagues);
+  useEffect(() => { enabledLeaguesRef.current = enabledLeagues; }, [enabledLeagues]);
+
+  // FIX: Ref to track fcmToken for listener callbacks
+  const fcmTokenRef = useRef(fcmToken);
+  useEffect(() => { fcmTokenRef.current = fcmToken; }, [fcmToken]);
+
+  // FIX: Ref to track hatedTeams for listener callbacks
+  const hatedTeamsRef = useRef(hatedTeams);
+  useEffect(() => { hatedTeamsRef.current = hatedTeams; }, [hatedTeams]);
+
+  // FIX: Track push listener cleanup handles
+  const pushListenersRef = useRef([]);
+
+  // FIX: Stable random values — only re-roll on explicit refresh, not on every loading toggle
+  const [randomSeed, setRandomSeed] = useState(0);
+
   const styles = THEMES[activeTheme];
 
+  // FIX: Stable random gif — re-rolls only when user explicitly triggers a refresh (randomSeed changes)
   const randomWaitingGif = useMemo(() => {
-      return WAITING_GIFS[Math.floor(Math.random() * WAITING_GIFS.length)];
-  }, [loading]);
+      return pickRandom(WAITING_GIFS);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [randomSeed]);
 
   const syncPreferencesWithServer = async (token, teams) => {
     if (!token) return;
@@ -298,8 +343,10 @@ function App() {
   const handleForceSync = async () => {
     if (!fcmToken) {
         try {
-            await PushNotifications.register();
-            alert("Requesting new token... wait 5 seconds and try again.");
+            tokenReceivedRef.current = false;
+            registerRetryCountRef.current = 0;
+            await attemptRegister();
+            alert("Requesting new token... check status bar for updates.");
         } catch(e) {
             alert("Error requesting token: " + e.message);
         }
@@ -330,6 +377,11 @@ function App() {
     }
   };
 
+  // Track whether we've successfully received a token this session
+  const tokenReceivedRef = useRef(false);
+  const registerRetryCountRef = useRef(0);
+  const MAX_REGISTER_RETRIES = 3;
+
   const initNativeRegistration = async () => {
     try {
       const platform = Capacitor.getPlatform();
@@ -337,52 +389,105 @@ function App() {
       
       const isNative = Capacitor.isNativePlatform();
       
-      if (isNative) {
-        setSyncStatus('Checking Permissions...');
-        await PushNotifications.removeAllDeliveredNotifications();
-        
-        // ---- FIX #1 ----
-        // await PushNotifications.setBadge({ count: 0 }); // REMOVED: Capacitor removed this feature!
-
-        let perm = await PushNotifications.checkPermissions();
-        if (perm.receive !== 'granted') perm = await PushNotifications.requestPermissions();
-
-        if (perm.receive === 'granted') {
-          setSyncStatus('Getting Token...');
-          await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-             LocalNotifications.schedule({
-                 notifications: [{
-                     title: notification.title || "THEY LOST!",
-                     body: notification.body,
-                     id: new Date().getTime(),
-                     schedule: { at: new Date(Date.now() + 100) }
-                 }]
-             });
-          });
-
-          await PushNotifications.addListener('registration', (token) => {
-            console.log("Token received:", token.value);
-            setFcmToken(token.value);
-            syncPreferencesWithServer(token.value, hatedTeams);
-          });
-
-          await PushNotifications.addListener('registrationError', (err) => {
-             console.error("Reg Error:", err);
-             setSyncStatus('❌ Reg Error');
-             setLastError(JSON.stringify(err));
-          });
-
-          await PushNotifications.register();
-        } else { 
-            setSyncStatus('❌ Notifications Disabled'); 
-        }
-      } else { 
-          setSyncStatus('Status: Non-native'); 
+      if (!isNative) { 
+        setSyncStatus('Status: Non-native'); 
+        return;
       }
+
+      setSyncStatus('Checking Permissions...');
+      
+      try {
+        await PushNotifications.removeAllDeliveredNotifications();
+      } catch (e) {
+        console.warn("removeAllDelivered failed (non-fatal):", e);
+      }
+
+      let perm = await PushNotifications.checkPermissions();
+      if (perm.receive !== 'granted') perm = await PushNotifications.requestPermissions();
+
+      if (perm.receive !== 'granted') {
+        setSyncStatus('❌ Notifications Disabled'); 
+        return;
+      }
+
+      setSyncStatus('Getting Token...');
+
+      // Clean up previous listeners before adding new ones to prevent stacking
+      for (const handle of pushListenersRef.current) {
+        try { await handle.remove(); } catch (_) {}
+      }
+      pushListenersRef.current = [];
+
+      // Set up listeners FIRST — these are the real mechanism for receiving the token
+      const h1 = await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+         LocalNotifications.schedule({
+             notifications: [{
+                 title: notification.title || "THEY LOST!",
+                 body: notification.body,
+                 id: new Date().getTime(),
+                 schedule: { at: new Date(Date.now() + 100) }
+             }]
+         });
+      });
+
+      const h2 = await PushNotifications.addListener('registration', (token) => {
+        console.log("✅ Token received:", token.value);
+        tokenReceivedRef.current = true;
+        registerRetryCountRef.current = 0;
+        setFcmToken(token.value);
+        setSyncStatus('Syncing...');
+        syncPreferencesWithServer(token.value, hatedTeamsRef.current);
+      });
+
+      const h3 = await PushNotifications.addListener('registrationError', (err) => {
+         console.error("Reg Error:", err);
+         setSyncStatus('❌ Reg Error');
+         setLastError(JSON.stringify(err));
+      });
+
+      pushListenersRef.current = [h1, h2, h3];
+
+      // Call register() but DON'T let its rejection kill everything.
+      // The 'registration' listener above is what actually delivers the token.
+      // register() in some Capacitor versions rejects on a short internal timeout 
+      // even though APNs may still deliver the token moments later.
+      attemptRegister();
+
     } catch (err) {
       console.error("Handshake Logic Failure:", err);
       setSyncStatus('❌ Bridge Error');
       setLastError(err.message || JSON.stringify(err));
+    }
+  };
+
+  const attemptRegister = async () => {
+    try {
+      await PushNotifications.register();
+      // If register resolved without error but we haven't gotten a token yet via listener,
+      // that's fine — the listener will fire async
+      if (!tokenReceivedRef.current) {
+        setSyncStatus('⏳ Waiting for token...');
+      }
+    } catch (regErr) {
+      console.warn(`register() rejected (attempt ${registerRetryCountRef.current + 1}):`, regErr);
+      
+      // Don't treat this as fatal — the listener might still fire
+      if (!tokenReceivedRef.current) {
+        registerRetryCountRef.current += 1;
+        
+        if (registerRetryCountRef.current < MAX_REGISTER_RETRIES) {
+          const delay = registerRetryCountRef.current * 2000; // 2s, 4s, 6s
+          setSyncStatus(`⏳ Retry ${registerRetryCountRef.current}/${MAX_REGISTER_RETRIES} in ${delay/1000}s...`);
+          setTimeout(() => {
+            if (!tokenReceivedRef.current) {
+              attemptRegister();
+            }
+          }, delay);
+        } else {
+          setSyncStatus('❌ Token Timeout');
+          setLastError(regErr.message || JSON.stringify(regErr));
+        }
+      }
     }
   };
   
@@ -392,9 +497,6 @@ function App() {
             try {
                 if (Capacitor.isNativePlatform()) {
                      await PushNotifications.removeAllDeliveredNotifications();
-                     
-                     // ---- FIX #2 ----
-                     // await PushNotifications.setBadge({ count: 0 }); // REMOVED: Capacitor removed this feature!
                 }
             } catch (e) {
                 console.error("Error clearing badges:", e);
@@ -404,44 +506,18 @@ function App() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     if (Capacitor.isNativePlatform()) {
          PushNotifications.removeAllDeliveredNotifications().catch(console.error);
-         
-         // ---- FIX #3 ----
-         // PushNotifications.setBadge({ count: 0 }).catch(console.error); // REMOVED: Capacitor removed this feature!
     }
     return () => {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
-  useEffect(() => {
-    setTimeout(() => initNativeRegistration(), 500);
-    checkLiveScores();
-  }, []); 
-
-  useEffect(() => { 
-    try {
-      localStorage.setItem('tl_hated_teams', JSON.stringify(hatedTeams)); 
-      if (fcmToken) syncPreferencesWithServer(fcmToken, hatedTeams);
-    } catch (e) {}
-  }, [hatedTeams]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('tl_notified_games', JSON.stringify(notifiedGames));
-    } catch (e) {}
-  }, [notifiedGames]);
-
-  useEffect(() => {
-    if (celebration) {
-        const timer = setTimeout(() => setShowCelebration(true), 50);
-        return () => clearTimeout(timer);
-    } else {
-        setShowCelebration(false);
+  // FIX: Use useCallback for checkLiveScores so it reads current enabledLeagues from ref
+  const checkLiveScores = useCallback(async (showLoader = true) => {
+    if (showLoader) {
+      setLoading(true);
+      setRandomSeed(prev => prev + 1); // re-roll random visuals on explicit refresh
     }
-  }, [celebration]);
-
-  const checkLiveScores = async (showLoader = true) => {
-    if (showLoader) setLoading(true);
     try {
       const now = new Date(new Date().toLocaleString("en-US", {timeZone: "America/New_York"}));
       const todayStr = now.toLocaleDateString('en-CA').replace(/-/g, '');
@@ -480,7 +556,9 @@ function App() {
         return [...events1, ...events2, ...events3];
       };
 
-      const targets = Object.keys(enabledLeagues).filter(l => enabledLeagues[l]);
+      // FIX: Read from ref so we always get the latest enabled leagues
+      const currentLeagues = enabledLeaguesRef.current;
+      const targets = Object.keys(currentLeagues).filter(l => currentLeagues[l]);
       const allRaw = (await Promise.all(targets.map(fetchLeague))).flat();
       const uniq = Array.from(new Map(allRaw.map(e => [e.id, e])).values());
       
@@ -491,7 +569,101 @@ function App() {
         console.error(e); 
         setDebugMsg(`Err: ${e.message}`);
     } finally { setLoading(false); }
-  };
+  }, []); // no deps needed — reads from refs
+
+  useEffect(() => {
+    // Give the native bridge more time to fully initialize before hitting push APIs
+    setTimeout(() => initNativeRegistration(), 1500);
+    checkLiveScores();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
+
+  useEffect(() => { 
+    try {
+      localStorage.setItem('tl_hated_teams', JSON.stringify(hatedTeams)); 
+      if (fcmToken) syncPreferencesWithServer(fcmToken, hatedTeams);
+    } catch (e) {}
+  }, [hatedTeams]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tl_notified_games', JSON.stringify(notifiedGames));
+    } catch (e) {}
+  }, [notifiedGames]);
+
+  useEffect(() => {
+    if (celebration) {
+        const timer = setTimeout(() => setShowCelebration(true), 50);
+        return () => clearTimeout(timer);
+    } else {
+        setShowCelebration(false);
+    }
+  }, [celebration]);
+
+  // FIX: Pure computation in useMemo — no side effects
+  const gameResults = useMemo(() => {
+      return rawGameEvents.map(event => {
+        const h = event.competitions[0].competitors.find(c=>c.homeAway==='home'), a = event.competitions[0].competitors.find(c=>c.homeAway==='away');
+        if(!h||!a) return null;
+        
+        const isHated = (tObj) => {
+          const apiAbbr = tObj.team.abbreviation.toLowerCase();
+          const apiName = tObj.team.name.toLowerCase(); 
+          const apiLoc = tObj.team.location.toLowerCase(); 
+
+          return hatedTeams.some(hId => {
+            const tData = ALL_TEAMS_DATA.find(t => t.id === hId);
+            if (!tData) return false;
+            if (tData.league !== event._league) return false;
+            const idAbbr = hId.split('_')[0];
+            if (idAbbr === apiAbbr) return true;
+            if (tData.mascot.toLowerCase() === apiName) return true;
+            if (tData.name.toLowerCase() === apiLoc) return true;
+            return false;
+          });
+        };
+
+        const hatedHome = isHated(h), hatedAway = isHated(a);
+        if(!hatedHome && !hatedAway) return null;
+        
+        let pRaw = hatedHome ? h : a, oRaw = hatedHome ? a : h;
+        const pA = pRaw.team.abbreviation.toLowerCase(), oA = oRaw.team.abbreviation.toLowerCase();
+        const hConf = ALL_TEAMS_DATA.find(t => t.league === event._league && t.id.startsWith(pA)) || { name: pRaw.team.location, mascot: pRaw.team.name, color: `#${pRaw.team.color}`, id: pRaw.team.abbreviation };
+        const oConf = ALL_TEAMS_DATA.find(t => t.league === event._league && t.id.startsWith(oA)) || { name: oRaw.team.location, mascot: oRaw.team.name, color: `#${oRaw.team.color}`, id: oRaw.team.abbreviation };
+
+        const sH = Number(h.score) || 0, sA = Number(a.score) || 0;
+        const isF = event.status.type.completed || event.status.type.state === 'post' || (event.status.type.shortDetail && event.status.type.shortDetail.toLowerCase().includes('final'));
+
+        let status = 'SCHEDULED';
+        if (event.status.type.state === 'in') status = 'PLAYING';
+        if (isF) status = ((hatedHome && sH < sA) || (hatedAway && sA < sH)) ? 'LOST' : 'WON';
+        
+        return { 
+          team: { ...hConf, score: Number(pRaw.score) || 0 }, 
+          opponentTeam: { ...oConf, score: Number(oRaw.score) || 0 }, 
+          status, gameId: event.id, league: event._league, gameDate: event.date
+        };
+      }).filter(Boolean);
+  }, [rawGameEvents, hatedTeams]);
+
+  // FIX: Side effects (celebration trigger) moved to useEffect reacting to gameResults
+  useEffect(() => {
+    gameResults.forEach(g => {
+      if (g.status === 'LOST' && !notifiedGames.includes(g.gameId)) {
+        setCelebration({
+          gif: pickRandom(CELEBRATION_GIFS_LIST),
+          game: g,
+          tagline: pickRandom(CELEBRATION_ONELINERS)
+        });
+        setNotifiedGames(prev => [...prev, g.gameId]);
+      }
+    });
+  // We intentionally only run this when gameResults changes.
+  // notifiedGames is read but we don't want it as a dep (would cause loops).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameResults]);
+
+  const displayResults = gameResults.filter(g => g.status === 'LOST');
 
   const getStoryUrl = (league, gameId) => {
     const slugMap = { 'NBA': 'nba', 'NFL': 'nfl', 'MLB': 'mlb', 'NCAA': 'mens-college-basketball', 'CFB': 'college-football' };
@@ -540,6 +712,7 @@ function App() {
       return ALL_TEAMS_DATA.filter(t => t.league === activeLeague && (searchTerm === '' || String(t.name).toLowerCase().includes(searchTerm.toLowerCase()) || String(t.mascot).toLowerCase().includes(searchTerm.toLowerCase()))).sort((a,b) => String(a.name).localeCompare(String(b.name)));
   }, [activeLeague, searchTerm]);
 
+  // FIX: Stable random history — re-rolls only on explicit refresh via randomSeed
   const randomHistory = useMemo(() => {
       if (hatedTeams.length === 0) return null;
       const availableHistory = [];
@@ -550,8 +723,8 @@ function App() {
           }
       });
       if (availableHistory.length === 0) return null;
-      const picked = availableHistory[Math.floor(Math.random() * availableHistory.length)];
-      const pickedHeader = HISTORY_HEADERS[Math.floor(Math.random() * HISTORY_HEADERS.length)];
+      const picked = pickRandom(availableHistory);
+      const pickedHeader = pickRandom(HISTORY_HEADERS);
       return {
           teamId: picked.teamId,
           title: picked[1],
@@ -560,66 +733,8 @@ function App() {
           blurb: picked[4],
           header: pickedHeader
       };
-  }, [hatedTeams, loading]);
-
-  const gameResults = useMemo(() => {
-      const filtered = rawGameEvents.map(event => {
-        const h = event.competitions[0].competitors.find(c=>c.homeAway==='home'), a = event.competitions[0].competitors.find(c=>c.homeAway==='away');
-        if(!h||!a) return null;
-        
-        const isHated = (tObj) => {
-          const apiAbbr = tObj.team.abbreviation.toLowerCase();
-          const apiName = tObj.team.name.toLowerCase(); 
-          const apiLoc = tObj.team.location.toLowerCase(); 
-
-          return hatedTeams.some(hId => {
-            const tData = ALL_TEAMS_DATA.find(t => t.id === hId);
-            if (!tData) return false;
-            if (tData.league !== event._league) return false;
-            const idAbbr = hId.split('_')[0];
-            if (idAbbr === apiAbbr) return true;
-            if (tData.mascot.toLowerCase() === apiName) return true;
-            if (tData.name.toLowerCase() === apiLoc) return true;
-            return false;
-          });
-        };
-
-        const hatedHome = isHated(h), hatedAway = isHated(a);
-        if(!hatedHome && !hatedAway) return null;
-        
-        let pRaw = hatedHome ? h : a, oRaw = hatedHome ? a : h;
-        const pA = pRaw.team.abbreviation.toLowerCase(), oA = oRaw.team.abbreviation.toLowerCase();
-        const hConf = ALL_TEAMS_DATA.find(t => t.league === event._league && t.id.startsWith(pA)) || { name: pRaw.team.location, mascot: pRaw.team.name, color: `#${pRaw.team.color}`, id: pRaw.team.abbreviation };
-        const oConf = ALL_TEAMS_DATA.find(t => t.league === event._league && t.id.startsWith(oA)) || { name: oRaw.team.location, mascot: oRaw.team.name, color: `#${oRaw.team.color}`, id: oRaw.team.abbreviation };
-
-        const sH = Number(h.score) || 0, sA = Number(a.score) || 0;
-        const isF = event.status.type.completed || event.status.type.state === 'post' || (event.status.type.shortDetail && event.status.type.shortDetail.toLowerCase().includes('final'));
-
-        let status = 'SCHEDULED';
-        if (event.status.type.state === 'in') status = 'PLAYING';
-        if (isF) status = ((hatedHome && sH < sA) || (hatedAway && sA < sH)) ? 'LOST' : 'WON';
-        
-        return { 
-          team: { ...hConf, score: Number(pRaw.score) || 0 }, 
-          opponentTeam: { ...oConf, score: Number(oRaw.score) || 0 }, 
-          status, gameId: event.id, league: event._league, gameDate: event.date
-        };
-      }).filter(Boolean);
-
-      filtered.forEach(g => {
-        if (g.status === 'LOST' && !notifiedGames.includes(g.gameId)) {
-            setCelebration({
-                gif: CELEBRATION_GIFS_LIST[Math.floor(Math.random() * CELEBRATION_GIFS_LIST.length)],
-                game: g,
-                tagline: CELEBRATION_ONELINERS[Math.floor(Math.random() * CELEBRATION_ONELINERS.length)]
-            });
-            setNotifiedGames(prev => [...prev, g.gameId]);
-        }
-      });
-      return filtered;
-  }, [rawGameEvents, hatedTeams]);
-
-  const displayResults = gameResults.filter(g => g.status === 'LOST');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hatedTeams, randomSeed]);
 
   const openShare = (g) => {
     const lib = {
@@ -678,15 +793,17 @@ function App() {
     setShareOptions(
       Object.entries(lib).map(([k, v]) => ({
         label: k,
-        text: format(v[Math.floor(Math.random() * v.length)])
+        text: format(pickRandom(v))
       }))
     );
     setShareModal(g);
   };
 
-  const doShare = (txt, index) => {
-    const textArea = document.createElement("textarea"); textArea.value = txt; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea);
-    setCopiedIndex(index); setTimeout(() => { setCopiedIndex(null); setShareModal(null); }, 1000);
+  const doShare = async (txt, index) => {
+    // FIX: Use modern clipboard API with fallback
+    await copyToClipboard(txt);
+    setCopiedIndex(index); 
+    setTimeout(() => { setCopiedIndex(null); setShareModal(null); }, 1000);
   };
 
   if (showOnboarding) return <Onboarding onComplete={() => { try { localStorage.setItem('tl_onboarded','true'); } catch(e) {} setShowOnboarding(false); setView('scoreboard'); }} />;
@@ -740,7 +857,7 @@ function App() {
             {displayResults.map((g,i) => {
               const dateLabel = getGameLabel(g.gameDate);
               return (
-                <div key={i} className={`relative overflow-hidden ${styles.card} border-2`}>
+                <div key={g.gameId} className={`relative overflow-hidden ${styles.card} border-2`}>
                   <div className={`p-2 text-center text-[10px] font-black uppercase ${g.status === 'LOST' ? styles.lossBanner : 'bg-slate-300 text-slate-700'}`}>
                       {g.status === 'LOST' ? `THEY LOST!${dateLabel ? ` • ${dateLabel}` : ''}` : 'PLAYING'}
                   </div>
@@ -763,7 +880,7 @@ function App() {
                   </div>
                   <div className="p-3 border-t bg-slate-50 flex gap-2">
                       <button onClick={()=>openShare(g)} className={`flex-1 py-2 rounded-lg text-xs font-bold ${styles.buttonPrimary}`}>Rub It In</button>
-                      <a href={getStoryUrl(g.league, g.gameId)} target="_blank" className={`flex-1 py-2 text-center rounded-lg text-xs font-bold transition shadow-sm ${styles.buttonSecondary}`}>Story</a>
+                      <a href={getStoryUrl(g.league, g.gameId)} target="_blank" rel="noopener noreferrer" className={`flex-1 py-2 text-center rounded-lg text-xs font-bold transition shadow-sm ${styles.buttonSecondary}`}>Story</a>
                   </div>
                 </div>
               );
@@ -816,14 +933,9 @@ function App() {
                 <Bell size={20}/> Test Local Alert (2s)
             </button>
             
-            <div className="p-4 bg-slate-200 rounded-xl break-all text-[10px] font-mono select-all active:bg-slate-300" onClick={() => {
+            <div className="p-4 bg-slate-200 rounded-xl break-all text-[10px] font-mono select-all active:bg-slate-300" onClick={async () => {
                 if(fcmToken) {
-                    const textArea = document.createElement("textarea"); 
-                    textArea.value = fcmToken; 
-                    document.body.appendChild(textArea); 
-                    textArea.select(); 
-                    document.execCommand('copy'); 
-                    document.body.removeChild(textArea);
+                    await copyToClipboard(fcmToken);
                     alert('Token Copied to Clipboard!');
                 }
             }}>
