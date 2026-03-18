@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Trophy, RefreshCw, PartyPopper, Settings, Target, Zap, LogOut, Check, Search, Bell, X, ToggleLeft, ToggleRight, History, Share2 } from 'lucide-react';
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
-import { PushNotifications } from '@capacitor/push-notifications';
+import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
-const APP_VERSION = "2.0.26"; 
+const APP_VERSION = "2.1.0"; 
 const API_BASE = 'https://us-central1-they-lost.cloudfunctions.net/registerToken';
 const APP_ICON = "https://ik.imagekit.io/ipi1yjzh9/theylost%20icon%20512.png";
 
@@ -208,9 +208,11 @@ function Onboarding({ onComplete }) {
   const handleEnableNotifications = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
-        let perm = await PushNotifications.checkPermissions();
-        if (perm.receive !== 'granted') perm = await PushNotifications.requestPermissions();
-        if (perm.receive === 'granted') await PushNotifications.register();
+        let perm = await FirebaseMessaging.checkPermissions();
+        if (perm.receive !== 'granted') perm = await FirebaseMessaging.requestPermissions();
+        if (perm.receive === 'granted') {
+          try { await FirebaseMessaging.getToken(); } catch (e) { console.warn("getToken in onboarding:", e); }
+        }
       }
     } catch (e) { console.error("Native push error:", e); }
     onComplete();
@@ -345,8 +347,8 @@ function App() {
         try {
             tokenReceivedRef.current = false;
             registerRetryCountRef.current = 0;
-            await attemptRegister();
-            alert("Requesting new token... check status bar for updates.");
+            await attemptGetToken();
+            alert("Requesting new FCM token... check status bar for updates.");
         } catch(e) {
             alert("Error requesting token: " + e.message);
         }
@@ -397,20 +399,20 @@ function App() {
       setSyncStatus('Checking Permissions...');
       
       try {
-        await PushNotifications.removeAllDeliveredNotifications();
+        await FirebaseMessaging.removeAllDeliveredNotifications();
       } catch (e) {
         console.warn("removeAllDelivered failed (non-fatal):", e);
       }
 
-      let perm = await PushNotifications.checkPermissions();
-      if (perm.receive !== 'granted') perm = await PushNotifications.requestPermissions();
+      let perm = await FirebaseMessaging.checkPermissions();
+      if (perm.receive !== 'granted') perm = await FirebaseMessaging.requestPermissions();
 
       if (perm.receive !== 'granted') {
         setSyncStatus('❌ Notifications Disabled'); 
         return;
       }
 
-      setSyncStatus('Getting Token...');
+      setSyncStatus('Getting FCM Token...');
 
       // Clean up previous listeners before adding new ones to prevent stacking
       for (const handle of pushListenersRef.current) {
@@ -418,40 +420,30 @@ function App() {
       }
       pushListenersRef.current = [];
 
-      // Set up listeners FIRST — these are the real mechanism for receiving the token
-      const h1 = await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      // Listen for foreground notifications — show as local notification
+      const h1 = await FirebaseMessaging.addListener('notificationReceived', (notification) => {
+         console.log("📬 Foreground notification:", notification);
          LocalNotifications.schedule({
              notifications: [{
-                 title: notification.title || "THEY LOST!",
-                 body: notification.body,
+                 title: notification.notification?.title || "THEY LOST!",
+                 body: notification.notification?.body || "",
                  id: new Date().getTime(),
                  schedule: { at: new Date(Date.now() + 100) }
              }]
          });
       });
 
-      const h2 = await PushNotifications.addListener('registration', (token) => {
-        console.log("✅ Token received:", token.value);
-        tokenReceivedRef.current = true;
-        registerRetryCountRef.current = 0;
-        setFcmToken(token.value);
-        setSyncStatus('Syncing...');
-        syncPreferencesWithServer(token.value, hatedTeamsRef.current);
+      // Listen for token refreshes — FCM can rotate tokens
+      const h2 = await FirebaseMessaging.addListener('tokenReceived', (event) => {
+        console.log("🔄 FCM token refreshed:", event.token);
+        setFcmToken(event.token);
+        syncPreferencesWithServer(event.token, hatedTeamsRef.current);
       });
 
-      const h3 = await PushNotifications.addListener('registrationError', (err) => {
-         console.error("Reg Error:", err);
-         setSyncStatus('❌ Reg Error');
-         setLastError(JSON.stringify(err));
-      });
+      pushListenersRef.current = [h1, h2];
 
-      pushListenersRef.current = [h1, h2, h3];
-
-      // Call register() but DON'T let its rejection kill everything.
-      // The 'registration' listener above is what actually delivers the token.
-      // register() in some Capacitor versions rejects on a short internal timeout 
-      // even though APNs may still deliver the token moments later.
-      attemptRegister();
+      // Get FCM token directly — this is the key difference from the generic plugin
+      await attemptGetToken();
 
     } catch (err) {
       console.error("Handshake Logic Failure:", err);
@@ -460,27 +452,27 @@ function App() {
     }
   };
 
-  const attemptRegister = async () => {
+  const attemptGetToken = async () => {
     try {
-      await PushNotifications.register();
-      // If register resolved without error but we haven't gotten a token yet via listener,
-      // that's fine — the listener will fire async
-      if (!tokenReceivedRef.current) {
-        setSyncStatus('⏳ Waiting for token...');
-      }
+      const result = await FirebaseMessaging.getToken();
+      console.log("✅ FCM Token received:", result.token);
+      tokenReceivedRef.current = true;
+      registerRetryCountRef.current = 0;
+      setFcmToken(result.token);
+      setSyncStatus('Syncing...');
+      syncPreferencesWithServer(result.token, hatedTeamsRef.current);
     } catch (regErr) {
-      console.warn(`register() rejected (attempt ${registerRetryCountRef.current + 1}):`, regErr);
+      console.warn(`getToken() failed (attempt ${registerRetryCountRef.current + 1}):`, regErr);
       
-      // Don't treat this as fatal — the listener might still fire
       if (!tokenReceivedRef.current) {
         registerRetryCountRef.current += 1;
         
         if (registerRetryCountRef.current < MAX_REGISTER_RETRIES) {
-          const delay = registerRetryCountRef.current * 2000; // 2s, 4s, 6s
+          const delay = registerRetryCountRef.current * 2000;
           setSyncStatus(`⏳ Retry ${registerRetryCountRef.current}/${MAX_REGISTER_RETRIES} in ${delay/1000}s...`);
           setTimeout(() => {
             if (!tokenReceivedRef.current) {
-              attemptRegister();
+              attemptGetToken();
             }
           }, delay);
         } else {
@@ -496,7 +488,7 @@ function App() {
         if (document.visibilityState === 'visible') {
             try {
                 if (Capacitor.isNativePlatform()) {
-                     await PushNotifications.removeAllDeliveredNotifications();
+                     await FirebaseMessaging.removeAllDeliveredNotifications();
                 }
             } catch (e) {
                 console.error("Error clearing badges:", e);
@@ -505,7 +497,7 @@ function App() {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     if (Capacitor.isNativePlatform()) {
-         PushNotifications.removeAllDeliveredNotifications().catch(console.error);
+         FirebaseMessaging.removeAllDeliveredNotifications().catch(console.error);
     }
     return () => {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
