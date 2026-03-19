@@ -4,7 +4,8 @@ import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
-const APP_VERSION = "2.1.0"; 
+const APP_VERSION = "2.1.1"; 
+const DEBUG_MODE = false; // Set to true to show test buttons and debug info in settings
 const API_BASE = 'https://us-central1-they-lost.cloudfunctions.net/registerToken';
 const APP_ICON = "https://ik.imagekit.io/ipi1yjzh9/theylost%20icon%20512.png";
 
@@ -138,7 +139,6 @@ const copyToClipboard = async (text) => {
   } catch (e) {
     // fallback below
   }
-  // Fallback for older WebViews
   const textArea = document.createElement("textarea");
   textArea.value = text;
   textArea.style.position = "fixed";
@@ -269,7 +269,6 @@ function App() {
     try { return localStorage.getItem('tl_onboarded') !== 'true'; } catch (e) { return true; }
   });
 
-  // FIX: Default leagues — NBA, NCAA (hoops), MLB on; NFL & CFB off
   const [enabledLeagues, setEnabledLeagues] = useState({ NCAA: true, CFB: false, NBA: true, NFL: false, MLB: true });
   const [hatedTeams, setHatedTeams] = useState(() => {
     try { return JSON.parse(localStorage.getItem('tl_hated_teams') || '[]'); } catch (e) { return []; }
@@ -287,27 +286,21 @@ function App() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [debugMsg, setDebugMsg] = useState('Init...');
 
-  // FIX: Ref to track current enabledLeagues for use in callbacks/effects without stale closures
   const enabledLeaguesRef = useRef(enabledLeagues);
   useEffect(() => { enabledLeaguesRef.current = enabledLeagues; }, [enabledLeagues]);
 
-  // FIX: Ref to track fcmToken for listener callbacks
   const fcmTokenRef = useRef(fcmToken);
   useEffect(() => { fcmTokenRef.current = fcmToken; }, [fcmToken]);
 
-  // FIX: Ref to track hatedTeams for listener callbacks
   const hatedTeamsRef = useRef(hatedTeams);
   useEffect(() => { hatedTeamsRef.current = hatedTeams; }, [hatedTeams]);
 
-  // FIX: Track push listener cleanup handles
   const pushListenersRef = useRef([]);
 
-  // FIX: Stable random values — only re-roll on explicit refresh, not on every loading toggle
   const [randomSeed, setRandomSeed] = useState(0);
 
   const styles = THEMES[activeTheme];
 
-  // FIX: Stable random gif — re-rolls only when user explicitly triggers a refresh (randomSeed changes)
   const randomWaitingGif = useMemo(() => {
       return pickRandom(WAITING_GIFS);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -379,7 +372,6 @@ function App() {
     }
   };
 
-  // Track whether we've successfully received a token this session
   const tokenReceivedRef = useRef(false);
   const registerRetryCountRef = useRef(0);
   const MAX_REGISTER_RETRIES = 3;
@@ -414,13 +406,11 @@ function App() {
 
       setSyncStatus('Getting FCM Token...');
 
-      // Clean up previous listeners before adding new ones to prevent stacking
       for (const handle of pushListenersRef.current) {
         try { await handle.remove(); } catch (_) {}
       }
       pushListenersRef.current = [];
 
-      // Listen for foreground notifications — show as local notification
       const h1 = await FirebaseMessaging.addListener('notificationReceived', (notification) => {
          console.log("📬 Foreground notification:", notification);
          LocalNotifications.schedule({
@@ -433,7 +423,6 @@ function App() {
          });
       });
 
-      // Listen for token refreshes — FCM can rotate tokens
       const h2 = await FirebaseMessaging.addListener('tokenReceived', (event) => {
         console.log("🔄 FCM token refreshed:", event.token);
         setFcmToken(event.token);
@@ -442,7 +431,6 @@ function App() {
 
       pushListenersRef.current = [h1, h2];
 
-      // Get FCM token directly — this is the key difference from the generic plugin
       await attemptGetToken();
 
     } catch (err) {
@@ -504,11 +492,13 @@ function App() {
     };
   }, []);
 
-  // FIX: Use useCallback for checkLiveScores so it reads current enabledLeagues from ref
+  // FIX: Sequential fetching — prevents iOS from dropping connections under load.
+  // Previously used Promise.all which fired up to 9 simultaneous requests, causing
+  // NSURLErrorNetworkConnectionLost (-1005) on iOS.
   const checkLiveScores = useCallback(async (showLoader = true) => {
     if (showLoader) {
       setLoading(true);
-      setRandomSeed(prev => prev + 1); // re-roll random visuals on explicit refresh
+      setRandomSeed(prev => prev + 1);
     }
     try {
       const now = new Date(new Date().toLocaleString("en-US", {timeZone: "America/New_York"}));
@@ -520,38 +510,63 @@ function App() {
 
       const ts = Date.now();
 
-      const fetchLeague = async (lg) => {
-        const path = {'NCAA':'basketball/mens-college-basketball','CFB':'football/college-football','NBA':'basketball/nba','NFL':'football/nfl','MLB':'baseball/mlb'}[lg];
+      // Safe single fetch with timeout — returns empty data on failure instead of throwing
+      const safeFetch = async (url: string) => {
+        try {
+          return await CapacitorHttp.get({
+            url,
+            connectTimeout: 10000,
+            readTimeout: 15000,
+          });
+        } catch (e) {
+          console.warn(`[safeFetch] Failed: ${url}\n`, e.message);
+          return { data: {} };
+        }
+      };
+
+      const safeParse = (res) => {
+        if (res.data && typeof res.data === 'object') return res.data;
+        if (res.data && typeof res.data === 'string') {
+          try { return JSON.parse(res.data); } catch (e) { return {}; }
+        }
+        return {};
+      };
+
+      // Fetch one league at a time — 3 sequential requests per league instead of all at once
+      const fetchLeague = async (lg: string) => {
+        const path = {
+          'NCAA': 'basketball/mens-college-basketball',
+          'CFB': 'football/college-football',
+          'NBA': 'basketball/nba',
+          'NFL': 'football/nfl',
+          'MLB': 'baseball/mlb'
+        }[lg];
         if (!path) return [];
-        
-        const [res1, res2, res3] = await Promise.all([
-          CapacitorHttp.get({ url: `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard?dates=${todayStr}&limit=1000&_=${ts}` }),
-          CapacitorHttp.get({ url: `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard?dates=${yesterdayStr}&limit=1000&_=${ts}` }),
-          CapacitorHttp.get({ url: `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard?dates=${tomorrowStr}&limit=1000&_=${ts}` })
-        ]);
 
-        const safeParse = (res) => {
-            if (res.data && typeof res.data === 'object') return res.data;
-            if (res.data && typeof res.data === 'string') {
-                try { return JSON.parse(res.data); } catch(e) { return {}; }
-            }
-            return {};
-        };
+        const base = `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`;
 
-        const data1 = safeParse(res1);
-        const data2 = safeParse(res2);
-        const data3 = safeParse(res3);
+        const res1 = await safeFetch(`${base}?dates=${todayStr}&limit=1000&_=${ts}`);
+        const res2 = await safeFetch(`${base}?dates=${yesterdayStr}&limit=1000&_=${ts}`);
+        const res3 = await safeFetch(`${base}?dates=${tomorrowStr}&limit=1000&_=${ts}`);
 
-        const events1 = (data1.events || []).map(e => ({...e, _league: lg}));
-        const events2 = (data2.events || []).map(e => ({...e, _league: lg}));
-        const events3 = (data3.events || []).map(e => ({...e, _league: lg}));
+        const events1 = (safeParse(res1).events || []).map(e => ({...e, _league: lg}));
+        const events2 = (safeParse(res2).events || []).map(e => ({...e, _league: lg}));
+        const events3 = (safeParse(res3).events || []).map(e => ({...e, _league: lg}));
+
+        console.log(`[fetchLeague] ${lg}: ${events1.length + events2.length + events3.length} events`);
         return [...events1, ...events2, ...events3];
       };
 
-      // FIX: Read from ref so we always get the latest enabled leagues
       const currentLeagues = enabledLeaguesRef.current;
       const targets = Object.keys(currentLeagues).filter(l => currentLeagues[l]);
-      const allRaw = (await Promise.all(targets.map(fetchLeague))).flat();
+
+      // Sequential loop — run leagues one at a time to avoid iOS connection drops
+      const allRaw: any[] = [];
+      for (const lg of targets) {
+        const results = await fetchLeague(lg);
+        allRaw.push(...results);
+      }
+
       const uniq = Array.from(new Map(allRaw.map(e => [e.id, e])).values());
       
       setDebugMsg(`Lgs: ${targets.length} | Raw: ${uniq.length}`);
@@ -560,11 +575,13 @@ function App() {
     } catch (e) { 
         console.error(e); 
         setDebugMsg(`Err: ${e.message}`);
-    } finally { setLoading(false); }
-  }, []); // no deps needed — reads from refs
+        setLastError(e.message || JSON.stringify(e));
+    } finally { 
+      setLoading(false); 
+    }
+  }, []);
 
   useEffect(() => {
-    // Give the native bridge more time to fully initialize before hitting push APIs
     setTimeout(() => initNativeRegistration(), 1500);
     checkLiveScores();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -592,7 +609,6 @@ function App() {
     }
   }, [celebration]);
 
-  // FIX: Pure computation in useMemo — no side effects
   const gameResults = useMemo(() => {
       return rawGameEvents.map(event => {
         const h = event.competitions[0].competitors.find(c=>c.homeAway==='home'), a = event.competitions[0].competitors.find(c=>c.homeAway==='away');
@@ -638,7 +654,6 @@ function App() {
       }).filter(Boolean);
   }, [rawGameEvents, hatedTeams]);
 
-  // FIX: Side effects (celebration trigger) moved to useEffect reacting to gameResults
   useEffect(() => {
     gameResults.forEach(g => {
       if (g.status === 'LOST' && !notifiedGames.includes(g.gameId)) {
@@ -650,8 +665,6 @@ function App() {
         setNotifiedGames(prev => [...prev, g.gameId]);
       }
     });
-  // We intentionally only run this when gameResults changes.
-  // notifiedGames is read but we don't want it as a dep (would cause loops).
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameResults]);
 
@@ -704,7 +717,6 @@ function App() {
       return ALL_TEAMS_DATA.filter(t => t.league === activeLeague && (searchTerm === '' || String(t.name).toLowerCase().includes(searchTerm.toLowerCase()) || String(t.mascot).toLowerCase().includes(searchTerm.toLowerCase()))).sort((a,b) => String(a.name).localeCompare(String(b.name)));
   }, [activeLeague, searchTerm]);
 
-  // FIX: Stable random history — re-rolls only on explicit refresh via randomSeed
   const randomHistory = useMemo(() => {
       if (hatedTeams.length === 0) return null;
       const availableHistory = [];
@@ -792,7 +804,6 @@ function App() {
   };
 
   const doShare = async (txt, index) => {
-    // FIX: Use modern clipboard API with fallback
     await copyToClipboard(txt);
     setCopiedIndex(index); 
     setTimeout(() => { setCopiedIndex(null); setShareModal(null); }, 1000);
@@ -904,6 +915,7 @@ function App() {
 
         {view === 'settings' && (
           <div className="space-y-6">
+            {DEBUG_MODE && (<>
             <button onClick={() => initNativeRegistration()} className="w-full p-4 bg-blue-600 text-white font-black rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform italic uppercase tracking-tighter">
               <Zap size={20}/> Force Handshake Retry
             </button>
@@ -934,6 +946,7 @@ function App() {
                 <p className="font-bold mb-1 text-slate-500">DEBUG TOKEN (Tap to Copy):</p>
                 {fcmToken || "Waiting for token..."}
             </div>
+            </>)}
 
             <div className={`p-4 rounded-xl border-2 ${styles.card}`}>
                 <h3 className="text-xs font-bold uppercase opacity-50 mb-3 tracking-widest">Sports</h3>
@@ -950,13 +963,16 @@ function App() {
         )}
       </main>
 
+      {/* Footer — always visible so sync errors show up even in production */}
       <footer className="p-2 px-4 bg-black/5 text-[10px] font-mono flex justify-between items-center border-t shrink-0">
-        <div className="flex flex-col gap-0.5">
-          <span className="opacity-40">v{APP_VERSION}</span>
-          <span className="opacity-40 text-[8px]">Bridge: {String(bridgeStatus)}</span>
-        </div>
-        <div className="flex gap-4 cursor-pointer" onClick={() => lastError && alert(`Bridge Error:\n\n${lastError}`)}>
-          <span className="text-blue-600 font-bold">{syncStatus} • {debugMsg}</span>
+        <span className="opacity-40">v{APP_VERSION} • {bridgeStatus}</span>
+        <div
+          className="flex gap-4 cursor-pointer"
+          onClick={() => lastError && alert(`Last Error:\n\n${lastError}`)}
+        >
+          <span className={`font-bold ${lastError ? 'text-red-500' : 'text-blue-600'}`}>
+            {syncStatus} • {debugMsg}
+          </span>
         </div>
       </footer>
 
